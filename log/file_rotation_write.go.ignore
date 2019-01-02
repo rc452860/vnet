@@ -1,0 +1,51 @@
+package log
+
+import (
+	"os"
+	"sync"
+)
+
+type FileRotationWrite struct {
+	Filename   string
+	MaxSize    int
+	MaxAge     int
+	MaxBackups int
+	size       int64
+	file       *os.File
+	sync.Mutex
+}
+
+func NewFileRotationWrite(filename string, maxSize int, maxage int, maxBackups int) (*FileRotationWrite, error) {
+	fileRotationWrite := &FileRotationWrite{
+		Filename:   filename,
+		MaxSize:    maxSize,
+		MaxAge:     maxage,
+		MaxBackups: maxBackups,
+		size:       0,
+	}
+
+	file, err := os.OpenFile(filename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0)
+	if err != nil {
+		return fileRotationWrite, err
+	}
+
+	fileRotationWrite.file = file
+	fi, err := file.Stat()
+	if err != nil {
+		return fileRotationWrite, err
+	}
+
+	fileRotationWrite.size = fi.Size()
+	return fileRotationWrite, nil
+}
+
+func (this FileRotationWrite) Write(message string) {
+
+}
+
+func (this FileRotationWrite) max() bool {
+	if this.size > this.MaxSize {
+		return true
+	}
+	return false
+}

@@ -1,0 +1,14 @@
+{
+    "mode": "",
+    "dbconfig": {
+        "host": "mysql.vnet.club",
+        "user": "",
+        "passwd": "",
+        "port": "",
+        "database": ""
+    },
+    "shadowsocks_options": {
+        "tcp_timeout": 0,
+        "udp_timeout": 0
+    }
+}
