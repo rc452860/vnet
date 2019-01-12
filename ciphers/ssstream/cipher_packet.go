@@ -6,6 +6,8 @@ import (
 	"io"
 	"net"
 	"sync"
+
+	"github.com/rc452860/vnet/pool"
 )
 
 var ErrShortPacket = errors.New("short packet")
@@ -79,4 +81,9 @@ func (c *streamPacket) ReadFrom(b []byte) (int, net.Addr, error) {
 	decryptr.XORKeyStream(b[ivLen:], b[ivLen:n])
 
 	return n - ivLen, addr, err
+}
+
+func (c *streamPacket) Close() error {
+	pool.PutUdpBuf(c.buf)
+	return c.PacketConn.Close()
 }

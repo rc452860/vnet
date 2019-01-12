@@ -1,0 +1,35 @@
+gc 1 @0.058s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->0 MB, 5 MB goal, 4 P
+gc 2 @0.086s 0%: 0+0.99+0 ms clock, 0+0/0.99/0+0 ms cpu, 4->4->0 MB, 5 MB goal, 4 P
+gc 3 @0.127s 0%: 0+0.96+0 ms clock, 0+0/0.96/1.9+0 ms cpu, 4->4->0 MB, 5 MB goal, 4 P
+gc 4 @0.165s 0%: 0+0+0 ms clock, 0+0/0/0+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 5 @0.194s 0%: 0+0+0 ms clock, 0+0/0/0+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 6 @0.225s 0%: 0+0.99+0 ms clock, 0+0/0.99/1.9+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 7 @0.252s 0%: 0+0.99+0 ms clock, 0+0/0.99/1.9+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 8 @0.286s 0%: 0+2.9+0 ms clock, 0+0/1.9/0+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 9 @0.316s 0%: 0+2.9+0 ms clock, 0+0/2.9/0.99+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 10 @0.328s 0%: 0+1.9+0 ms clock, 0+0.99/1.9/2.9+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 11 @0.331s 0%: 0+0.99+0 ms clock, 0+0/0.99/1.9+0 ms cpu, 4->5->2 MB, 5 MB goal, 4 P
+gc 12 @0.335s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 13 @0.342s 0%: 0+1.9+0 ms clock, 0+0/1.9/0+0 ms cpu, 4->5->2 MB, 5 MB goal, 4 P
+gc 14 @0.348s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 15 @0.352s 0%: 0+0.99+0 ms clock, 0+0/0.99/0+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 16 @0.355s 0%: 0+1.9+0 ms clock, 0+1.9/1.9/1.9+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 17 @0.361s 0%: 0+0.99+0 ms clock, 0+0/0.99/0+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 18 @0.365s 0%: 0+1.9+0 ms clock, 0+0/1.9/0+0 ms cpu, 4->5->3 MB, 5 MB goal, 4 P
+gc 19 @0.371s 0%: 0+1.9+0 ms clock, 0+0/1.9/0.99+0 ms cpu, 5->6->2 MB, 7 MB goal, 4 P
+gc 20 @0.376s 0%: 0+1.9+0 ms clock, 0+0/1.9/1.9+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 21 @0.381s 0%: 0+2.9+0 ms clock, 0+0/2.9/0+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 22 @0.388s 0%: 0+2.9+0 ms clock, 0+0/1.9/0.99+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 23 @0.421s 0%: 0+3.9+0.99 ms clock, 0+0/1.9/0.99+3.9 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+# github.com/rc452860/vnet/service
+gc 1 @0.008s 0%: 0+0+0 ms clock, 0+0/0/0+0 ms cpu, 4->5->2 MB, 5 MB goal, 4 P
+gc 2 @0.009s 0%: 0+0+3.9 ms clock, 0+0/0/0+15 ms cpu, 4->4->3 MB, 5 MB goal, 4 P
+gc 3 @0.013s 0%: 0.99+3.9+0 ms clock, 3.9+0/0/0+0 ms cpu, 7->8->7 MB, 8 MB goal, 4 P
+# github.com/rc452860/vnet/service.test
+gc 1 @0.004s 0%: 0+1.9+0 ms clock, 0+0/1.9/0+0 ms cpu, 4->5->4 MB, 5 MB goal, 4 P
+gc 2 @0.011s 0%: 0+9.9+0 ms clock, 0+1.9/2.9/0+0 ms cpu, 7->8->8 MB, 9 MB goal, 4 P
+gc 3 @0.025s 0%: 0+8.9+0 ms clock, 0+0/4.9/4.9+0 ms cpu, 14->15->14 MB, 16 MB goal, 4 P
+gc 4 @0.059s 0%: 0+11+0 ms clock, 0+1.9/11/0+0 ms cpu, 26->28->26 MB, 28 MB goal, 4 P
+gc 5 @0.108s 0%: 0+23+0 ms clock, 0+0.99/23/11+0 ms cpu, 49->54->51 MB, 53 MB goal, 4 P
+gc 6 @0.247s 0%: 0+66+0 ms clock, 0+0/65/0.99+0 ms cpu, 93->99->89 MB, 103 MB goal, 4 P
+gc 24 @6.309s 0%: 0+2.9+0 ms clock, 0+0/2.9/0+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P

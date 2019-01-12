@@ -2,20 +2,21 @@ package log
 
 import (
 	"os"
+	"path/filepath"
 	"sync"
 )
 
 type FileRotationWrite struct {
 	Filename   string
-	MaxSize    int
-	MaxAge     int
+	MaxSize    int64
+	MaxAge     int64
 	MaxBackups int
 	size       int64
 	file       *os.File
 	sync.Mutex
 }
 
-func NewFileRotationWrite(filename string, maxSize int, maxage int, maxBackups int) (*FileRotationWrite, error) {
+func NewFileRotationWrite(filename string, maxSize int64, maxage int64, maxBackups int) (*FileRotationWrite, error) {
 	fileRotationWrite := &FileRotationWrite{
 		Filename:   filename,
 		MaxSize:    maxSize,
@@ -39,13 +40,15 @@ func NewFileRotationWrite(filename string, maxSize int, maxage int, maxBackups i
 	return fileRotationWrite, nil
 }
 
-func (this FileRotationWrite) Write(message string) {
+func (this *FileRotationWrite) Write(message string) {
 
 }
-
-func (this FileRotationWrite) max() bool {
+func (this *FileRotationWrite) Rotation() {
 	if this.size > this.MaxSize {
-		return true
+		fiels, err := filepath.Glob(this.Filename + "*")
+		if err != nil {
+			panic(err)
+		}
+		
 	}
-	return false
 }

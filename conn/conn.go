@@ -26,14 +26,14 @@ func NewDefaultConn(conn net.Conn, network string) (IConn, error) {
 	return c, err
 }
 
-func DirectConn(network, host string) (IConn, error) {
+func DirectConn(network, host string, upload, download TrafficHandle) (IConn, error) {
 	conn, err := net.DialTimeout(network, host, DefaultTimeOut)
 	if err != nil {
 		return nil, err
 	}
 	c, err := NewDefaultConn(conn, network)
 	if err == nil {
-		c, err = TrafficDecorate(c)
+		c, err = TrafficDecorate(c, upload, download)
 	}
 	return c, err
 }

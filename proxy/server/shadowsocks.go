@@ -4,20 +4,19 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/rc452860/vnet/config"
-	"github.com/rc452860/vnet/pool"
-	"github.com/rc452860/vnet/proxy"
-
-	"github.com/rc452860/vnet/socks"
+	"github.com/rc452860/vnet/utils/datasize"
 
 	"github.com/rc452860/vnet/ciphers"
-
 	"github.com/rc452860/vnet/conn"
-
 	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/pool"
+	"github.com/rc452860/vnet/proxy"
+	"github.com/rc452860/vnet/socks"
+	"golang.org/x/time/rate"
 )
 
 type mode int
@@ -28,23 +27,32 @@ const (
 	socksClient
 )
 
-var logging *log.Logging
+var (
+	logging *log.Logging
+	// ShadowsocksServerList Global map for store shadowsocks proxy
+	ShadowsocksServerList map[string]*ShadowsocksProxy
+)
 
 func init() {
 	logging = log.GetLogger("root")
 }
 
+// ShadowsocksProxy is respect shadowsocks proxy server
+// it have Start and Stop method to control proxy
 type ShadowsocksProxy struct {
-	proxy.ProxyService
-	Host       string
-	Method     string
-	Password   string
-	Port       int
-	TcpTimeout time.Duration
-	UdpTimeout time.Duration
+	*proxy.ProxyService `json:"-,omitempty"`
+	Host                string        `json:"host,omitempty"`
+	Method              string        `json:"method,omitempty"`
+	Password            string        `json:"password,omitempty"`
+	Port                int           `json:"port,omitempty"`
+	TCPTimeout          time.Duration `json:"tcp_timeout,omitempty"`
+	UDPTimeout          time.Duration `json:"udp_timeout,omitempty"`
+	ReadLimit           *rate.Limiter `json:"read_limit,omitempty"`
+	WriteLimit          *rate.Limiter `json:"write_limit,omitempty"`
 }
 
-func NewShadowsocsk(host string, method string, password string, port int) *ShadowsocksProxy {
+// NewShadowsocks is new ShadowsocksProxy object
+func NewShadowsocks(host string, method string, password string, port int, limit string, timeout int64) (*ShadowsocksProxy, error) {
 	ss := &ShadowsocksProxy{
 		ProxyService: proxy.NewProxyService(),
 		Host:         host,
@@ -52,37 +60,84 @@ func NewShadowsocsk(host string, method string, password string, port int) *Shad
 		Password:     password,
 		Port:         port,
 	}
-	if config.CurrentConfig().ShadowsocksOptions.TcpTimeout == 0 {
-		ss.TcpTimeout = 3e9
-	} else {
-		ss.TcpTimeout = config.CurrentConfig().ShadowsocksOptions.TcpTimeout
+	// for traffic limit
+	err := ss.ConfigLimit(limit)
+	if err != nil {
+		return nil, err
 	}
 
-	if config.CurrentConfig().ShadowsocksOptions.UdpTimeout == 0 {
-		ss.UdpTimeout = 3e9
-	} else {
-		ss.UdpTimeout = config.CurrentConfig().ShadowsocksOptions.UdpTimeout
-	}
-	return ss
+	// for 3 second time out
+	err = ss.ConfigTimeout(timeout)
+	return ss, err
 }
 
-func (this ShadowsocksProxy) Start() error {
-	if err := this.startTcp(); err != nil {
-		return err
+func (s *ShadowsocksProxy) ConfigLimit(limit string) error {
+	if limit != "" {
+		trafficLimit, err := datasize.Parse(limit)
+		if err != nil {
+			return err
+		}
+		logging.Info("server port: %v limit is: %v", s.Port, trafficLimit/8)
+		s.ReadLimit = rate.NewLimiter(rate.Limit(trafficLimit/8), int(trafficLimit/8))
+		s.WriteLimit = rate.NewLimiter(rate.Limit(trafficLimit/8), int(trafficLimit/8))
 	}
-	if err := this.startUdp(); err != nil {
-		return err
+	return nil
+
+}
+
+func (s *ShadowsocksProxy) ConfigTimeout(timeout int64) error {
+	if timeout == 0 {
+		s.TCPTimeout = 3e9
+		s.UDPTimeout = 3e9
+	} else {
+		s.TCPTimeout = time.Duration(timeout)
+		s.UDPTimeout = time.Duration(timeout)
 	}
+	log.Info("%s:%v timeout:%v", s.Host, s.Port, s.TCPTimeout)
 	return nil
 }
 
-func (this ShadowsocksProxy) Stop() error {
-	return this.ProxyService.Stop()
+// Start proxy
+func (s *ShadowsocksProxy) Start() error {
+	s.ProxyService.Start()
+	if err := s.startTCP(); err != nil {
+		return err
+	}
+	if err := s.startUDP(); err != nil {
+		return err
+	}
+	go s.ProxyService.TrafficMeasure()
+	return nil
+}
+
+// Stop proxy
+func (s *ShadowsocksProxy) Stop() error {
+	return s.ProxyService.Stop()
+}
+
+// statistics upload traffic
+func (s *ShadowsocksProxy) upload(con conn.IConn, up int) {
+	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
+		Network: "tcp",
+		LAddr:   con.LocalAddr().String(),
+		RAddr:   con.RemoteAddr().String(),
+		UpBytes: uint64(up),
+	}
+}
+
+// statics download traffic
+func (s *ShadowsocksProxy) download(con conn.IConn, down int) {
+	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
+		Network:   "tcp",
+		LAddr:     con.LocalAddr().String(),
+		RAddr:     con.RemoteAddr().String(),
+		DownBytes: uint64(down),
+	}
 }
 
 // start shadowsocks tcp proxy service
-func (this ShadowsocksProxy) startTcp() error {
-	addr := fmt.Sprintf("%s:%d", this.Host, this.Port)
+func (s *ShadowsocksProxy) startTCP() error {
+	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		logging.Error(err.Error())
@@ -94,24 +149,28 @@ func (this ShadowsocksProxy) startTcp() error {
 		logging.Error(err.Error())
 		return err
 	}
-	this.Tcp = server
+	s.Tcp = server
 
 	go func() {
 		defer server.Close()
 		for {
-			select {
-			case <-this.TcpClose:
-				this.Tcp = nil
-				return
-			default:
-			}
-			server.SetDeadline(time.Now().Add(this.TcpTimeout))
+			// select {
+			// case <-s.ProxyService.TcpClose:
+			// 	s.Tcp.Close()
+			// 	s.Tcp = nil
+			// 	return
+			// default:
+			// }
+			server.SetDeadline(time.Now().Add(s.TCPTimeout))
 			lcon, err := server.Accept()
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				continue
 			}
 
 			if err != nil {
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					return
+				}
 				logging.Error(err.Error())
 				continue
 			}
@@ -125,24 +184,26 @@ func (this ShadowsocksProxy) startTcp() error {
 					return
 				}
 				/** 流量记录装饰器 */
-				lcd, err = conn.TrafficDecorate(lcd)
+				lcd, err = conn.TrafficDecorate(lcd, s.upload, s.download)
 				if err != nil {
 					logging.Err(err)
 					return
 				}
+				/** 限流装饰器 */
+				lcd, _ = conn.TrafficLimitDecorate(lcd, s.ReadLimit, s.WriteLimit)
 
-				// /** 超时装饰器 */
-				// lcd, err = conn.TimerDecorate(lcd, this.TcpTimeout, this.TcpTimeout)
+				// lcd, err = conn.TimerDecorate(lcd, s.TcpTimeout, s.TcpTimeout)
 				// if err != nil {
 				// 	logging.Err(err)
 				// 	return
 				// }
 				/** 加密装饰器 */
-				lcd, err = ciphers.CipherDecorate(this.Password, this.Method, lcd)
+				lcd, err = ciphers.CipherDecorate(s.Password, s.Method, lcd)
 				if err != nil {
 					logging.Err(err)
 					return
 				}
+
 				/** 读取目标地址 */
 				targetAddr, err := socks.ReadAddr(lcd)
 				if err != nil {
@@ -168,6 +229,8 @@ func (this ShadowsocksProxy) startTcp() error {
 					return
 				}
 
+				// rcd, _ = conn.TrafficLimitDecorate(rcd, s.ReadLimit, s.WriteLimit)
+
 				/** 流量统计装饰器 */
 				// rcd, err = conn.TrafficDecorate(rcd)
 				// if err != nil {
@@ -175,7 +238,7 @@ func (this ShadowsocksProxy) startTcp() error {
 				// 	return
 				// }
 
-				_, _, err = relayTcp(lcd, rcd)
+				_, _, err = relayTCP(lcd, rcd)
 				if err != nil {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						return // ignore i/o timeout
@@ -190,7 +253,7 @@ func (this ShadowsocksProxy) startTcp() error {
 
 // relay copies between left and right bidirectionally. Returns number of
 // bytes copied from right to left, from left to right, and any error occurred.
-func relayTcp(left, right net.Conn) (int64, int64, error) {
+func relayTCP(left, right net.Conn) (int64, int64, error) {
 	type res struct {
 		N   int64
 		Err error
@@ -215,22 +278,43 @@ func relayTcp(left, right net.Conn) (int64, int64, error) {
 	return n, rs.N, err
 }
 
+// udp upload traffic count
+func (s *ShadowsocksProxy) udpUpload(laddr, raddr string, n int) {
+	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
+		Network: "tcp",
+		LAddr:   laddr,
+		RAddr:   raddr,
+		UpBytes: uint64(n),
+	}
+}
+
+// udp download traffic count
+func (s *ShadowsocksProxy) udpDownload(laddr, raddr string, n int) {
+	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
+		Network:   "tcp",
+		LAddr:     laddr,
+		RAddr:     raddr,
+		DownBytes: uint64(n),
+	}
+}
+
 // Listen on addr for encrypted packets and basically do UDP NAT.
-func (this ShadowsocksProxy) startUdp() error {
-	addr := fmt.Sprintf("%s:%d", this.Host, this.Port)
+func (s *ShadowsocksProxy) startUDP() error {
+	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	server, err := net.ListenPacket("udp", addr)
 	if err != nil {
 		logging.Error("UDP remote listen error: %v", err)
 		return err
 	}
-	this.Udp = server
-	server, err = ciphers.CipherPacketDecorate(this.Password, this.Method, server)
+	s.Udp = server
+	server, err = ciphers.CipherPacketDecorate(s.Password, s.Method, server)
+	server = conn.PacketTrafficConnDecorate(server, s.udpUpload, s.udpDownload)
 	if err != nil {
 		logging.Error("UDP CipherPacketDecorate init error: %v", err)
 		return err
 	}
 
-	nm := newNATmap(this.UdpTimeout)
+	nm := newNATmap(s.UDPTimeout)
 	buf := pool.GetUdpBuf()
 	defer pool.PutUdpBuf(buf)
 
@@ -239,18 +323,15 @@ func (this ShadowsocksProxy) startUdp() error {
 	go func() {
 		defer server.Close()
 		for {
-			select {
-			case <-this.UdpClose:
-				this.Udp = nil
-				return
-			default:
-			}
-			server.SetDeadline(time.Now().Add(this.UdpTimeout))
+			server.SetDeadline(time.Now().Add(s.UDPTimeout))
 			n, raddr, err := server.ReadFrom(buf)
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				continue
 			}
 			if err != nil {
+				if strings.Contains(err.Error(), "use of closed network connection") {
+					return
+				}
 				logging.Error("UDP remote read error: %v", err)
 				continue
 			}

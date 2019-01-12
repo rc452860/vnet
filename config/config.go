@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"time"
 
+	"github.com/rc452860/vnet/log"
 	"github.com/rc452860/vnet/utils"
 )
 
@@ -45,6 +47,12 @@ func LoadConfig(file string) (*Config, error) {
 	utils.RLock(file)
 	defer utils.RUnLock(file)
 	if !utils.IsFileExist(file) {
+		absFile, err := filepath.Abs(file)
+		if err != nil {
+			log.Err(err)
+		} else {
+			log.Warn(fmt.Sprintf("%s is not exist"), absFile)
+		}
 		configFile = file
 		config = &Config{}
 		data, _ := json.MarshalIndent(config, "", "    ")

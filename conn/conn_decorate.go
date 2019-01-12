@@ -9,6 +9,7 @@ import (
 
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/utils"
+	"golang.org/x/time/rate"
 )
 
 var DefaultTimeOut = 10 * time.Second
@@ -85,16 +86,13 @@ func (c *DefaultConn) SetContext(ctx context.Context) {
 
 func (c *DefaultConn) Read(b []byte) (n int, err error) {
 	n, err = c.Conn.Read(b)
-	logging.Debug("[ID:%d] Read Data: %v", c.GetID(), b[:n])
 	return
 }
 
 func (c *DefaultConn) Write(b []byte) (n int, err error) {
-	logging.Debug("[ID:%d] Write Data: %v", c.GetID(), b)
 	return c.Conn.Write(b)
 }
 func (c *DefaultConn) Close() error {
-	logging.Debug("[ID:%d] close connection", c.GetID())
 	return c.Conn.Close()
 }
 
@@ -193,33 +191,114 @@ func (r *RealTimeFlush) Write(b []byte) (n int, err error) {
 }
 
 //导出装饰器
-var upload, download func(int64, int) = nil, nil
+type TrafficHandle func(IConn, int)
 
-func InitTrafficChannel(up, down func(int64, int)) {
-	upload, download = up, down
-}
-func TrafficDecorate(c IConn) (IConn, error) {
+func TrafficDecorate(c IConn, upload, download TrafficHandle) (IConn, error) {
 	return &Traffic{
-		IConn: c,
+		IConn:    c,
+		Upload:   upload,
+		Download: download,
 	}, nil
 }
 
 type Traffic struct {
 	IConn
+	Upload   TrafficHandle
+	Download TrafficHandle
 }
 
 func (t *Traffic) Read(b []byte) (n int, err error) {
 	n, err = t.IConn.Read(b)
-	if download != nil && t.GetRecordID() > 0 && n > 0 {
-		download(t.GetRecordID(), n)
+	if t.Download != nil {
+		t.Download(t.IConn, n)
 	}
 	return
 }
 
 func (t *Traffic) Write(b []byte) (n int, err error) {
 	n, err = t.IConn.Write(b)
-	if upload != nil && t.GetRecordID() > 0 && n > 0 {
-		upload(t.GetRecordID(), n)
+	if t.Upload != nil {
+		t.Upload(t.IConn, n)
 	}
 	return
+}
+
+// traffic limit decorate
+type TrafficLimit struct {
+	IConn
+	ReadLimit  *rate.Limiter
+	WriteLimit *rate.Limiter
+}
+
+func TrafficLimitDecorate(con IConn, read, write *rate.Limiter) (IConn, error) {
+	return &TrafficLimit{
+		IConn:      con,
+		ReadLimit:  read,
+		WriteLimit: write,
+	}, nil
+}
+
+func (c *TrafficLimit) Read(b []byte) (n int, err error) {
+	if c.ReadLimit == nil {
+		return c.IConn.Read(b)
+	}
+	n, err = c.IConn.Read(b)
+	if err != nil {
+		return n, err
+	}
+	if err = c.ReadLimit.WaitN(context.Background(), n); err != nil {
+		return n, err
+	}
+	return n, nil
+}
+
+func (c *TrafficLimit) Write(b []byte) (n int, err error) {
+	if c.WriteLimit == nil {
+		return c.IConn.Write(b)
+	}
+	n, err = c.IConn.Write(b)
+	if err != nil {
+		return n, err
+	}
+	if err = c.WriteLimit.WaitN(context.Background(), n); err != nil {
+		return n, err
+	}
+	return n, nil
+}
+
+// for blow code is about udp communicateion
+// is decorate packet con to provide traffic record and traffic limit etc ...
+type PacketTrafficHandle func(laddr string, raddr string, n int)
+
+type PacketTrafficConn struct {
+	net.PacketConn
+	upload   PacketTrafficHandle
+	download PacketTrafficHandle
+}
+
+func PacketTrafficConnDecorate(con net.PacketConn, upload, download PacketTrafficHandle) net.PacketConn {
+	return &PacketTrafficConn{
+		PacketConn: con,
+		upload:     upload,
+		download:   download,
+	}
+}
+
+func (this *PacketTrafficConn) ReadFrom(p []byte) (n int, addr net.Addr, err error) {
+	n, addr, err = this.PacketConn.ReadFrom(p)
+	if err != nil {
+		return n, addr, err
+	}
+	if this.download != nil {
+		this.download(this.PacketConn.LocalAddr().String(), addr.String(), n)
+	}
+	return n, addr, err
+}
+
+func (this *PacketTrafficConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
+	n, err = this.PacketConn.WriteTo(p, addr)
+	if this.upload != nil {
+		this.upload(this.PacketConn.LocalAddr().String(), addr.String(), n)
+	}
+	return n, err
 }

@@ -6,9 +6,11 @@ import (
 	"io"
 	"net"
 	"sync"
+
+	"github.com/rc452860/vnet/pool"
 )
 
-const MAX_PACKET_SIZE = 64 * 1204
+const MAX_PACKET_SIZE = 65507
 
 var _zerononce [128]byte
 var ErrShortPacket = errors.New("short packet")
@@ -35,7 +37,7 @@ func GetAEADPacketCiphers(method string) func(string, net.PacketConn) (net.Packe
 			PacketConn:  packCon,
 			IAEADCipher: c,
 			key:         evpBytesToKey(password, c.KeySize()),
-			buf:         make([]byte, MAX_PACKET_SIZE),
+			buf:         pool.GetUdpBuf(),
 		}
 		return ap, nil
 	}

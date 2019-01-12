@@ -9,6 +9,7 @@ import (
 
 type PatternLogFormatter struct {
 	Pattern string
+	Depth   int
 }
 
 const (
@@ -20,6 +21,7 @@ func PatternLogFormatterFactory(params ...string) *PatternLogFormatter {
 	if params == nil {
 		instance = &PatternLogFormatter{
 			Pattern: pattern,
+			Depth:   5,
 		}
 	} else {
 		instance = &PatternLogFormatter{
@@ -31,7 +33,7 @@ func PatternLogFormatterFactory(params ...string) *PatternLogFormatter {
 
 func (this *PatternLogFormatter) Format(message string, level string, params ...interface{}) string {
 
-	file, funcName, line := GetRuntimeInfoShortFormat(5)
+	file, funcName, line := GetRuntimeInfoShortFormat(this.Depth)
 
 	replacer := strings.NewReplacer(
 		LEVEL,
@@ -50,4 +52,8 @@ func (this *PatternLogFormatter) Format(message string, level string, params ...
 
 	result := replacer.Replace(this.Pattern)
 	return fmt.Sprintf(result, params...)
+}
+
+func (this *PatternLogFormatter) SetDepth(depth int) {
+	this.Depth = depth
 }

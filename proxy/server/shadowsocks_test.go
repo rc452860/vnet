@@ -13,7 +13,7 @@ import (
 )
 
 func Test_NewServer(t *testing.T) {
-	go NewServer("0.0.0.0", "aes-128-gcm", "killer", 8080)
+	go NewShadowsocks("0.0.0.0", "aes-128-gcm", "killer", 8080, "4MB", 0)
 	time.Sleep(3 * time.Second)
 	con, _ := net.Dial("tcp", "0.0.0.0:8080")
 	c, _ := conn.DefaultDecorate(con, conn.TCP)

@@ -16,6 +16,7 @@ type LogFormatterWritePair struct {
 }
 type LogFormatter interface {
 	Format(message string, level string, params ...interface{}) string
+	SetDepth(depth int)
 }
 
 type LogWriter interface {
@@ -61,9 +62,11 @@ type ILog interface {
 }
 
 var Loggers map[string]*Logging
+var logging *Logging
 
 func init() {
 	Loggers = make(map[string]*Logging)
+	logging = GetLogger("root")
 }
 
 func GetLogger(name string, level ...string) *Logging {
@@ -121,4 +124,47 @@ func (this *Logging) write(level string, message string, params ...interface{}) 
 		formatString := item.Formatter.Format(message, level, params...)
 		item.Writer.Write(formatString)
 	}
+}
+
+func fixDepth(depth int) {
+	for _, item := range logging.LogFormatterWritePairs {
+		item.Formatter.SetDepth(depth)
+	}
+}
+
+//TODO fixDepth multiple thread problem
+
+// default use root logging
+func Debug(message string, params ...interface{}) {
+	fixDepth(6)
+	defer fixDepth(5)
+	logging.Debug(message, params...)
+}
+
+// default use root logging
+func Info(message string, params ...interface{}) {
+	fixDepth(6)
+	defer fixDepth(5)
+	logging.Info(message, params...)
+}
+
+// default use root logging
+func Warn(message string, params ...interface{}) {
+	fixDepth(6)
+	defer fixDepth(5)
+	logging.Warn(message, params...)
+}
+
+// default use root logging
+func Error(message string, params ...interface{}) {
+	fixDepth(6)
+	defer fixDepth(5)
+	logging.Error(message, params...)
+}
+
+// default use root logging
+func Err(err error) {
+	fixDepth(6)
+	defer fixDepth(5)
+	logging.Err(err)
 }

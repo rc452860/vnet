@@ -3,7 +3,7 @@ package ssstream
 import (
 	"crypto/cipher"
 
-	"github.com/Yawning/chacha20"
+	"github.com/aead/chacha20"
 )
 
 func init() {

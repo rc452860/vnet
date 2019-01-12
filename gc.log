@@ -1,0 +1,25 @@
+gc 1 @0.053s 0%: 0+0.96+0 ms clock, 0+0.96/0.96/0.96+0 ms cpu, 4->4->0 MB, 5 MB goal, 4 P
+gc 2 @0.078s 0%: 0+0+0.99 ms clock, 0+0/0/0+3.9 ms cpu, 4->4->0 MB, 5 MB goal, 4 P
+gc 3 @0.123s 0%: 0+0+0 ms clock, 0+0/0/0+0 ms cpu, 4->4->0 MB, 5 MB goal, 4 P
+gc 4 @0.166s 0%: 0+0.99+0 ms clock, 0+0/0.99/0+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 5 @0.196s 0%: 0+0+0 ms clock, 0+0/0/0+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 6 @0.230s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 7 @0.283s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 8 @0.307s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->1 MB, 5 MB goal, 4 P
+gc 9 @0.361s 0%: 0+1.9+0.99 ms clock, 0+0/1.9/0+3.9 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 10 @0.369s 0%: 0+3.9+0 ms clock, 0+0/3.9/0+0 ms cpu, 4->5->3 MB, 5 MB goal, 4 P
+gc 11 @0.376s 0%: 0+8.9+0.99 ms clock, 0+0/1.9/0.99+3.9 ms cpu, 5->7->4 MB, 6 MB goal, 4 P
+gc 12 @0.393s 0%: 1.0+3.9+0 ms clock, 4.0+0/3.9/0+0 ms cpu, 6->7->2 MB, 8 MB goal, 4 P
+gc 13 @0.403s 0%: 0+2.9+0 ms clock, 0+0/1.9/0+0 ms cpu, 4->5->2 MB, 5 MB goal, 4 P
+gc 14 @0.415s 0%: 0+2.9+0 ms clock, 0+0.99/0.99/0+0 ms cpu, 4->5->3 MB, 5 MB goal, 4 P
+gc 15 @0.429s 0%: 0+1.9+0 ms clock, 0+0/1.9/2.9+0 ms cpu, 5->5->2 MB, 6 MB goal, 4 P
+gc 16 @0.434s 0%: 0+2.9+0.99 ms clock, 0+0/2.9/0+3.9 ms cpu, 4->5->3 MB, 5 MB goal, 4 P
+gc 17 @0.449s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 5->5->2 MB, 6 MB goal, 4 P
+gc 18 @0.453s 0%: 0+0.99+0 ms clock, 0+0/0.99/0.99+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 19 @0.459s 0%: 0+2.9+0 ms clock, 0+0/1.9/0+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+gc 20 @0.468s 0%: 0.99+3.9+0 ms clock, 3.9+0/2.9/0+0 ms cpu, 5->5->2 MB, 6 MB goal, 4 P
+gc 21 @0.504s 0%: 0+1.9+0 ms clock, 0+0/1.9/0.99+0 ms cpu, 4->4->2 MB, 5 MB goal, 4 P
+# github.com/rc452860/vnet/proxy/server
+gc 1 @0.007s 0%: 0+1.9+0 ms clock, 0+0/1.9/0.99+0 ms cpu, 4->4->3 MB, 5 MB goal, 4 P
+proxy\server\shadowsocks.go:57:3: cannot use &proxy.NewProxyService() (type **proxy.ProxyService) as type *proxy.ProxyService in field value
+proxy\server\shadowsocks.go:57:17: cannot take the address of proxy.NewProxyService()
