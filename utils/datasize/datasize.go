@@ -111,17 +111,17 @@ func (b ByteSize) HR() string {
 func (b ByteSize) HumanReadable() string {
 	switch {
 	case b > EB:
-		return fmt.Sprintf("%.1f EB", b.EBytes())
+		return fmt.Sprintf("%.2f EB", b.EBytes())
 	case b > PB:
-		return fmt.Sprintf("%.1f PB", b.PBytes())
+		return fmt.Sprintf("%.2f PB", b.PBytes())
 	case b > TB:
-		return fmt.Sprintf("%.1f TB", b.TBytes())
+		return fmt.Sprintf("%.2f TB", b.TBytes())
 	case b > GB:
-		return fmt.Sprintf("%.1f GB", b.GBytes())
+		return fmt.Sprintf("%.2f GB", b.GBytes())
 	case b > MB:
-		return fmt.Sprintf("%.1f MB", b.MBytes())
+		return fmt.Sprintf("%.2f MB", b.MBytes())
 	case b > KB:
-		return fmt.Sprintf("%.1f KB", b.KBytes())
+		return fmt.Sprintf("%.2f KB", b.KBytes())
 	default:
 		return fmt.Sprintf("%d B", b)
 	}
@@ -134,7 +134,8 @@ func (b ByteSize) MarshalText() ([]byte, error) {
 func (b *ByteSize) UnmarshalText(t []byte) error {
 	var val uint64
 	var unit string
-
+	var negative bool
+	var nval float64
 	// copy for error message
 	t0 := t
 
@@ -151,21 +152,32 @@ ParseLoop:
 			}
 
 			c = c - '0'
-			val *= 10
 
+			val *= 10
 			if val > val+uint64(c) {
 				// val+v overflows
 				goto Overflow
 			}
-			val += uint64(c)
+			if negative {
+				nval *= 10
+				nval += float64(c)
+			} else {
+				val += uint64(c)
+			}
 			i++
-
+		case '.' == c:
+			negative = true
+			i++
 		default:
 			if i == 0 {
 				goto SyntaxError
 			}
 			break ParseLoop
 		}
+	}
+
+	for nval > 1 {
+		nval /= 10
 	}
 
 	unit = strings.TrimSpace(string(t[i:]))
@@ -183,36 +195,41 @@ ParseLoop:
 			goto Overflow
 		}
 		val *= uint64(KB)
-
+		val += uint64(nval * float64(KB))
 	case "m", "mb", "mega", "megabyte", "megabytes":
 		if val > maxUint64/uint64(MB) {
 			goto Overflow
 		}
 		val *= uint64(MB)
+		val += uint64(nval * float64(MB))
 
 	case "g", "gb", "giga", "gigabyte", "gigabytes":
 		if val > maxUint64/uint64(GB) {
 			goto Overflow
 		}
 		val *= uint64(GB)
+		val += uint64(nval * float64(GB))
 
 	case "t", "tb", "tera", "terabyte", "terabytes":
 		if val > maxUint64/uint64(TB) {
 			goto Overflow
 		}
 		val *= uint64(TB)
+		val += uint64(nval * float64(TB))
 
 	case "p", "pb", "peta", "petabyte", "petabytes":
 		if val > maxUint64/uint64(PB) {
 			goto Overflow
 		}
 		val *= uint64(PB)
+		val += uint64(nval * float64(PB))
 
 	case "E", "EB", "e", "eb", "eB":
 		if val > maxUint64/uint64(EB) {
 			goto Overflow
 		}
 		val *= uint64(EB)
+		val += uint64(nval * float64(EB))
 
 	default:
 		goto SyntaxError

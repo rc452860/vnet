@@ -40,7 +40,18 @@ type ShadowsocksOptions struct {
 }
 
 func CurrentConfig() *Config {
+	if config == nil {
+		conf, err := LoadDefault()
+		if err != nil {
+			panic(err)
+		}
+		config = conf
+	}
 	return config
+}
+
+func LoadDefault() (*Config, error) {
+	return LoadConfig("config.json")
 }
 
 func LoadConfig(file string) (*Config, error) {
@@ -54,12 +65,16 @@ func LoadConfig(file string) (*Config, error) {
 			log.Warn(fmt.Sprintf("%s is not exist"), absFile)
 		}
 		configFile = file
-		config = &Config{}
+		config = &Config{
+			Mode: "db",
+		}
 		data, _ := json.MarshalIndent(config, "", "    ")
 		ioutil.WriteFile(configFile, data, 0644)
 		return config, nil
 	}
-	config = &Config{}
+	config = &Config{
+		Mode: "bare",
+	}
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, fmt.Errorf("read config file failed: %v", err)

@@ -52,7 +52,7 @@ type ShadowsocksProxy struct {
 }
 
 // NewShadowsocks is new ShadowsocksProxy object
-func NewShadowsocks(host string, method string, password string, port int, limit string, timeout int64) (*ShadowsocksProxy, error) {
+func NewShadowsocks(host string, method string, password string, port int, limit string, timeout time.Duration) (*ShadowsocksProxy, error) {
 	ss := &ShadowsocksProxy{
 		ProxyService: proxy.NewProxyService(),
 		Host:         host,
@@ -61,7 +61,7 @@ func NewShadowsocks(host string, method string, password string, port int, limit
 		Port:         port,
 	}
 	// for traffic limit
-	err := ss.ConfigLimit(limit)
+	err := ss.ConfigLimitHuman(limit)
 	if err != nil {
 		return nil, err
 	}
@@ -71,27 +71,35 @@ func NewShadowsocks(host string, method string, password string, port int, limit
 	return ss, err
 }
 
-func (s *ShadowsocksProxy) ConfigLimit(limit string) error {
+func (s *ShadowsocksProxy) ConfigLimit(limit uint64) {
+	s.ReadLimit = rate.NewLimiter(rate.Limit(limit), int(limit))
+	s.WriteLimit = rate.NewLimiter(rate.Limit(limit), int(limit))
+}
+
+//ConfigLimitHuman is config shadowsocks service traffic limit
+// argument limit can be a human readable like: 4KB 4MB 4GB
+func (s *ShadowsocksProxy) ConfigLimitHuman(limit string) error {
 	if limit != "" {
 		trafficLimit, err := datasize.Parse(limit)
 		if err != nil {
+			log.Err(err)
 			return err
 		}
-		logging.Info("server port: %v limit is: %v", s.Port, trafficLimit/8)
-		s.ReadLimit = rate.NewLimiter(rate.Limit(trafficLimit/8), int(trafficLimit/8))
-		s.WriteLimit = rate.NewLimiter(rate.Limit(trafficLimit/8), int(trafficLimit/8))
+		logging.Info("server port: %v limit is: %v", s.Port, trafficLimit)
+		s.ReadLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))
+		s.WriteLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))
 	}
 	return nil
 
 }
 
-func (s *ShadowsocksProxy) ConfigTimeout(timeout int64) error {
+func (s *ShadowsocksProxy) ConfigTimeout(timeout time.Duration) error {
 	if timeout == 0 {
 		s.TCPTimeout = 3e9
 		s.UDPTimeout = 3e9
 	} else {
-		s.TCPTimeout = time.Duration(timeout)
-		s.UDPTimeout = time.Duration(timeout)
+		s.TCPTimeout = timeout
+		s.UDPTimeout = timeout
 	}
 	log.Info("%s:%v timeout:%v", s.Host, s.Port, s.TCPTimeout)
 	return nil
@@ -101,9 +109,11 @@ func (s *ShadowsocksProxy) ConfigTimeout(timeout int64) error {
 func (s *ShadowsocksProxy) Start() error {
 	s.ProxyService.Start()
 	if err := s.startTCP(); err != nil {
+		log.Err(err)
 		return err
 	}
 	if err := s.startUDP(); err != nil {
+		log.Err(err)
 		return err
 	}
 	go s.ProxyService.TrafficMeasure()
@@ -220,7 +230,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				defer rc.Close()
 
 				rc.(*net.TCPConn).SetKeepAlive(true)
-				logging.Info("%s <----> %s", lcd.RemoteAddr(), targetAddr)
+				logging.Info("tcp %s <----> %s", lcd.RemoteAddr(), targetAddr)
 
 				/** 默认装饰器 */
 				rcd, err := conn.DefaultDecorate(rc, conn.TCP)
@@ -335,12 +345,12 @@ func (s *ShadowsocksProxy) startUDP() error {
 				logging.Error("UDP remote read error: %v", err)
 				continue
 			}
-
 			tgtAddr := socks.SplitAddr(buf[:n])
 			if tgtAddr == nil {
 				logging.Error("failed to split target address from packet: %v", buf[:n])
 				continue
 			}
+			logging.Info("udp %s <----> %s", raddr, tgtAddr)
 
 			tgtUDPAddr, err := net.ResolveUDPAddr("udp", tgtAddr.String())
 			if err != nil {

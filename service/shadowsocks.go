@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rc452860/vnet/proxy/server"
 )
@@ -25,7 +26,7 @@ func NewShadowsocksService() *ShadowsocksService {
 	}
 }
 
-func (this *ShadowsocksService) Add(host string, method string, password string, port int, limit string, timeout int64) error {
+func (this *ShadowsocksService) Add(host string, method string, password string, port int, limit string, timeout time.Duration) error {
 	proxy := this.Get(port)
 
 	if proxy == nil {
@@ -39,7 +40,7 @@ func (this *ShadowsocksService) Add(host string, method string, password string,
 		proxy.Host = host
 		proxy.Method = method
 		proxy.Password = password
-		err := proxy.ConfigLimit(limit)
+		err := proxy.ConfigLimitHuman(limit)
 		if err != nil {
 			return err
 		}

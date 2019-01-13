@@ -36,7 +36,7 @@ func GetStreamPacketCiphers(method string) func(string, net.PacketConn) (net.Pac
 			PacketConn:    packet,
 			IStreamCipher: c,
 			key:           evpBytesToKey(password, c.KeyLen()),
-			buf:           make([]byte, MAX_PACKET_SIZE),
+			buf:           pool.GetBuf(),
 		}
 		return sc, nil
 	}
@@ -65,12 +65,13 @@ func (c *streamPacket) WriteTo(b []byte, addr net.Addr) (int, error) {
 
 func (c *streamPacket) ReadFrom(b []byte) (int, net.Addr, error) {
 	n, addr, err := c.PacketConn.ReadFrom(b)
+
 	if err != nil {
 		return n, addr, err
 	}
 	ivLen := c.IVLen()
 
-	if len(b) < ivLen {
+	if n < ivLen || len(b) < ivLen {
 		return n, addr, ErrShortPacket
 	}
 
@@ -78,8 +79,9 @@ func (c *streamPacket) ReadFrom(b []byte) (int, net.Addr, error) {
 	if err != nil {
 		return n, addr, err
 	}
+
 	pool.GetUdpBuf()
-	decryptr.XORKeyStream(b[ivLen:], b[ivLen:n])
+	decryptr.XORKeyStream(b[ivLen:], b[ivLen:ivLen+n])
 	copy(b, b[ivLen:])
 	return n - ivLen, addr, err
 }

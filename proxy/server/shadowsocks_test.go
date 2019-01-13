@@ -1,9 +1,7 @@
 package server
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"testing"
@@ -16,43 +14,91 @@ import (
 	"github.com/rc452860/vnet/socks"
 )
 
+func mockUdpServer(t *testing.T) {
+	conn, err := net.ListenPacket("udp", "0.0.0.0:8081")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+		return
+	}
+	buf := pool.GetUdpBuf()
+	n, addr, err := conn.ReadFrom(buf)
+	if "hello" == string(buf[:n]) {
+		t.Logf(string(buf[:n]))
+		t.Logf("udp success")
+	}
+	n, _ = conn.WriteTo([]byte("hello"), addr)
+	conn.Close()
+}
 func Test_NewServer(t *testing.T) {
-	ss, _ := NewShadowsocks("0.0.0.0", "aes-128-cfb", "killer", 8080, "4MB", 0)
+	testShadowsocksProxy(t, "0.0.0.0", "rc4-md5", "killer", 8080)
+	t.Logf("--------------------rc4-md5 success--------------------")
+	testShadowsocksProxy(t, "0.0.0.0", "aes-128-cfb", "killer", 8080)
+	t.Logf("--------------------aes-128-cfb success--------------------")
+
+}
+
+func testShadowsocksProxy(t *testing.T, host, method, password string, port int) {
+	ss, _ := NewShadowsocks(host, method, password, port, "4MB", 0)
 	go ss.Start()
-	time.Sleep(3 * time.Second)
-	con, _ := net.Dial("tcp", "0.0.0.0:8080")
-	c, _ := conn.DefaultDecorate(con, conn.TCP)
-	c, err := ciphers.CipherDecorate("killer", "aes-128-cfb", c)
-	if err != nil {
-		logging.Error(err.Error())
+	time.Sleep(1 * time.Second)
+	transport := &http.Transport{
+		Proxy: nil,
+		Dial: func(network, addr string) (net.Conn, error) {
+			con, _ := net.Dial("tcp", fmt.Sprintf("%s:%v", host, port))
+			c, _ := conn.DefaultDecorate(con, conn.TCP)
+			c, err := ciphers.CipherDecorate(password, method, c)
+			c.Write(socks.ParseAddr(addr))
+			return c, err
+		},
+		TLSHandshakeTimeout: 10 * time.Second,
 	}
-	c.Write(socks.ParseAddr("baidu.com.com:80"))
-	c.Write([]byte("GET / HTTP/1.1\n"))
-	c.Write([]byte("host: baidu.com\n"))
-	c.Write([]byte("Connection: keep-alive\n"))
-	c.Write([]byte("User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.80 Safari/537.36\n"))
-	c.Write([]byte("Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8\n"))
-	c.Write([]byte("Accept-Encoding: gzip, deflate, br\n"))
-	c.Write([]byte("Accept-Language: zh-CN,zh;q=0.9\n"))
-
-	c.Write([]byte("\n\n"))
-
-	request, err := http.ReadRequest(bufio.NewReader(c))
+	client := &http.Client{
+		Transport: transport,
+	}
+	response, err := client.Get("http://baidu.com")
 	if err != nil {
 		t.Error(err)
 		return
 	}
-	reader, err := request.GetBody()
+	if response.StatusCode < 200 && response.StatusCode > 400 {
+		t.Fatal("http status error")
+	}
+
+	t.Logf("tcp success")
+	go mockUdpServer(t)
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%v", "127.0.0.1", port))
 	if err != nil {
 		t.Error(err)
-		return
+		t.FailNow()
+	}
+	packet, err := net.ListenPacket("udp", "0.0.0.0:12345")
+	packet, err = ciphers.CipherPacketDecorate(password, method, packet)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	sendBuf := pool.GetBuf()
+	targetAddr := socks.ParseAddr("127.0.0.1:8081")
+	copy(sendBuf, targetAddr)
+	copy(sendBuf[len(targetAddr):], []byte("hello"))
+	n, err := packet.WriteTo(sendBuf[:len(targetAddr)+5], addr)
+	pool.PutBuf(sendBuf)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
 	}
 	buf := pool.GetBuf()
-	for {
-		n, err := reader.Read(buf)
-		if err == io.EOF {
-			return
-		}
-		fmt.Print(string(buf[:n]))
+	n, _, err = packet.ReadFrom(buf)
+	t.Logf("%v", n)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
 	}
+	fromAddr := socks.SplitAddr(buf[:n])
+	if string(buf[len(fromAddr):n]) != "hello" {
+		t.Error("recive is not compare hello")
+	}
+	packet.Close()
+	ss.Stop()
 }

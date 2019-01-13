@@ -1,11 +1,10 @@
 package db
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/rc452860/vnet/utils"
-
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -20,6 +19,7 @@ type User struct {
 	TransferEnable int64  `gorm:"column:transfer_enable"`
 	Method         string `gorm:"column:method"`
 	Password       string `gorm:"column:passwd"`
+	Limit          uint64 `gorm:"column:speed_limit_per_user"`
 }
 
 func (this User) TableName() string {
@@ -27,12 +27,6 @@ func (this User) TableName() string {
 }
 
 func Connect() (*gorm.DB, error) {
-	logging := log.GetLogger("root")
-	defer func() {
-		if err := recover(); err != nil {
-			logging.Error("%v", err)
-		}
-	}()
 
 	var (
 		username string
@@ -43,15 +37,16 @@ func Connect() (*gorm.DB, error) {
 	)
 	pattern := "username:password@tcp(host:port)/database?charset=utf8&parseTime=True&loc=Local"
 
-	config := utils.ConfigFactory("config.json")
-
-	dbConfig := config.Map.GetConfigMap("dbconfig")
-	logging.Info("dbConfig: %s", dbConfig)
-	username = dbConfig.GetString("username")
-	password = dbConfig.GetString("password")
-	database = dbConfig.GetString("database")
-	host = dbConfig.GetString("host")
-	port = dbConfig.GetString("port")
+	c := config.CurrentConfig()
+	if c == nil {
+		return nil, fmt.Errorf("config dbconfig is nil")
+	}
+	// log.Info("dbConfig: %s", c.DbConfig)
+	username = c.DbConfig.User
+	password = c.DbConfig.Passwd
+	database = c.DbConfig.Database
+	host = c.DbConfig.Host
+	port = c.DbConfig.Port
 	replacer := strings.NewReplacer(
 		"username",
 		username,
@@ -65,17 +60,18 @@ func Connect() (*gorm.DB, error) {
 		database,
 	)
 	conntionStr := replacer.Replace(pattern)
-	logging.Info("connection string: %s", conntionStr)
+	// log.Info("connection string: %s", conntionStr)
 	db, err := gorm.Open("mysql", conntionStr)
 	return db, err
 }
 
 func GetEnableUser() ([]User, error) {
 	db, err := Connect()
-	defer db.Close()
 	if err != nil {
 		return nil, err
 	}
+	defer db.Close()
+
 	var userList []User
 	db.Where("port != 0 AND enable = 1").Find(&userList)
 	return userList, nil

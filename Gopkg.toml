@@ -38,13 +38,13 @@
   unused-packages = true
 
 [[constraint]]
-  name = "github.com/labstack/echo"
-  version = "3.3.8"
-
-[[constraint]]
   name = "github.com/gin-gonic/gin"
   version = "1.3.0"
 
 [[constraint]]
   name = "github.com/shirou/gopsutil"
   version = "2.18.12"
+
+[[constraint]]
+  name = "github.com/AlecAivazis/survey"
+  version = "1.8.0"
