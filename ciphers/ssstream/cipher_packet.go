@@ -74,12 +74,13 @@ func (c *streamPacket) ReadFrom(b []byte) (int, net.Addr, error) {
 		return n, addr, ErrShortPacket
 	}
 
-	decryptr, err := c.NewDecrypter(c.key, b[ivLen:])
+	decryptr, err := c.NewDecrypter(c.key, b[:ivLen])
 	if err != nil {
 		return n, addr, err
 	}
+	pool.GetUdpBuf()
 	decryptr.XORKeyStream(b[ivLen:], b[ivLen:n])
-
+	copy(b, b[ivLen:])
 	return n - ivLen, addr, err
 }
 

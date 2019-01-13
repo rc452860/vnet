@@ -1,36 +1,31 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
+	"fmt"
+	"time"
 
-	"runtime/pprof"
-
-	"github.com/rc452860/vnet/api"
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/service"
 )
 
 func main() {
-	f, err := os.Create("profile.pprof")
-	if err != nil {
-		log.Err(err)
-		return
-	}
-	pprof.StartCPUProfile(f)
-	go api.StartApi()
-	stop := make(chan os.Signal)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
-	<-stop
-	mem, err := os.Create("mem.pprof")
-	if err != nil {
-		log.Err(err)
+	tick := time.Tick(time.Second)
+	for {
+		<-tick
+		up, down := service.GetNetwork()
+		fmt.Printf("cpu: %v, mem: %v, network: %v - %v, disk: %v\n",
+			service.GetCPUUsage(),
+			service.GetMemUsage(),
+			up, down,
+			service.GetDiskUsage())
 	}
-	runtime.GC()
-	pprof.WriteHeapProfile(mem)
-	mem.Close()
-	pprof.StopCPUProfile()
-	f.Close()
+
+	// stop := make(chan os.Signal)
+	// signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+
+	// <-stop
+	// if err != nil {
+	// 	log.Err(err)
+	// }
+
 }

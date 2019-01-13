@@ -38,3 +38,28 @@ func Error(err error) *Response {
 	}
 	return r
 }
+
+type SystemInfo struct {
+	CPUUsage  int         `json:"cpu_usage,omitempty"`
+	MemUsage  int         `json:"mem_usage,omitempty"`
+	DiskUsage int         `json:"disk_usage,omitempty"`
+	Network   NetworkInfo `json:"network,omitempty"`
+}
+
+type NetworkInfo struct {
+	Up   uint64 `json:"up,omitempty"`
+	Down uint64 `json:"down,omitempty"`
+}
+
+func NewSystemInfo(cpu, mem, disk int, up, down uint64) SystemInfo {
+	sysinfo := SystemInfo{
+		CPUUsage:  cpu,
+		MemUsage:  mem,
+		DiskUsage: disk,
+		Network: NetworkInfo{
+			Up:   up,
+			Down: down,
+		},
+	}
+	return sysinfo
+}

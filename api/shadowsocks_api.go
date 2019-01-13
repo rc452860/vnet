@@ -18,6 +18,7 @@ type Shadowsocks struct {
 	Limit    string `form:"limit" json:"limit"`
 }
 
+// ShadowsocksAdd add a shadowsocks service
 func ShadowsocksAdd(c *gin.Context) {
 	var (
 		ss       Shadowsocks
@@ -44,6 +45,7 @@ func ShadowsocksAdd(c *gin.Context) {
 	c.JSON(200, Success(nil))
 }
 
+// ShadowsocksGet get a shadowsocks config
 func ShadowsocksGet(c *gin.Context) {
 	port, err := strconv.Atoi(c.Param("port"))
 	if err != nil {
@@ -60,10 +62,12 @@ func ShadowsocksGet(c *gin.Context) {
 	}
 }
 
+// ShadowsocksList return all shadowsocks service incloud started or stoped
 func ShadowsocksList(c *gin.Context) {
 	c.JSON(200, service.CurrentShadowsocksService().List())
 }
 
+// ShadowsocksStart start a shadowsocks service
 func ShadowsocksStart(c *gin.Context) {
 	port, err := strconv.Atoi(c.Param("port"))
 	if err != nil {
@@ -78,6 +82,7 @@ func ShadowsocksStart(c *gin.Context) {
 	c.JSON(200, Success(fmt.Sprintf("start %v success", port)))
 }
 
+// ShadowsocksStop stop a shadowsocks service
 func ShadowsocksStop(c *gin.Context) {
 	port, err := strconv.Atoi(c.Param("port"))
 	if err != nil {
@@ -92,6 +97,7 @@ func ShadowsocksStop(c *gin.Context) {
 	c.JSON(200, Success(fmt.Sprintf("stop %v success", port)))
 }
 
+// ShadowsocksDel del a shadowsocks service
 func ShadowsocksDel(c *gin.Context) {
 	port, err := strconv.Atoi(c.Param("port"))
 	if err != nil {

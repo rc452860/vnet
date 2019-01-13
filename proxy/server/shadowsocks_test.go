@@ -1,23 +1,28 @@
 package server
 
 import (
+	"bufio"
+	"fmt"
 	"io"
 	"net"
+	"net/http"
 	"testing"
 	"time"
 
+	"github.com/rc452860/vnet/pool"
+
 	"github.com/rc452860/vnet/ciphers"
 	"github.com/rc452860/vnet/conn"
-	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/socks"
 )
 
 func Test_NewServer(t *testing.T) {
-	go NewShadowsocks("0.0.0.0", "aes-128-gcm", "killer", 8080, "4MB", 0)
+	ss, _ := NewShadowsocks("0.0.0.0", "aes-128-cfb", "killer", 8080, "4MB", 0)
+	go ss.Start()
 	time.Sleep(3 * time.Second)
 	con, _ := net.Dial("tcp", "0.0.0.0:8080")
 	c, _ := conn.DefaultDecorate(con, conn.TCP)
-	c, err := ciphers.CipherDecorate("killer", "aes-128-gcm", c)
+	c, err := ciphers.CipherDecorate("killer", "aes-128-cfb", c)
 	if err != nil {
 		logging.Error(err.Error())
 	}
@@ -31,20 +36,23 @@ func Test_NewServer(t *testing.T) {
 	c.Write([]byte("Accept-Language: zh-CN,zh;q=0.9\n"))
 
 	c.Write([]byte("\n\n"))
-	results := pool.GetBuf()
 
+	request, err := http.ReadRequest(bufio.NewReader(c))
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	reader, err := request.GetBody()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	buf := pool.GetBuf()
 	for {
-		n, err := c.Read(results)
-		if err != nil && err == io.EOF {
-			logging.Info("read end")
+		n, err := reader.Read(buf)
+		if err == io.EOF {
 			return
 		}
-		if err != nil {
-			logging.Error(err.Error())
-		}
-		logging.Info(string(results[0:n]))
-		if n <= 0 {
-			return
-		}
+		fmt.Print(string(buf[:n]))
 	}
 }

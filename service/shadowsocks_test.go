@@ -11,7 +11,7 @@ import (
 func TestMemProblem(t *testing.T) {
 	log.GetLogger("root").Level = log.WARN
 	for i := 10000; i < 20000; i++ {
-		CurrentShadowsocksService().Add("0.0.0.0", "aes-128-gcm", "killer", i, "", 0)
+		CurrentShadowsocksService().Add("0.0.0.0", "aes-128-cfb", "killer", i, "", 0)
 		CurrentShadowsocksService().Start(i)
 		CurrentShadowsocksService().Stop(i)
 		CurrentShadowsocksService().Del(i)

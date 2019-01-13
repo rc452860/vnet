@@ -338,7 +338,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 
 			tgtAddr := socks.SplitAddr(buf[:n])
 			if tgtAddr == nil {
-				logging.Error("failed to split target address from packet: %q", buf[:n])
+				logging.Error("failed to split target address from packet: %v", buf[:n])
 				continue
 			}
 

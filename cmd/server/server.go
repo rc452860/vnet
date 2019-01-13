@@ -28,7 +28,7 @@ func main() {
 	}
 
 	host := flag.String("host", "0.0.0.0", "shadowsocks server host")
-	method := flag.String("method", "aes-128-gcm", "shadowsocks method")
+	method := flag.String("method", "aes-128-cfb", "shadowsocks method")
 	password := flag.String("password", "killer", "shadowsocks password")
 	port := flag.Int("port", 1090, "shadowsocks port")
 	limit := flag.String("limit", "", "shadowsocks traffic limit exp:4MB")

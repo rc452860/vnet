@@ -3,14 +3,6 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b763ac7907021d7c87885dd299ae8b57015243f179493b274b3b9af808ecbdcc"
-  name = "github.com/DeanThompson/ginpprof"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "8c0e31bfeaa87bd40412ee8a8ba383f5f700ff72"
-
-[[projects]]
-  branch = "master"
   digest = "1:e05c7b72aeba7570b1d2f9c6dc9f0373d224b16b70fa886c504de867bffe1c2e"
   name = "github.com/aead/chacha20"
   packages = [
@@ -130,6 +122,14 @@
   version = "v0.8.1"
 
 [[projects]]
+  digest = "1:0dc41f232ad16c241c1ab36d51eaffef124e3550ef490dfd1ea3ebdf11ca1d21"
+  name = "github.com/shirou/gopsutil"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "ccc1c1016bc5d10e803189ee43417c50cdde7f1b"
+  version = "v2.18.12"
+
+[[projects]]
   branch = "master"
   digest = "1:f10bb2efe706eea8e386fa5021281e302a58e8fa0ba9f2e31ad9ca2cb234b282"
   name = "github.com/templexxx/cpufeat"
@@ -243,13 +243,13 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
-    "github.com/DeanThompson/ginpprof",
     "github.com/aead/chacha20",
     "github.com/gin-gonic/gin",
     "github.com/go-sql-driver/mysql",
     "github.com/jinzhu/gorm",
     "github.com/klauspost/reedsolomon",
     "github.com/pkg/errors",
+    "github.com/shirou/gopsutil",
     "github.com/templexxx/xor",
     "github.com/tjfoc/gmsm/sm4",
     "golang.org/x/crypto/blowfish",
