@@ -28,6 +28,10 @@ func registerAEADCiphers(method string, c IAEADCipher) {
 	aeadCiphers[method] = c
 }
 
+func GetAEADCiphers() map[string]IAEADCipher {
+	return aeadCiphers
+}
+
 func GetAEADConnCipher(method string) func(string, connect.IConn) (connect.IConn, error) {
 	c, ok := aeadCiphers[method]
 	if !ok {

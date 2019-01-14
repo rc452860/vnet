@@ -19,14 +19,11 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:e05c7b72aeba7570b1d2f9c6dc9f0373d224b16b70fa886c504de867bffe1c2e"
-  name = "github.com/aead/chacha20"
-  packages = [
-    ".",
-    "chacha",
-  ]
+  digest = "1:8fa55a6e302771a90a86ceae1ca3c0df4ef15d21092198e8313f61dde9eea963"
+  name = "github.com/Yawning/chacha20"
+  packages = ["."]
   pruneopts = "UT"
-  revision = "8b13a72661dae6e9e5dea04f344f0dc95ea29547"
+  revision = "e3b1f968fc6397b51d963fee8ec8711a47bc0ce8"
 
 [[projects]]
   branch = "master"
@@ -313,7 +310,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/AlecAivazis/survey",
-    "github.com/aead/chacha20",
+    "github.com/Yawning/chacha20",
     "github.com/gin-gonic/gin",
     "github.com/go-sql-driver/mysql",
     "github.com/jinzhu/gorm",

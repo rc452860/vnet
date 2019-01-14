@@ -13,6 +13,9 @@ type ConnDecorate func(password string, conn connect.IConn) (connect.IConn, erro
 
 //加密装饰
 func CipherDecorate(password, method string, conn connect.IConn) (connect.IConn, error) {
+	if method == "none" {
+		return conn, nil
+	}
 	d := ssstream.GetStreamConnCiphers(method)
 	if d != nil {
 		return d(password, conn)
@@ -25,6 +28,9 @@ func CipherDecorate(password, method string, conn connect.IConn) (connect.IConn,
 }
 
 func CipherPacketDecorate(password, method string, conn net.PacketConn) (net.PacketConn, error) {
+	if method == "none" {
+		return conn, nil
+	}
 	d := ssstream.GetStreamPacketCiphers(method)
 	if d != nil {
 		return d(password, conn)
@@ -34,4 +40,17 @@ func CipherPacketDecorate(password, method string, conn net.PacketConn) (net.Pac
 		return d(password, conn)
 	}
 	return nil, fmt.Errorf("[SS Cipher] not support : %s", method)
+}
+
+func GetSupportCiphers() []string {
+	stream := ssstream.GetStreamCiphers()
+	list := make([]string, 0, 20)
+	for k, _ := range stream {
+		list = append(list, k)
+	}
+	aeas := ssaead.GetAEADCiphers()
+	for k, _ := range aeas {
+		list = append(list, k)
+	}
+	return list
 }

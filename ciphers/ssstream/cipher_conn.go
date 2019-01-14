@@ -21,6 +21,10 @@ func registerStreamCiphers(method string, c IStreamCipher) {
 	streamCiphers[method] = c
 }
 
+func GetStreamCiphers() map[string]IStreamCipher {
+	return streamCiphers
+}
+
 func GetStreamConnCiphers(method string) func(string, connect.IConn) (connect.IConn, error) {
 	c, ok := streamCiphers[method]
 	if !ok {

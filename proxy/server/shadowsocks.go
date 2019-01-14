@@ -72,6 +72,9 @@ func NewShadowsocks(host string, method string, password string, port int, limit
 }
 
 func (s *ShadowsocksProxy) ConfigLimit(limit uint64) {
+	if limit == 0 {
+		return
+	}
 	s.ReadLimit = rate.NewLimiter(rate.Limit(limit), int(limit))
 	s.WriteLimit = rate.NewLimiter(rate.Limit(limit), int(limit))
 }
@@ -84,6 +87,9 @@ func (s *ShadowsocksProxy) ConfigLimitHuman(limit string) error {
 		if err != nil {
 			log.Err(err)
 			return err
+		}
+		if trafficLimit < 5*1024 {
+			return nil
 		}
 		logging.Info("server port: %v limit is: %v", s.Port, trafficLimit)
 		s.ReadLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))

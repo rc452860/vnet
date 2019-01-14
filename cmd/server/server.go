@@ -4,10 +4,9 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"runtime"
 	"syscall"
 	"time"
-
-	"github.com/rc452860/vnet/proxy"
 
 	"github.com/rc452860/vnet/service"
 
@@ -21,6 +20,8 @@ import (
 
 func main() {
 	conf, err := config.LoadDefault()
+	log.Info("cpu core: %d", runtime.NumCPU())
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	if err != nil {
 		log.Err(err)
 		return
@@ -69,9 +70,6 @@ func DbStarted() {
 		}, &conf.DbConfig.Database, nil)
 	}
 
-	proxy.RegisterTrafficHandle(func(data proxy.TrafficMessage) {
-
-	})
 	tick := time.Tick(time.Second)
 	for {
 		config.SaveConfig()
