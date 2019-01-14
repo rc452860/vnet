@@ -1,1 +1,4 @@
 bin/
+server
+server.exe
+config.json

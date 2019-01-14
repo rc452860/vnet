@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 	"os/signal"
@@ -8,9 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rc452860/vnet/service"
-
-	"github.com/AlecAivazis/survey"
 	"github.com/rc452860/vnet/config"
 	"github.com/rc452860/vnet/db"
 	"github.com/rc452860/vnet/log"
@@ -27,8 +25,10 @@ func main() {
 		return
 	}
 
+	ctx, cancle := context.WithCancel(context.Background())
 	if conf.Mode == "db" {
-		DbStarted()
+
+		db.DbStarted(ctx)
 	} else {
 		BareStarted()
 	}
@@ -36,100 +36,7 @@ func main() {
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
-}
-
-func DbStarted() {
-	conf := config.CurrentConfig()
-	if conf.DbConfig.Host == "" {
-		survey.AskOne(&survey.Input{
-			Message: "what is your host address?",
-		}, &conf.DbConfig.Host, nil)
-	}
-
-	if conf.DbConfig.Port == "" {
-		survey.AskOne(&survey.Input{
-			Message: "what is your database port?",
-		}, &conf.DbConfig.Port, nil)
-	}
-
-	if conf.DbConfig.User == "" {
-		survey.AskOne(&survey.Input{
-			Message: "what is your username?",
-		}, &conf.DbConfig.User, nil)
-	}
-
-	if conf.DbConfig.Passwd == "" {
-		survey.AskOne(&survey.Password{
-			Message: "what is your password?",
-		}, &conf.DbConfig.Passwd, nil)
-	}
-
-	if conf.DbConfig.Database == "" {
-		survey.AskOne(&survey.Input{
-			Message: "what is your database name?",
-		}, &conf.DbConfig.Database, nil)
-	}
-
-	tick := time.Tick(time.Second)
-	for {
-		config.SaveConfig()
-		users, err := db.GetEnableUser()
-		if err != nil {
-			log.Err(err)
-			return
-		}
-
-		sslist := service.CurrentShadowsocksService().List()
-		for _, user := range users {
-			flag := false
-			for _, ss := range sslist {
-				if ss.Port == user.Port {
-					flag = true
-				}
-			}
-			if !flag {
-				log.Info("start port [%d]", user.Port)
-				StartShadowsocks(user)
-			}
-		}
-
-		for _, ss := range sslist {
-			flag := false
-			for _, user := range users {
-				if ss.Port == user.Port {
-					flag = true
-				}
-			}
-			if !flag {
-				log.Info("stop port [%d]", ss.Port)
-				service.CurrentShadowsocksService().Del(ss.Port)
-			}
-		}
-		//TODO update user upload and download
-		<-tick
-
-	}
-}
-
-func StartShadowsocks(user db.User) {
-	limit, err := datasize.HumanSize(user.Limit)
-	if err != nil {
-		log.Error("limit: %d, error info:%s", user.Limit, err.Error())
-		return
-	}
-	err = service.CurrentShadowsocksService().Add("0.0.0.0",
-		user.Method,
-		user.Password,
-		user.Port,
-		limit,
-		3*time.Second)
-	if err != nil {
-		log.Info("[%d] add failure, case %s", user.Port, err.Error())
-	}
-	err = service.CurrentShadowsocksService().Start(user.Port)
-	if err != nil {
-		log.Info("[%d] started failure, case: %s", user.Port, err.Error())
-	}
+	cancle()
 }
 
 func BareStarted() {

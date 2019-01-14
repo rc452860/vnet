@@ -223,7 +223,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 读取目标地址 */
 				targetAddr, err := socks.ReadAddr(lcd)
 				if err != nil {
-					logging.Err(err)
+					log.Error("read target address error %s", err.Error())
 					return
 				}
 
@@ -353,7 +353,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 			}
 			tgtAddr := socks.SplitAddr(buf[:n])
 			if tgtAddr == nil {
-				logging.Error("failed to split target address from packet: %v", buf[:n])
+				logging.Error("failed to split target address from packet: %q", buf[:n])
 				continue
 			}
 			logging.Info("udp %s <----> %s", raddr, tgtAddr)

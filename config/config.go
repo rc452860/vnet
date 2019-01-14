@@ -16,22 +16,23 @@ var (
 	configFile string
 )
 
-const (
-	MODE_DATABASE = "database"
-)
-
+// Config is global config
 type Config struct {
 	Mode               string             `json:"mode"`
 	DbConfig           DbConfig           `json:"dbconfig"`
 	ShadowsocksOptions ShadowsocksOptions `json:"shadowsocks_options"`
 }
 
+// DbConfig is global database config
 type DbConfig struct {
-	Host     string `json:"host"`
-	User     string `json:"user"`
-	Passwd   string `json:"passwd"`
-	Port     string `json:"port"`
-	Database string `json:"database"`
+	Host     string        `json:"host"`
+	User     string        `json:"user"`
+	Passwd   string        `json:"passwd"`
+	Port     string        `json:"port"`
+	Database string        `json:"database"`
+	Rate     float32       `json:"rate"`
+	NodeId   int           `json:"node_id`
+	SyncTime time.Duration `json:'sync_time'`
 }
 
 type ShadowsocksOptions struct {
@@ -67,6 +68,9 @@ func LoadConfig(file string) (*Config, error) {
 		configFile = file
 		config = &Config{
 			Mode: "db",
+			DbConfig: DbConfig{
+				SyncTime: 3 * time.Second,
+			},
 		}
 		data, _ := json.MarshalIndent(config, "", "    ")
 		ioutil.WriteFile(configFile, data, 0644)

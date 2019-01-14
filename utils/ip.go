@@ -70,3 +70,16 @@ func WatchIP(addr string) (*IP, error) {
 	}
 	return nil, nil
 }
+
+func GetPublicIP() string {
+	ip, err := http.Get("http://ipinfo.io/ip")
+	if err != nil {
+		return ""
+	}
+	defer ip.Body.Close()
+	context, err := ioutil.ReadAll(ip.Body)
+	if err != nil {
+		return ""
+	}
+	return string(context)
+}

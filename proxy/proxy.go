@@ -50,10 +50,11 @@ func NewProxyService() *ProxyService {
 	}
 }
 
-var trafficHandle func(TrafficMessage)
+var trafficMonitorQueue []chan TrafficMessage
 
-func RegisterTrafficHandle(trafficHandle func(TrafficMessage)) {
-	trafficHandle = trafficHandle
+// RegisterTrafficHandle TrafficMessage channel
+func RegisterTrafficHandle(trafficMonitor chan TrafficMessage) {
+	trafficMonitorQueue = append(trafficMonitorQueue, trafficMonitor)
 }
 
 func (this *ProxyService) TrafficMeasure() {
@@ -88,8 +89,10 @@ func (this *ProxyService) TrafficMeasure() {
 			}
 			this.UpBytes += data.UpBytes
 			this.DownBytes += data.DownBytes
-			if trafficHandle != nil {
-				trafficHandle(data)
+			if trafficMonitorQueue != nil && len(trafficMonitorQueue) > 0 {
+				for _, item := range trafficMonitorQueue {
+					item <- data
+				}
 			}
 		}
 	}()
