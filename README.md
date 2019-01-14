@@ -17,6 +17,18 @@ Vnet是一个代理工具,在某些网络条件受到限制的情况先提供突
 ## 已知问题
 - [ ] log formatter setdepth 多线程问题待改进
 
+
+
+## 运行
+linux去release页面下载对应的指令集二进制文件给运行权限直接运行,根据提示输入对应的配置好
+
+window直接运行exe
+
+linx:
+```
+chmod +x server && ./server
+```
+
 ## 编译方式
 ```
 go get -u -d github/rc452860/vnet
@@ -27,12 +39,3 @@ go get -u -d github/rc452860/vnet
 ```
 go build cmd/server/server.go
 ```
-
-## 运行
-linux:
-```
-chmod +x server && ./server
-```
-
-windows:
-运行server.exe
