@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/rc452860/vnet.svg?branch=master)](https://travis-ci.org/rc452860/vnet)
 [![Go Report Card](https://goreportcard.com/badge/github.com/rc452860/vnet)](https://goreportcard.com/report/github.com/rc452860/vnet)
 
+![you have me](./assert/donate.png)
 
 ## 功能介绍
 Vnet是一个代理工具,在某些网络条件受到限制的情况先提供突破服务.
