@@ -62,7 +62,7 @@ func LoadConfig(file string) (*Config, error) {
 		if err != nil {
 			log.Err(err)
 		} else {
-			log.Warn(fmt.Sprintf("%s is not exist"), absFile)
+			log.Warn("%s is not exist", absFile)
 		}
 		configFile = file
 		config = &Config{

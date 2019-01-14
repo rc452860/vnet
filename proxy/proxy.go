@@ -50,6 +50,12 @@ func NewProxyService() *ProxyService {
 	}
 }
 
+var trafficHandle func(TrafficMessage)
+
+func RegisterTrafficHandle(trafficHandle func(TrafficMessage)) {
+	trafficHandle = trafficHandle
+}
+
 func (this *ProxyService) TrafficMeasure() {
 	speedClose := make(chan struct{})
 	countClose := make(chan struct{})
@@ -82,6 +88,9 @@ func (this *ProxyService) TrafficMeasure() {
 			}
 			this.UpBytes += data.UpBytes
 			this.DownBytes += data.DownBytes
+			if trafficHandle != nil {
+				trafficHandle(data)
+			}
 		}
 	}()
 	<-this.TrafficClose

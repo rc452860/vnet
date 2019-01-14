@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/rc452860/vnet/service"
 
@@ -36,7 +37,7 @@ func ShadowsocksAdd(c *gin.Context) {
 		ss.Password,
 		ss.Port,
 		ss.Limit,
-		ss.Timeout,
+		time.Duration(ss.Timeout),
 	)
 	if err != nil {
 		c.JSON(500, Error(err))

@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rc452860/vnet/proxy"
+
 	"github.com/rc452860/vnet/service"
 
 	"github.com/AlecAivazis/survey"
@@ -17,17 +19,10 @@ import (
 	"github.com/rc452860/vnet/utils/datasize"
 )
 
-var logging *log.Logging
-
-func init() {
-	logging = log.GetLogger("root")
-	logging.Level = log.INFO
-}
-
 func main() {
 	conf, err := config.LoadDefault()
 	if err != nil {
-		logging.Err(err)
+		log.Err(err)
 		return
 	}
 
@@ -74,6 +69,9 @@ func DbStarted() {
 		}, &conf.DbConfig.Database, nil)
 	}
 
+	proxy.RegisterTrafficHandle(func(data proxy.TrafficMessage) {
+
+	})
 	tick := time.Tick(time.Second)
 	for {
 		config.SaveConfig()
@@ -145,11 +143,11 @@ func BareStarted() {
 	flag.Parse()
 	shadowsocks, err := server.NewShadowsocks(*host, *method, *password, *port, *limit, 0)
 	if err != nil {
-		logging.Err(err)
+		log.Err(err)
 		return
 	}
 	if err := shadowsocks.Start(); err != nil {
-		logging.Err(err)
+		log.Err(err)
 		return
 	}
 
@@ -161,7 +159,7 @@ func BareStarted() {
 			downSpeed, _ := datasize.HumanSize(shadowsocks.DownSpeed)
 			upBytes, _ := datasize.HumanSize(shadowsocks.UpBytes)
 			downBytes, _ := datasize.HumanSize(shadowsocks.DownBytes)
-			logging.Info("[upspeed: %s] [downspeed: %s] [up: %s] [down: %s]", upSpeed, downSpeed, upBytes, downBytes)
+			log.Info("[upspeed: %s] [downspeed: %s] [up: %s] [down: %s]", upSpeed, downSpeed, upBytes, downBytes)
 		}
 	}()
 
