@@ -1,6 +1,6 @@
-NAME=shadowsocks2
+NAME=vnet
 BINDIR=bin
-GOBUILD=CGO_ENABLED=0 go build -ldflags '-w -s'
+GOBUILD=CGO_ENABLED=0 go build -ldflags '-w -s' cmd\server\server.go
 # The -w and -s flags reduce binary sizes by excluding unnecessary symbols and debug info
 
 all: linux macos win64
