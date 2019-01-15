@@ -10,7 +10,8 @@ deploy:
   skip_cleanup: true
   file_glob: true
   file: bin/*
-  draft: true
+  # draft: true
+  overwrite: true
   on:
     repo: rc452860/vnet
     branch: master
