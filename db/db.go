@@ -233,8 +233,8 @@ func UpdateTrafficByUser(users map[int]User) {
 		if v.Up+v.Down < 512*1024 {
 			continue
 		}
-		whenUp.WriteString(fmt.Sprintf(" WHEN %v THEN u+%v", v.Port, v.Up))
-		whenDown.WriteString(fmt.Sprintf(" WHEN %v THEN d+%v", v.Port, v.Down))
+		whenUp.WriteString(fmt.Sprintf(" WHEN %v THEN u+%v", v.Port, float32(v.Up)*conf.Rate))
+		whenDown.WriteString(fmt.Sprintf(" WHEN %v THEN d+%v", v.Port, float32(v.Down)*conf.Rate))
 		whenPort.WriteString(fmt.Sprintf("%v,", v.Port))
 		traffic, err := datasize.HumanSize(v.Up + v.Down)
 		if err != nil {
