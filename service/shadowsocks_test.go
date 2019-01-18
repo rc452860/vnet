@@ -9,7 +9,7 @@ import (
 )
 
 func TestMemProblem(t *testing.T) {
-	log.GetLogger("root").Level = log.WARN
+	log.GetLogger("root").Level = log.INFO
 	for i := 10000; i < 20000; i++ {
 		CurrentShadowsocksService().Add("0.0.0.0", "aes-128-cfb", "killer", i, "", 0)
 		CurrentShadowsocksService().Start(i)

@@ -27,6 +27,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:e2a1ff1174d564ed4b75a62757f4a9081ed3b8c99ed17e47eb252b048b4ff018"
+  name = "github.com/asaskevich/EventBus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d46933a94f05c6657d7b923fcf5ac563ee37ec79"
+
+[[projects]]
+  branch = "master"
   digest = "1:36fe9527deed01d2a317617e59304eb2c4ce9f8a24115bcc5c2e37b3aee5bae4"
   name = "github.com/gin-contrib/sse"
   packages = ["."]
@@ -311,6 +319,7 @@
   input-imports = [
     "github.com/AlecAivazis/survey",
     "github.com/Yawning/chacha20",
+    "github.com/asaskevich/EventBus",
     "github.com/gin-gonic/gin",
     "github.com/go-sql-driver/mysql",
     "github.com/jinzhu/gorm",

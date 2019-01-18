@@ -24,11 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/aead/chacha20"
-
 [[constraint]]
   branch = "master"
   name = "golang.org/x/crypto"
@@ -48,3 +43,7 @@
 [[constraint]]
   name = "github.com/AlecAivazis/survey"
   version = "1.8.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/asaskevich/EventBus"

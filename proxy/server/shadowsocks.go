@@ -170,13 +170,11 @@ func (s *ShadowsocksProxy) startTCP() error {
 	go func() {
 		defer server.Close()
 		for {
-			// select {
-			// case <-s.ProxyService.TcpClose:
-			// 	s.Tcp.Close()
-			// 	s.Tcp = nil
-			// 	return
-			// default:
-			// }
+			select {
+			case <-s.ProxyService.Done():
+				return
+			default:
+			}
 			server.SetDeadline(time.Now().Add(s.TCPTimeout))
 			lcon, err := server.Accept()
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
@@ -208,11 +206,6 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 限流装饰器 */
 				lcd, _ = conn.TrafficLimitDecorate(lcd, s.ReadLimit, s.WriteLimit)
 
-				// lcd, err = conn.TimerDecorate(lcd, s.TcpTimeout, s.TcpTimeout)
-				// if err != nil {
-				// 	logging.Err(err)
-				// 	return
-				// }
 				/** 加密装饰器 */
 				lcd, err = ciphers.CipherDecorate(s.Password, s.Method, lcd)
 				if err != nil {
@@ -339,6 +332,11 @@ func (s *ShadowsocksProxy) startUDP() error {
 	go func() {
 		defer server.Close()
 		for {
+			select {
+			case <-s.ProxyService.Done():
+				return
+			default:
+			}
 			server.SetDeadline(time.Now().Add(s.UDPTimeout))
 			n, raddr, err := server.ReadFrom(buf)
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {

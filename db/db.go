@@ -196,9 +196,11 @@ func DbStarted(ctx context.Context) {
 }
 
 type DBTraffic struct {
-	Port int
-	Up   uint64
-	Down uint64
+	Port         int
+	Up           uint64
+	Down         uint64
+	ConnectCount int
+	Connects     map[string]bool
 }
 
 var trafficTable = make(map[int]*DBTraffic)

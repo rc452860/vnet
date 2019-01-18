@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/rc452860/vnet/log"
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/utils"
 	"golang.org/x/time/rate"
@@ -26,7 +27,7 @@ func DialTcp(addr string) (IConn, error) {
 	}
 	err = con.(*net.TCPConn).SetKeepAlivePeriod(30 * time.Second)
 	if err != nil {
-		logging.Error("set tcp keepalive error: %v", err)
+		log.Error("set tcp keepalive error: %v", err)
 	}
 	return icon, nil
 }
