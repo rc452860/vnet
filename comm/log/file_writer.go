@@ -2,8 +2,6 @@ package log
 
 import (
 	"os"
-
-	"github.com/rc452860/vnet/utils"
 )
 
 type LogFileWriter struct {
@@ -12,7 +10,7 @@ type LogFileWriter struct {
 }
 
 func LogFileWriterFactory(name string) *LogFileWriter {
-	file, _ := utils.OpenFile(name)
+	file, _ := OpenFile(name)
 	log := &LogFileWriter{
 		FileName: name,
 		File:     file,
@@ -22,4 +20,9 @@ func LogFileWriterFactory(name string) *LogFileWriter {
 
 func (this *LogFileWriter) Write(message string) {
 	this.File.WriteString(message)
+}
+
+// remember after used need close file
+func OpenFile(file string) (*os.File, error) {
+	return os.OpenFile(file, os.O_APPEND|os.O_CREATE, 0644)
 }

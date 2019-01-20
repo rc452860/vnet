@@ -11,7 +11,7 @@ import (
 
 	"github.com/rc452860/vnet/config"
 	"github.com/rc452860/vnet/db"
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/proxy/server"
 	"github.com/rc452860/vnet/utils/datasize"
 )

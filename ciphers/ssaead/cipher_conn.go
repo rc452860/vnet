@@ -11,7 +11,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/pool"
 	"golang.org/x/crypto/hkdf"
 )

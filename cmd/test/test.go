@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 )
 
 type Test struct {
@@ -9,6 +10,6 @@ type Test struct {
 }
 
 func main() {
-	a := Test{}
-	fmt.Print(a.(type))
+	listen, _ := net.Listen("tcp", "0.0.0.0:8080")
+	fmt.Print(listen.Addr().String())
 }

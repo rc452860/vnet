@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/utils"
 	"golang.org/x/time/rate"
@@ -192,7 +192,7 @@ func (r *RealTimeFlush) Write(b []byte) (n int, err error) {
 }
 
 //导出装饰器
-type TrafficHandle func(IConn, int)
+type TrafficHandle func(IConn, uint64)
 
 func TrafficDecorate(c IConn, upload, download TrafficHandle) (IConn, error) {
 	return &Traffic{
@@ -211,7 +211,7 @@ type Traffic struct {
 func (t *Traffic) Read(b []byte) (n int, err error) {
 	n, err = t.IConn.Read(b)
 	if t.Download != nil {
-		t.Download(t.IConn, n)
+		t.Download(t.IConn, uint64(n))
 	}
 	return
 }
@@ -219,7 +219,7 @@ func (t *Traffic) Read(b []byte) (n int, err error) {
 func (t *Traffic) Write(b []byte) (n int, err error) {
 	n, err = t.IConn.Write(b)
 	if t.Upload != nil {
-		t.Upload(t.IConn, n)
+		t.Upload(t.IConn, uint64(n))
 	}
 	return
 }
@@ -269,7 +269,7 @@ func (c *TrafficLimit) Write(b []byte) (n int, err error) {
 
 // for blow code is about udp communicateion
 // is decorate packet con to provide traffic record and traffic limit etc ...
-type PacketTrafficHandle func(laddr string, raddr string, n int)
+type PacketTrafficHandle func(laddr net.Addr, raddr net.Addr, n uint64)
 
 type PacketTrafficConn struct {
 	net.PacketConn
@@ -291,7 +291,7 @@ func (this *PacketTrafficConn) ReadFrom(p []byte) (n int, addr net.Addr, err err
 		return n, addr, err
 	}
 	if this.download != nil {
-		this.download(this.PacketConn.LocalAddr().String(), addr.String(), n)
+		this.download(this.PacketConn.LocalAddr(), addr, uint64(n))
 	}
 	return n, addr, err
 }
@@ -299,7 +299,7 @@ func (this *PacketTrafficConn) ReadFrom(p []byte) (n int, addr net.Addr, err err
 func (this *PacketTrafficConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
 	n, err = this.PacketConn.WriteTo(p, addr)
 	if this.upload != nil {
-		this.upload(this.PacketConn.LocalAddr().String(), addr.String(), n)
+		this.upload(this.PacketConn.LocalAddr(), addr, uint64(n))
 	}
 	return n, err
 }

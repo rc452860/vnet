@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/mem"

@@ -16,7 +16,7 @@ func Test_config(t *testing.T) {
 	// config.ShadowsocksOptions = &ShadowsocksOptions{
 	// 	TcpTimeout: 12,
 	// }
-	config.ShadowsocksOptions.UdpTimeout = 3
+	config.ShadowsocksOptions.UDPTimeout = 3
 	// fmt.Print(config)
 	err = SaveConfig()
 	if err != nil {

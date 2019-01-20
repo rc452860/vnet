@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"time"
 
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/utils"
 )
 
@@ -25,19 +24,20 @@ type Config struct {
 
 // DbConfig is global database config
 type DbConfig struct {
-	Host     string        `json:"host"`
-	User     string        `json:"user"`
-	Passwd   string        `json:"passwd"`
-	Port     string        `json:"port"`
-	Database string        `json:"database"`
-	Rate     float32       `json:"rate"`
-	NodeId   int           `json:"node_id`
-	SyncTime time.Duration `json:'sync_time'`
+	Host           string  `json:"host"`
+	User           string  `json:"user"`
+	Passwd         string  `json:"passwd"`
+	Port           string  `json:"port"`
+	Database       string  `json:"database"`
+	Rate           float32 `json:"rate"`
+	NodeId         int     `json:"node_id`
+	SyncTime       int     `json:'sync_time'`
+	OnlineSyncTime int     `json:'online_sync_time'`
 }
 
 type ShadowsocksOptions struct {
-	TcpTimeout time.Duration `json:"tcp_timeout"`
-	UdpTimeout time.Duration `json:"udp_timeout"`
+	TCPTimeout int `json:"tcp_timeout"`
+	UDPTimeout int `json:"udp_timeout"`
 }
 
 func CurrentConfig() *Config {
@@ -67,10 +67,8 @@ func LoadConfig(file string) (*Config, error) {
 		}
 		configFile = file
 		config = &Config{
-			Mode: "db",
-			DbConfig: DbConfig{
-				SyncTime: 3 * time.Second,
-			},
+			Mode:     "db",
+			DbConfig: DbConfig{},
 		}
 		data, _ := json.MarshalIndent(config, "", "    ")
 		ioutil.WriteFile(configFile, data, 0644)

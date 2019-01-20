@@ -14,7 +14,8 @@ import (
 	"github.com/rc452860/vnet/socks"
 )
 
-func mockUdpServer(t *testing.T) {
+// mockUDPServer is mock udp server for shadowsocks udp test
+func mockUDPServer(t *testing.T) {
 	conn, err := net.ListenPacket("udp", "0.0.0.0:8081")
 	if err != nil {
 		t.Error(err)
@@ -39,7 +40,7 @@ func Test_NewServer(t *testing.T) {
 }
 
 func testShadowsocksProxy(t *testing.T, host, method, password string, port int) {
-	ss, _ := NewShadowsocks(host, method, password, port, "4MB", 0)
+	ss, _ := NewShadowsocks(host, method, password, port, "512k", 0)
 	go ss.Start()
 	time.Sleep(1 * time.Second)
 	transport := &http.Transport{
@@ -65,8 +66,8 @@ func testShadowsocksProxy(t *testing.T, host, method, password string, port int)
 		t.Fatal("http status error")
 	}
 
-	t.Logf("tcp success")
-	go mockUdpServer(t)
+	t.Logf("tcp success: %s", ss.String())
+	go mockUDPServer(t)
 	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%v", "127.0.0.1", port))
 	if err != nil {
 		t.Error(err)

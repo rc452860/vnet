@@ -2,3 +2,4 @@ bin/
 server
 server.exe
 config.json
+*.test.exe

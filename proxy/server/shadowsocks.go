@@ -1,6 +1,7 @@
 package server
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -8,13 +9,16 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/rc452860/vnet/utils/datasize"
 
 	"github.com/rc452860/vnet/ciphers"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/conn"
-	"github.com/rc452860/vnet/log"
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/proxy"
+	"github.com/rc452860/vnet/record"
 	"github.com/rc452860/vnet/socks"
 	"golang.org/x/time/rate"
 )
@@ -42,9 +46,9 @@ func init() {
 type ShadowsocksProxy struct {
 	*proxy.ProxyService `json:"-,omitempty"`
 	Host                string        `json:"host,omitempty"`
+	Port                int           `json:"port,omitempty"`
 	Method              string        `json:"method,omitempty"`
 	Password            string        `json:"password,omitempty"`
-	Port                int           `json:"port,omitempty"`
 	TCPTimeout          time.Duration `json:"tcp_timeout,omitempty"`
 	UDPTimeout          time.Duration `json:"udp_timeout,omitempty"`
 	ReadLimit           *rate.Limiter `json:"read_limit,omitempty"`
@@ -71,6 +75,7 @@ func NewShadowsocks(host string, method string, password string, port int, limit
 	return ss, err
 }
 
+// ConfigLimit config shadowsocks traffic limit
 func (s *ShadowsocksProxy) ConfigLimit(limit uint64) {
 	if limit == 0 {
 		return
@@ -91,7 +96,7 @@ func (s *ShadowsocksProxy) ConfigLimitHuman(limit string) error {
 		if trafficLimit < 5*1024 {
 			return nil
 		}
-		logging.Info("server port: %v limit is: %v", s.Port, trafficLimit)
+		// logging.Info("server port: %v limit is: %v", s.Port, trafficLimit)
 		s.ReadLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))
 		s.WriteLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))
 	}
@@ -99,6 +104,7 @@ func (s *ShadowsocksProxy) ConfigLimitHuman(limit string) error {
 
 }
 
+// ConfigTimeout is config shadowsocks timeout
 func (s *ShadowsocksProxy) ConfigTimeout(timeout time.Duration) error {
 	if timeout == 0 {
 		s.TCPTimeout = 3e9
@@ -107,7 +113,7 @@ func (s *ShadowsocksProxy) ConfigTimeout(timeout time.Duration) error {
 		s.TCPTimeout = timeout
 		s.UDPTimeout = timeout
 	}
-	log.Info("%s:%v timeout:%v", s.Host, s.Port, s.TCPTimeout)
+	// log.Info("%s:%v timeout:%v", s.Host, s.Port, s.TCPTimeout)
 	return nil
 }
 
@@ -122,7 +128,6 @@ func (s *ShadowsocksProxy) Start() error {
 		log.Err(err)
 		return err
 	}
-	go s.ProxyService.TrafficMeasure()
 	return nil
 }
 
@@ -131,24 +136,32 @@ func (s *ShadowsocksProxy) Stop() error {
 	return s.ProxyService.Stop()
 }
 
-// statistics upload traffic
-func (s *ShadowsocksProxy) upload(con conn.IConn, up int) {
-	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
-		Network: "tcp",
-		LAddr:   con.LocalAddr().String(),
-		RAddr:   con.RemoteAddr().String(),
-		UpBytes: uint64(up),
+// statistics tcpUpload traffic
+func (s *ShadowsocksProxy) tcpUpload(con conn.IConn, up uint64) {
+	message := record.Traffic{
+		ConnectionPair: record.ConnectionPair{
+			ProxyAddr:  con.LocalAddr(),
+			ClientAddr: con.RemoteAddr(),
+		},
+		Network: con.GetNetwork(),
+		Up:      up,
 	}
+
+	s.ProxyService.MessageRoute <- message
 }
 
-// statics download traffic
-func (s *ShadowsocksProxy) download(con conn.IConn, down int) {
-	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
-		Network:   "tcp",
-		LAddr:     con.LocalAddr().String(),
-		RAddr:     con.RemoteAddr().String(),
-		DownBytes: uint64(down),
+// statics tcpDownload traffic
+func (s *ShadowsocksProxy) tcpDownload(con conn.IConn, down uint64) {
+	message := record.Traffic{
+		ConnectionPair: record.ConnectionPair{
+			ProxyAddr:  con.LocalAddr(),
+			ClientAddr: con.RemoteAddr(),
+		},
+		Network: con.GetNetwork(),
+		Down:    down,
 	}
+
+	s.ProxyService.MessageRoute <- message
 }
 
 // start shadowsocks tcp proxy service
@@ -160,12 +173,12 @@ func (s *ShadowsocksProxy) startTCP() error {
 		return err
 	}
 	server, err := net.ListenTCP("tcp", tcpAddr)
-	logging.Info("listening TCP on %s", addr)
+	// logging.Info("listening TCP on %s", addr)
 	if err != nil {
 		logging.Error(err.Error())
-		return err
+		return errors.Cause(err)
 	}
-	s.Tcp = server
+	s.TCP = server
 
 	go func() {
 		defer server.Close()
@@ -198,7 +211,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 					return
 				}
 				/** 流量记录装饰器 */
-				lcd, err = conn.TrafficDecorate(lcd, s.upload, s.download)
+				lcd, err = conn.TrafficDecorate(lcd, s.tcpUpload, s.tcpDownload)
 				if err != nil {
 					logging.Err(err)
 					return
@@ -216,7 +229,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 读取目标地址 */
 				targetAddr, err := socks.ReadAddr(lcd)
 				if err != nil {
-					log.Error("read target address error %s", err.Error())
+					log.Error("read target address error %s. (maybe the crypto method 2rong configuration)", err.Error())
 					return
 				}
 
@@ -227,9 +240,10 @@ func (s *ShadowsocksProxy) startTCP() error {
 					return
 				}
 				defer rc.Close()
+				s.ConnectionStage(s.TCP.Addr(), lcd.RemoteAddr(), rc.RemoteAddr())
 
 				rc.(*net.TCPConn).SetKeepAlive(true)
-				logging.Info("tcp %s <----> %s", lcd.RemoteAddr(), targetAddr)
+				// logging.Info("tcp %s <----> %s", lcd.RemoteAddr(), targetAddr)
 
 				/** 默认装饰器 */
 				rcd, err := conn.DefaultDecorate(rc, conn.TCP)
@@ -237,15 +251,6 @@ func (s *ShadowsocksProxy) startTCP() error {
 					logging.Err(err)
 					return
 				}
-
-				// rcd, _ = conn.TrafficLimitDecorate(rcd, s.ReadLimit, s.WriteLimit)
-
-				/** 流量统计装饰器 */
-				// rcd, err = conn.TrafficDecorate(rcd)
-				// if err != nil {
-				// 	logging.Err(err)
-				// 	return
-				// }
 
 				_, _, err = relayTCP(lcd, rcd)
 				if err != nil {
@@ -284,27 +289,34 @@ func relayTCP(left, right net.Conn) (int64, int64, error) {
 	if err == nil {
 		err = rs.Err
 	}
-	return n, rs.N, err
+	return n, rs.N, errors.Cause(err)
 }
 
 // udp upload traffic count
-func (s *ShadowsocksProxy) udpUpload(laddr, raddr string, n int) {
-	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
-		Network: "tcp",
-		LAddr:   laddr,
-		RAddr:   raddr,
-		UpBytes: uint64(n),
+func (s *ShadowsocksProxy) udpUpload(laddr, raddr net.Addr, n uint64) {
+	message := record.Traffic{
+		ConnectionPair: record.ConnectionPair{
+			ProxyAddr:  laddr,
+			ClientAddr: raddr,
+		},
+		Network: laddr.Network(),
+		Up:      n,
 	}
+
+	s.ProxyService.MessageRoute <- message
 }
 
 // udp download traffic count
-func (s *ShadowsocksProxy) udpDownload(laddr, raddr string, n int) {
-	s.ProxyService.TrafficMQ <- proxy.TrafficMessage{
-		Network:   "tcp",
-		LAddr:     laddr,
-		RAddr:     raddr,
-		DownBytes: uint64(n),
+func (s *ShadowsocksProxy) udpDownload(laddr, raddr net.Addr, n uint64) {
+	message := record.Traffic{
+		ConnectionPair: record.ConnectionPair{
+			ProxyAddr:  laddr,
+			ClientAddr: raddr,
+		},
+		Network: laddr.Network(),
+		Down:    n,
 	}
+	s.ProxyService.MessageRoute <- message
 }
 
 // Listen on addr for encrypted packets and basically do UDP NAT.
@@ -313,21 +325,21 @@ func (s *ShadowsocksProxy) startUDP() error {
 	server, err := net.ListenPacket("udp", addr)
 	if err != nil {
 		logging.Error("UDP remote listen error: %v", err)
-		return err
+		return errors.Cause(err)
 	}
-	s.Udp = server
+	s.UDP = server
 	server, err = ciphers.CipherPacketDecorate(s.Password, s.Method, server)
 	server = conn.PacketTrafficConnDecorate(server, s.udpUpload, s.udpDownload)
 	if err != nil {
 		logging.Error("UDP CipherPacketDecorate init error: %v", err)
-		return err
+		return errors.Cause(err)
 	}
 
 	nm := newNATmap(s.UDPTimeout)
 	buf := pool.GetUdpBuf()
 	defer pool.PutUdpBuf(buf)
 
-	logging.Info("listening UDP on %s", addr)
+	// logging.Info("listening UDP on %s", addr)
 
 	go func() {
 		defer server.Close()
@@ -354,14 +366,14 @@ func (s *ShadowsocksProxy) startUDP() error {
 				logging.Error("failed to split target address from packet: %q", buf[:n])
 				continue
 			}
-			logging.Info("udp %s <----> %s", raddr, tgtAddr)
-
+			// logging.Info("udp %s <----> %s", raddr, tgtAddr)
 			tgtUDPAddr, err := net.ResolveUDPAddr("udp", tgtAddr.String())
 			if err != nil {
 				logging.Error("failed to resolve target UDP address: %v", err)
 				continue
 			}
 
+			s.ConnectionStage(s.UDP.LocalAddr(), raddr, tgtUDPAddr)
 			payload := buf[len(tgtAddr):n]
 
 			pc := nm.Get(raddr.String())
@@ -383,6 +395,26 @@ func (s *ShadowsocksProxy) startUDP() error {
 		}
 	}()
 	return nil
+}
+
+// ConnectionStage event
+func (s *ShadowsocksProxy) ConnectionStage(proxy, client, target net.Addr) {
+	s.MessageRoute <- record.ConnectionProxyRequest{
+		ConnectionPair: record.ConnectionPair{
+			ClientAddr: client,
+			ProxyAddr:  proxy,
+			TargetAddr: target,
+		},
+	}
+}
+
+func (s *ShadowsocksProxy) String() string {
+	result, err := json.Marshal(s)
+	if err != nil {
+		log.Err(err)
+		return ""
+	}
+	return string(result)
 }
 
 // Packet NAT table
@@ -444,7 +476,7 @@ func timedCopy(dst net.PacketConn, target net.Addr, src net.PacketConn, timeout 
 		src.SetReadDeadline(time.Now().Add(timeout))
 		n, raddr, err := src.ReadFrom(buf)
 		if err != nil {
-			return err
+			return errors.Cause(err)
 		}
 
 		switch role {
@@ -461,7 +493,7 @@ func timedCopy(dst net.PacketConn, target net.Addr, src net.PacketConn, timeout 
 		}
 
 		if err != nil {
-			return err
+			return errors.Cause(err)
 		}
 	}
 }

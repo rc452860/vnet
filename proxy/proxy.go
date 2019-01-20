@@ -3,10 +3,16 @@ package proxy
 import (
 	"context"
 	"net"
-	"sync"
 	"time"
 
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/utils/addr"
+
+	"github.com/rc452860/vnet/comm/cache"
+	"github.com/rc452860/vnet/comm/eventbus"
+
+	"github.com/rc452860/vnet/record"
+
+	"github.com/rc452860/vnet/comm/log"
 )
 
 type IProxyService interface {
@@ -14,87 +20,114 @@ type IProxyService interface {
 	Stop() error
 }
 
-type TrafficMessage struct {
-	Network   string
-	LAddr     string
-	RAddr     string
-	UpBytes   uint64
-	DownBytes uint64
-}
 type ProxyService struct {
-	context.Context `json:"-"`
-	Tcp             net.Listener        `json:"tcp"`
-	Udp             net.PacketConn      `json:"udp"`
-	UpSpeed         uint64              `json:"upspeed"`
-	DownSpeed       uint64              `json:"downspeed"`
-	UpBytes         uint64              `json:"upbytes"`
-	DownBytes       uint64              `json:"downbytes"`
-	TrafficMQ       chan TrafficMessage `json:"_"`
-	TcpLock         *sync.Mutex         `json:"_"`
-	UdpLock         *sync.Mutex         `json:"_"`
-	Status          string              `json:"status"`
-	Cancel          context.CancelFunc  `json:"-`
+	context.Context          `json:"-"`
+	TCP                      net.Listener       `json:"tcp"`
+	UDP                      net.PacketConn     `json:"udp"`
+	LastOneMinuteConnections *cache.Cache       `json:"-"`
+	UpSpeed                  uint64             `json:"upspeed"`
+	DownSpeed                uint64             `json:"downspeed"`
+	UpBytes                  uint64             `json:"upbytes"`
+	DownBytes                uint64             `json:"downbytes"`
+	MessageRoute             chan interface{}   `json:"-"`
+	Status                   string             `json:"status"`
+	Cancel                   context.CancelFunc `json:"-"`
+	Tick                     time.Duration      `json:"-"`
 }
 
 func NewProxyService() *ProxyService {
+	return NewProxyServiceWithTick(time.Second)
+}
+
+func NewProxyServiceWithTick(duration time.Duration) *ProxyService {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &ProxyService{
-		TcpLock:   &sync.Mutex{},
-		UdpLock:   &sync.Mutex{},
-		TrafficMQ: make(chan TrafficMessage, 128),
-		Status:    "stop",
-		Context:   ctx,
-		Cancel:    cancel,
+		MessageRoute:             make(chan interface{}, 32),
+		Status:                   "stop",
+		Context:                  ctx,
+		Cancel:                   cancel,
+		Tick:                     duration,
+		LastOneMinuteConnections: cache.New(duration),
 	}
 }
 
-var trafficMonitorQueue []chan TrafficMessage
+var trafficMonitorQueue []chan record.Traffic
 
 // RegisterTrafficHandle TrafficMessage channel
-func RegisterTrafficHandle(trafficMonitor chan TrafficMessage) {
+func RegisterTrafficHandle(trafficMonitor chan record.Traffic) {
 	trafficMonitorQueue = append(trafficMonitorQueue, trafficMonitor)
 }
 
 func (this *ProxyService) TrafficMeasure() {
-
-	go func() {
-		var upTmp, downTmp uint64 = this.UpBytes, this.DownBytes
-		tick := time.Tick(1 * time.Second)
-		for {
-			this.UpSpeed, upTmp = this.UpBytes-upTmp, this.UpBytes
-			this.DownSpeed, downTmp = this.DownBytes-downTmp, this.DownBytes
-			select {
-			case <-tick:
-				continue
-			case <-this.Done():
-				return
-			}
-		}
-	}()
-	go func() {
-		for {
-			var data TrafficMessage
-			select {
-			case <-this.Done():
-				log.Info("close countClose")
-				return
-			case data = <-this.TrafficMQ:
-			}
-			this.UpBytes += data.UpBytes
-			this.DownBytes += data.DownBytes
-			if trafficMonitorQueue != nil && len(trafficMonitorQueue) > 0 {
-				for _, item := range trafficMonitorQueue {
-					item <- data
-				}
-			}
-		}
-	}()
+	go this.speed()
+	go this.route()
 	<-this.Done()
 	log.Info("close traffic measure")
-
 }
 
+func (this *ProxyService) route() {
+	for {
+		var data interface{}
+		select {
+		case <-this.Done():
+			log.Info("close countClose")
+			return
+		case data = <-this.MessageRoute:
+		}
+		switch data.(type) {
+		case record.Traffic:
+			this.traffic(data.(record.Traffic))
+		case record.ConnectionProxyRequest:
+			this.proxyRequest(data.(record.ConnectionProxyRequest))
+		}
+	}
+}
+
+// traffic handle traffic message
+func (this *ProxyService) traffic(data record.Traffic) {
+	eventbus.GetEventBus().Publish("record:traffic", data)
+	this.UpBytes += data.Up
+	this.DownBytes += data.Down
+	if trafficMonitorQueue != nil && len(trafficMonitorQueue) > 0 {
+		for _, item := range trafficMonitorQueue {
+			item <- data
+		}
+	}
+}
+
+// proxyRequest handle proxy request message
+func (this *ProxyService) proxyRequest(data record.ConnectionProxyRequest) {
+	eventbus.GetEventBus().Publish("record:proxyRequest", data)
+	key := addr.GetIPFromAddr(data.ClientAddr)
+	if this.LastOneMinuteConnections.Get(key) == nil {
+		this.LastOneMinuteConnections.Put(key, []record.ConnectionProxyRequest{data}, this.Tick)
+	} else {
+		last := this.LastOneMinuteConnections.Get(key).([]record.ConnectionProxyRequest)
+		this.LastOneMinuteConnections.Put(key, append(last, data), this.Tick)
+	}
+	log.Info("%v:%s %s <-------> %s", addr.GetPortFromAddr(data.ProxyAddr),
+		addr.GetNetworkFromAddr(data.ProxyAddr),
+		data.ClientAddr.String(),
+		data.TargetAddr.String())
+}
+
+// speed is traffic statis
+func (this *ProxyService) speed() {
+	var upTmp, downTmp uint64 = this.UpBytes, this.DownBytes
+	tick := time.Tick(this.Tick)
+	for {
+		this.UpSpeed, upTmp = this.UpBytes-upTmp, this.UpBytes
+		this.DownSpeed, downTmp = this.DownBytes-downTmp, this.DownBytes
+		select {
+		case <-tick:
+			continue
+		case <-this.Done():
+			return
+		}
+	}
+}
 func (this *ProxyService) Start() error {
+	go this.TrafficMeasure()
 	this.Status = "run"
 	return nil
 }
@@ -102,15 +135,14 @@ func (this *ProxyService) Start() error {
 func (this *ProxyService) Stop() error {
 	log.Info("proxy stop")
 	this.Cancel()
-	// this.TcpClose <- struct{}{}
-	if this.Tcp != nil {
-		err := this.Tcp.Close()
+	if this.TCP != nil {
+		err := this.TCP.Close()
 		if err != nil {
 			log.Err(err)
 		}
 	}
-	if this.Udp != nil {
-		err := this.Udp.Close()
+	if this.UDP != nil {
+		err := this.UDP.Close()
 		if err != nil {
 			log.Err(err)
 		}

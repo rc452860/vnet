@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rc452860/vnet/log"
+	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/utils/datasize"
 )
 
