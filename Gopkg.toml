@@ -24,10 +24,6 @@
 #   go-tests = true
 #   unused-packages = true
 
-[[constraint]]
-  branch = "master"
-  name = "golang.org/x/crypto"
-
 [prune]
   go-tests = true
   unused-packages = true
@@ -47,3 +43,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/asaskevich/EventBus"
+
+[[constraint]]
+  name = "github.com/takama/daemon"
+  version = "0.11.0"

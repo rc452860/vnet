@@ -67,8 +67,10 @@ func LoadConfig(file string) (*Config, error) {
 		}
 		configFile = file
 		config = &Config{
-			Mode:     "db",
-			DbConfig: DbConfig{},
+			Mode: "db",
+			DbConfig: DbConfig{
+				Rate: -1,
+			},
 		}
 		data, _ := json.MarshalIndent(config, "", "    ")
 		ioutil.WriteFile(configFile, data, 0644)
