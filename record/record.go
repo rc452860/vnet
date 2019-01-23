@@ -119,15 +119,15 @@ func (g *GlobalResourceMonitor) GetLastOneMinuteOnlineCount() int {
 // GetLastOneMinuteOnlineByPort convert LastOneMinuteOnlineByPort key from client to proxy
 // the original map is map[client.ip]
 // the convert map is map[proxy.port]
-func (g *GlobalResourceMonitor) GetLastOneMinuteOnlineByPort() map[int][]string {
-	result := make(map[int][]string)
+func (g *GlobalResourceMonitor) GetLastOneMinuteOnlineByPort() map[int][]net.Addr {
+	result := make(map[int][]net.Addr)
 	filter := make(map[string]bool)
 	g.LastOneMinuteConnections.Range(func(k, v interface{}) {
 		if value, ok := v.([]ConnectionProxyRequest); ok {
 			for _, item := range value {
 				proxyPort := addr.GetPortFromAddr(item.ProxyAddr)
-				clientIp := addr.GetIPFromAddr(item.ClientAddr)
-				filterKey := fmt.Sprintf("%v-%s", proxyPort, clientIp)
+				clientIP := addr.GetIPFromAddr(item.ClientAddr)
+				filterKey := fmt.Sprintf("%v-%s", proxyPort, clientIP)
 				if filter[filterKey] {
 					continue
 				} else {
@@ -135,10 +135,10 @@ func (g *GlobalResourceMonitor) GetLastOneMinuteOnlineByPort() map[int][]string 
 				}
 				if result[proxyPort] != nil {
 					result[proxyPort] = append(result[proxyPort],
-						clientIp)
+						item.ClientAddr)
 
 				} else {
-					result[proxyPort] = []string{clientIp}
+					result[proxyPort] = []net.Addr{item.ClientAddr}
 				}
 			}
 		}

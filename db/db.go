@@ -42,7 +42,10 @@ type DBTraffic struct {
 	Connects     map[string]bool
 }
 
-var trafficTable = make(map[int]*DBTraffic)
+var (
+	trafficTable = make(map[int]*DBTraffic)
+	startTime    = time.Now()
+)
 
 func (this User) TableName() string {
 	return "user"
@@ -183,7 +186,7 @@ func DBOnlineMonitor(ctx context.Context) {
 
 	for {
 		ss_node_info := fmt.Sprintf("INSERT INTO `ss_node_info` (`id`,`node_id`,`uptime`,`load`,`log_time`)"+
-			"VALUES (NULL,%v,unix_timestamp(),'%s',unix_timestamp())", conf.NodeId, FormatLoad())
+			"VALUES (NULL,%v,%v,'%s',unix_timestamp())", time.Since(startTime).Seconds(), conf.NodeId, formatLoad())
 		ss_node_online_log := fmt.Sprintf("INSERT INTO `ss_node_online_log` (id,node_id,online_user,log_time) "+
 			" VALUES (NULL,%v,%v,unix_timestamp())", conf.NodeId, grmInstance.GetLastOneMinuteOnlineCount())
 		ss_node_ip := bytes.NewBufferString("")
@@ -191,12 +194,26 @@ func DBOnlineMonitor(ctx context.Context) {
 		headLen := ss_node_ip.Len()
 		userOnline := grmInstance.GetLastOneMinuteOnlineByPort()
 		for k, v := range userOnline {
-			ips := bytes.NewBufferString("")
+			tcpIps := bytes.NewBufferString("")
+			udpIps := bytes.NewBufferString("")
+
 			for _, ip := range v {
-				ips.WriteString(ip)
-				ips.WriteString(",")
+				if strings.Contains(ip.Network(), "tcp") {
+					tcpIps.WriteString(addr.GetIPFromAddr(ip))
+					tcpIps.WriteString(",")
+				}
+				if strings.Contains(ip.Network(), "tcp") {
+					udpIps.WriteString(addr.GetIPFromAddr(ip))
+					udpIps.WriteString(",")
+				}
 			}
-			ss_node_ip.WriteString(fmt.Sprintf("(NULL,%v,%v,'%s','%s',unix_timestamp()),", conf.NodeId, k, "-", ips.String()[:ips.Len()-1]))
+			if tcpIps.Len() > 1 {
+				ss_node_ip.WriteString(fmt.Sprintf("(NULL,%v,%v,'%s','%s',unix_timestamp()),", conf.NodeId, k, "tcp", tcpIps.String()[:tcpIps.Len()-1]))
+
+			}
+			if udpIps.Len() > 1 {
+				ss_node_ip.WriteString(fmt.Sprintf("(NULL,%v,%v,'%s','%s',unix_timestamp()),", conf.NodeId, k, "udp", udpIps.String()[:udpIps.Len()-1]))
+			}
 		}
 		connect.Exec(ss_node_online_log)
 		connect.Exec(ss_node_info)
@@ -309,8 +326,8 @@ func UpdateTrafficByUser(users map[int]User) {
 		}
 		insertBuf.WriteString(fmt.Sprintf("(NULL,%v,%v,%v,%v,%f,'%s',unix_timestamp()),",
 			users[v.Port].Id,
-			v.Up,
 			v.Down,
+			v.Up,
 			conf.NodeId,
 			conf.Rate,
 			traffic))
@@ -327,19 +344,19 @@ func UpdateTrafficByUser(users map[int]User) {
 	portStr := whenPort.String()
 	user := fmt.Sprintf("UPDATE user SET u = CASE port%s END,"+
 		"d = CASE port%s END,t = unix_timestamp() WHERE port IN (%s)",
-		whenUp.String(),
 		whenDown.String(),
+		whenUp.String(),
 
 		portStr[:len(portStr)-1])
 	inserStr := insertBuf.String()
-	user_traffic_log := fmt.Sprintf("INSERT INTO `user_traffic_log` (`id`, `user_id`, `u`, `d`, "+
+	userTrafficLog := fmt.Sprintf("INSERT INTO `user_traffic_log` (`id`, `user_id`, `u`, `d`, "+
 		"`node_id`, `rate`, `traffic`, `log_time`) VALUES %s", inserStr[:len(inserStr)-1])
 
 	connect.Exec(user)
-	connect.Exec(user_traffic_log)
+	connect.Exec(userTrafficLog)
 }
 
-func FormatLoad() string {
+func formatLoad() string {
 	return fmt.Sprintf("cpu:%v%% mem:%v%% disk:%v%%", service.GetCPUUsage(), service.GetMemUsage(), service.GetDiskUsage())
 }
 

@@ -23,7 +23,7 @@ func Test_GetLastOneMinuteOnlineByPort(t *testing.T) {
 		time.Sleep(5 * time.Millisecond)
 	}
 
-	if instance.GetLastOneMinuteOnlineByPort()[8080][0] != "192.168.1.1" {
+	if addr.GetIPFromAddr(instance.GetLastOneMinuteOnlineByPort()[8080][0]) != "192.168.1.1" {
 		t.FailNow()
 	}
 }

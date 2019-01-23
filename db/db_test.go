@@ -20,5 +20,5 @@ func Test_GetEnableUser(t *testing.T) {
 }
 
 func TestFormatLoad(t *testing.T) {
-	t.Log(FormatLoad())
+	t.Log(formatLoad())
 }
