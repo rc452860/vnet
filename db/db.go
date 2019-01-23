@@ -326,8 +326,8 @@ func UpdateTrafficByUser(users map[int]User) {
 		}
 		insertBuf.WriteString(fmt.Sprintf("(NULL,%v,%v,%v,%v,%f,'%s',unix_timestamp()),",
 			users[v.Port].Id,
-			v.Down,
-			v.Up,
+			v.Down*uint64(conf.Rate),
+			v.Up*uint64(conf.Rate),
 			conf.NodeId,
 			conf.Rate,
 			traffic))
@@ -346,8 +346,8 @@ func UpdateTrafficByUser(users map[int]User) {
 		"d = CASE port%s END,t = unix_timestamp() WHERE port IN (%s)",
 		whenDown.String(),
 		whenUp.String(),
-
 		portStr[:len(portStr)-1])
+
 	inserStr := insertBuf.String()
 	userTrafficLog := fmt.Sprintf("INSERT INTO `user_traffic_log` (`id`, `user_id`, `u`, `d`, "+
 		"`node_id`, `rate`, `traffic`, `log_time`) VALUES %s", inserStr[:len(inserStr)-1])
