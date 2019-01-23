@@ -31,7 +31,7 @@ chmod +x server && ./server
 
 ## 编译方式
 ```
-go get -u -d github/rc452860/vnet
+go get -u -d github.com/rc452860/vnet/...
 ```
 
 进入$gopath/rc452860/vnet目录
