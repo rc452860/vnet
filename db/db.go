@@ -186,7 +186,7 @@ func DBOnlineMonitor(ctx context.Context) {
 
 	for {
 		ss_node_info := fmt.Sprintf("INSERT INTO `ss_node_info` (`id`,`node_id`,`uptime`,`load`,`log_time`)"+
-			"VALUES (NULL,%v,%v,'%s',unix_timestamp())", time.Since(startTime).Seconds(), conf.NodeId, formatLoad())
+			"VALUES (NULL,%v,%v,'%s',unix_timestamp())", conf.NodeId, time.Since(startTime).Seconds(), formatLoad())
 		ss_node_online_log := fmt.Sprintf("INSERT INTO `ss_node_online_log` (id,node_id,online_user,log_time) "+
 			" VALUES (NULL,%v,%v,unix_timestamp())", conf.NodeId, grmInstance.GetLastOneMinuteOnlineCount())
 		ss_node_ip := bytes.NewBufferString("")
