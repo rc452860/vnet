@@ -210,7 +210,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 					logging.Err(err)
 					return
 				}
-				/** 流量记录装饰器 */
+				/** 去皮流量记录装饰器 */
 				lcd, err = conn.TrafficDecorate(lcd, s.tcpUpload, s.tcpDownload)
 				if err != nil {
 					logging.Err(err)
@@ -328,8 +328,9 @@ func (s *ShadowsocksProxy) startUDP() error {
 		return errors.Cause(err)
 	}
 	s.UDP = server
-	server, err = ciphers.CipherPacketDecorate(s.Password, s.Method, server)
+	// 去皮流量装饰器
 	server = conn.PacketTrafficConnDecorate(server, s.udpUpload, s.udpDownload)
+	server, err = ciphers.CipherPacketDecorate(s.Password, s.Method, server)
 	if err != nil {
 		logging.Error("UDP CipherPacketDecorate init error: %v", err)
 		return errors.Cause(err)
