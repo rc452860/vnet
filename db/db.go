@@ -319,15 +319,15 @@ func UpdateTrafficByUser(users map[int]User) {
 		whenUp.WriteString(fmt.Sprintf(" WHEN %v THEN u+%v", v.Port, float32(v.Up)*conf.Rate))
 		whenDown.WriteString(fmt.Sprintf(" WHEN %v THEN d+%v", v.Port, float32(v.Down)*conf.Rate))
 		whenPort.WriteString(fmt.Sprintf("%v,", v.Port))
-		traffic, err := datasize.HumanSize(v.Up + v.Down)
+		traffic, err := datasize.HumanSize((v.Up + v.Down) * uint64(conf.Rate))
 		if err != nil {
 			log.Error("traffic parse error")
 			traffic = "0"
 		}
 		insertBuf.WriteString(fmt.Sprintf("(NULL,%v,%v,%v,%v,%f,'%s',unix_timestamp()),",
 			users[v.Port].Id,
-			v.Down*uint64(conf.Rate),
-			v.Up*uint64(conf.Rate),
+			v.Down,
+			v.Up,
 			conf.NodeId,
 			conf.Rate,
 			traffic))
