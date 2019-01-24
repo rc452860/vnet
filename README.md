@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/rc452860/vnet.svg?branch=master)](https://travis-ci.org/rc452860/vnet)
-[![Go Report Card](https://goreportcard.com/badge/github.com/rc452860/vnet)](https://goreportcard.com/report/github.com/rc452860/vnet)
+[![Go Report Card](https://goreportcard.com/badge/github.com/rc452860/vnet)](https://goreportcard.com/report/github.com/rc452860/vnet) [![Join the chat at https://gitter.im/kitami-vnet/community](https://badges.gitter.im/kitami-vnet/community.svg)](https://gitter.im/kitami-vnet/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 <img src="./assert/donate.png" width="300" title="you have me!">
 
