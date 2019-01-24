@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"net"
+
+	"github.com/rc452860/vnet/ciphers"
 )
 
 type Test struct {
@@ -10,6 +11,7 @@ type Test struct {
 }
 
 func main() {
-	listen, _ := net.Listen("tcp", "0.0.0.0:8080")
-	fmt.Print(listen.Addr().String())
+	for _, item := range ciphers.GetSupportCiphers() {
+		fmt.Println(item)
+	}
 }
