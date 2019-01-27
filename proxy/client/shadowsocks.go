@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/proxy/common"
 
 	"github.com/rc452860/vnet/socks"

@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/utils"
 )
 
@@ -36,8 +36,7 @@ type DbConfig struct {
 }
 
 type ShadowsocksOptions struct {
-	TCPTimeout int `json:"tcp_timeout"`
-	UDPTimeout int `json:"udp_timeout"`
+	ConnectTimeout int `json:"connect_timeout"`
 }
 
 func CurrentConfig() *Config {
@@ -70,6 +69,9 @@ func LoadConfig(file string) (*Config, error) {
 			Mode: "db",
 			DbConfig: DbConfig{
 				Rate: -1,
+			},
+			ShadowsocksOptions: ShadowsocksOptions{
+				ConnectTimeout: 3000,
 			},
 		}
 		data, _ := json.MarshalIndent(config, "", "    ")

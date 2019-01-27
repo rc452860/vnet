@@ -14,7 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rc452860/vnet/config"
 	"github.com/rc452860/vnet/conn"
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/proxy/server"
 

@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 )
 
 func TestMemProblem(t *testing.T) {

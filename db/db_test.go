@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 )
 
 func Test_GetEnableUser(t *testing.T) {

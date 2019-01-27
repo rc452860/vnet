@@ -13,7 +13,7 @@ import (
 	"github.com/rc452860/vnet/record"
 
 	"github.com/AlecAivazis/survey"
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/config"
 	"github.com/rc452860/vnet/service"
 	"github.com/rc452860/vnet/utils/datasize"
@@ -392,12 +392,14 @@ func StartShadowsocks(user User) {
 		log.Error("limit: %d, error info:%s", user.Limit, err.Error())
 		return
 	}
+	con := config.CurrentConfig().ShadowsocksOptions
 	err = service.CurrentShadowsocksService().Add("0.0.0.0",
 		user.Method,
 		user.Password,
 		user.Port,
 		limit,
-		3*time.Second)
+		time.Duration(con.ConnectTimeout) * time.Millisecond
+	)
 	if err != nil {
 		log.Info("[%d] add failure, case %s", user.Port, err.Error())
 	}

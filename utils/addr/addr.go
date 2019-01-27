@@ -3,7 +3,7 @@ package addr
 import (
 	"net"
 
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 )
 
 func GetIPFromAddr(addr net.Addr) string {

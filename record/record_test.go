@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rc452860/vnet/comm/eventbus"
+	"github.com/rc452860/vnet/common/eventbus"
 	"github.com/rc452860/vnet/utils/addr"
 )
 

@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rc452860/vnet/comm/cache"
-	"github.com/rc452860/vnet/comm/eventbus"
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/cache"
+	"github.com/rc452860/vnet/common/eventbus"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/utils"
 	"github.com/rc452860/vnet/utils/addr"
 )

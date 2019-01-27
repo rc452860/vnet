@@ -7,7 +7,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/utils"
 	"golang.org/x/time/rate"

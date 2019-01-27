@@ -14,7 +14,7 @@ import (
 	"github.com/rc452860/vnet/utils/datasize"
 
 	"github.com/rc452860/vnet/ciphers"
-	"github.com/rc452860/vnet/comm/log"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/conn"
 	"github.com/rc452860/vnet/pool"
 	"github.com/rc452860/vnet/proxy"
@@ -229,7 +229,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 读取目标地址 */
 				targetAddr, err := socks.ReadAddr(lcd)
 				if err != nil {
-					log.Error("read target address error %s. (maybe the crypto method 2rong configuration)", err.Error())
+					log.Error("read target address error %s. (maybe the crypto method wrong configuration)", err.Error())
 					return
 				}
 
