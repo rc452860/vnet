@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/config"
 	"github.com/rc452860/vnet/db"
-	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/proxy/server"
 	"github.com/rc452860/vnet/utils/datasize"
 )

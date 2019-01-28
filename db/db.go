@@ -398,8 +398,7 @@ func StartShadowsocks(user User) {
 		user.Password,
 		user.Port,
 		limit,
-		time.Duration(con.ConnectTimeout) * time.Millisecond
-	)
+		time.Duration(con.ConnectTimeout)*time.Millisecond)
 	if err != nil {
 		log.Info("[%d] add failure, case %s", user.Port, err.Error())
 	}
