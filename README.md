@@ -78,3 +78,4 @@ chacha20-ietf-poly1305
 
 ## 注意事项
 config.json配置文件中的所有时间单位都为毫秒
+升级后续删除原有config.json重新生成
