@@ -75,3 +75,6 @@ aes-192-gcm
 aes-128-gcm
 chacha20-ietf-poly1305
 ```
+
+## 注意事项
+config.json配置文件中的所有时间单位都为毫秒
