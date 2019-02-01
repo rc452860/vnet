@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rc452860/vnet/config"
-	"github.com/rc452860/vnet/conn"
+	"github.com/rc452860/vnet/common/config"
 	"github.com/rc452860/vnet/common/log"
-	"github.com/rc452860/vnet/pool"
+	"github.com/rc452860/vnet/common/pool"
+	"github.com/rc452860/vnet/network/conn"
 	"github.com/rc452860/vnet/proxy/server"
 
 	"github.com/rc452860/vnet/utils/datasize"
@@ -82,7 +82,10 @@ func startFakeFileServer() {
 func Test_Limit(t *testing.T) {
 	config.LoadConfig("config.json")
 	log.GetLogger("root").Level = log.INFO
-	proxy, err := server.NewShadowsocks("0.0.0.0", "aes-128-gcm", "killer", 1090, "4MB", 0)
+	proxy, err := server.NewShadowsocks("0.0.0.0", "aes-128-gcm", "killer", 1090, server.ShadowsocksArgs{
+		Limit:          4 * 1024 * 1024,
+		ConnectTimeout: 0,
+	})
 	proxy.Start()
 	if err != nil {
 		t.Error(err)

@@ -5,6 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/rc452860/vnet/utils/datasize"
+
+	"github.com/rc452860/vnet/proxy/server"
 	"github.com/rc452860/vnet/service"
 
 	"github.com/gin-gonic/gin"
@@ -36,9 +39,10 @@ func ShadowsocksAdd(c *gin.Context) {
 		ss.Method,
 		ss.Password,
 		ss.Port,
-		ss.Limit,
-		time.Duration(ss.Timeout),
-	)
+		server.ShadowsocksArgs{
+			Limit:          datasize.MustParse(ss.Limit),
+			ConnectTimeout: time.Duration(ss.Timeout) * time.Millisecond,
+		})
 	if err != nil {
 		c.JSON(500, Error(err))
 		return

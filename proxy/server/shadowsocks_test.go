@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/rc452860/vnet/pool"
+	"github.com/rc452860/vnet/common/pool"
 
-	"github.com/rc452860/vnet/ciphers"
-	"github.com/rc452860/vnet/conn"
+	"github.com/rc452860/vnet/network/ciphers"
+	"github.com/rc452860/vnet/network/conn"
 	"github.com/rc452860/vnet/socks"
 )
 
@@ -40,7 +40,10 @@ func Test_NewServer(t *testing.T) {
 }
 
 func testShadowsocksProxy(t *testing.T, host, method, password string, port int) {
-	ss, _ := NewShadowsocks(host, method, password, port, "512k", 0)
+	ss, _ := NewShadowsocks(host, method, password, port, ShadowsocksArgs{
+		Limit:          4096 * 1024,
+		ConnectTimeout: 3 * time.Second,
+	})
 	go ss.Start()
 	time.Sleep(1 * time.Second)
 	transport := &http.Transport{
@@ -49,7 +52,7 @@ func testShadowsocksProxy(t *testing.T, host, method, password string, port int)
 			con, _ := net.Dial("tcp", fmt.Sprintf("%s:%v", host, port))
 			c, _ := conn.DefaultDecorate(con, conn.TCP)
 			c, err := ciphers.CipherDecorate(password, method, c)
-			c.Write(socks.ParseAddr(addr))
+			c.Write(socks.ParseAddr(addr).Raw)
 			return c, err
 		},
 		TLSHandshakeTimeout: 10 * time.Second,
@@ -81,9 +84,9 @@ func testShadowsocksProxy(t *testing.T, host, method, password string, port int)
 	}
 	sendBuf := pool.GetBuf()
 	targetAddr := socks.ParseAddr("127.0.0.1:8081")
-	copy(sendBuf, targetAddr)
-	copy(sendBuf[len(targetAddr):], []byte("hello"))
-	n, err := packet.WriteTo(sendBuf[:len(targetAddr)+5], addr)
+	copy(sendBuf, targetAddr.Raw)
+	copy(sendBuf[len(targetAddr.Raw):], []byte("hello"))
+	n, err := packet.WriteTo(sendBuf[:len(targetAddr.Raw)+5], addr)
 	pool.PutBuf(sendBuf)
 	if err != nil {
 		t.Error(err)
@@ -97,7 +100,7 @@ func testShadowsocksProxy(t *testing.T, host, method, password string, port int)
 		t.FailNow()
 	}
 	fromAddr := socks.SplitAddr(buf[:n])
-	if string(buf[len(fromAddr):n]) != "hello" {
+	if string(buf[len(fromAddr.Raw):n]) != "hello" {
 		t.Error("recive is not compare hello")
 	}
 	packet.Close()

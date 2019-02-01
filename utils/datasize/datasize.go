@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/rc452860/vnet/common/log"
 )
 
 type ByteSize uint64
@@ -27,6 +29,15 @@ var ErrBits = errors.New("unit with capital unit prefix and lower case unit (b) 
 
 var defaultDatasize ByteSize
 
+func MustParse(s string) uint64 {
+	size, err := Parse(s)
+	if err != nil {
+		log.Err(err)
+		return 0
+	}
+	return size
+}
+
 func Parse(s string) (bytes uint64, err error) {
 	err = defaultDatasize.UnmarshalText([]byte(s))
 	if err != nil {
@@ -35,6 +46,7 @@ func Parse(s string) (bytes uint64, err error) {
 	bytes = defaultDatasize.Bytes()
 	return
 }
+
 func HumanSize(bytes uint64) (s string, err error) {
 	err = defaultDatasize.UnmarshalText([]byte(fmt.Sprintf("%d", bytes)))
 	if err != nil {

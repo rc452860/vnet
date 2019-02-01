@@ -2,7 +2,9 @@ package proxy
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/rc452860/vnet/utils/addr"
@@ -105,10 +107,15 @@ func (this *ProxyService) proxyRequest(data record.ConnectionProxyRequest) {
 		last := this.LastOneMinuteConnections.Get(key).([]record.ConnectionProxyRequest)
 		this.LastOneMinuteConnections.Put(key, append(last, data), this.Tick)
 	}
-	log.Info("%v:%s %s <-------> %s", addr.GetPortFromAddr(data.ProxyAddr),
-		addr.GetNetworkFromAddr(data.ProxyAddr),
-		data.ClientAddr.String(),
-		data.TargetAddr.String())
+
+	// just print tcp log
+	if strings.Contains("tcp", data.ClientAddr.Network()) {
+		log.Info("%v:%s %s <-------> %s", addr.GetPortFromAddr(data.ProxyAddr),
+			addr.GetNetworkFromAddr(data.ProxyAddr),
+			data.ClientAddr.String(),
+			fmt.Sprintf("%s:%v", data.GetAddress(), data.GetPort()))
+	}
+
 }
 
 // speed is traffic statis
@@ -126,6 +133,7 @@ func (this *ProxyService) speed() {
 		}
 	}
 }
+
 func (this *ProxyService) Start() error {
 	go this.TrafficMeasure()
 	this.Status = "run"

@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/rc452860/vnet/config"
+	"github.com/rc452860/vnet/common/config"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/db"
-	"github.com/rc452860/vnet/comm/log"
 	"github.com/rc452860/vnet/proxy/server"
 	"github.com/rc452860/vnet/utils/datasize"
 )
@@ -45,8 +45,13 @@ func BareStarted() {
 	password := flag.String("password", "killer", "shadowsocks password")
 	port := flag.Int("port", 1090, "shadowsocks port")
 	limit := flag.String("limit", "", "shadowsocks traffic limit exp:4MB")
+	timeout := flag.Int("timeout", 3000, "connect timeout (Millisecond)")
 	flag.Parse()
-	shadowsocks, err := server.NewShadowsocks(*host, *method, *password, *port, *limit, 0)
+	limitNumberical := datasize.MustParse(*limit)
+	shadowsocks, err := server.NewShadowsocks(*host, *method, *password, *port, server.ShadowsocksArgs{
+		Limit:          limitNumberical,
+		ConnectTimeout: time.Duration(*timeout) * time.Millisecond,
+	})
 	if err != nil {
 		log.Err(err)
 		return

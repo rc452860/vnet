@@ -4,10 +4,10 @@ import (
 	"io"
 	"strings"
 
-	"github.com/rc452860/vnet/pool"
+	"github.com/rc452860/vnet/common/pool"
 
-	"github.com/rc452860/vnet/conn"
 	"github.com/rc452860/vnet/common/log"
+	"github.com/rc452860/vnet/network/conn"
 )
 
 type TcpChannel struct{}

@@ -9,14 +9,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rc452860/vnet/component/dnsx"
+
 	"github.com/pkg/errors"
 
-	"github.com/rc452860/vnet/utils/datasize"
-
-	"github.com/rc452860/vnet/ciphers"
 	"github.com/rc452860/vnet/common/log"
-	"github.com/rc452860/vnet/conn"
-	"github.com/rc452860/vnet/pool"
+	"github.com/rc452860/vnet/common/pool"
+	"github.com/rc452860/vnet/network/ciphers"
+	"github.com/rc452860/vnet/network/conn"
 	"github.com/rc452860/vnet/proxy"
 	"github.com/rc452860/vnet/record"
 	"github.com/rc452860/vnet/socks"
@@ -45,89 +45,81 @@ func init() {
 // it have Start and Stop method to control proxy
 type ShadowsocksProxy struct {
 	*proxy.ProxyService `json:"-,omitempty"`
-	Host                string        `json:"host,omitempty"`
-	Port                int           `json:"port,omitempty"`
-	Method              string        `json:"method,omitempty"`
-	Password            string        `json:"password,omitempty"`
-	TCPTimeout          time.Duration `json:"tcp_timeout,omitempty"`
-	UDPTimeout          time.Duration `json:"udp_timeout,omitempty"`
-	ReadLimit           *rate.Limiter `json:"read_limit,omitempty"`
-	WriteLimit          *rate.Limiter `json:"write_limit,omitempty"`
+	Host                string `json:"host,omitempty"`
+	Port                int    `json:"port,omitempty"`
+	Method              string `json:"method,omitempty"`
+	Password            string `json:"password,omitempty"`
+	ShadowsocksArgs
+	ReadLimiter  *rate.Limiter `json:"read_limit,omitempty"`
+	WriteLimiter *rate.Limiter `json:"write_limit,omitempty"`
+}
+
+// ShadowsocksArgs is ShadowsocksProxy arguments
+type ShadowsocksArgs struct {
+	ConnectTimeout time.Duration `json:"connect_timeout,omitempty"`
+	Limit          uint64        `json:"limit"`
+	TCPSwitch      string        `json:"tcp_switch"`
+	UDPSwitch      string        `json:"udp_switch"`
 }
 
 // NewShadowsocks is new ShadowsocksProxy object
-func NewShadowsocks(host string, method string, password string, port int, limit string, timeout time.Duration) (*ShadowsocksProxy, error) {
+func NewShadowsocks(host string, method string, password string, port int, ssarg ShadowsocksArgs) (*ShadowsocksProxy, error) {
 	ss := &ShadowsocksProxy{
-		ProxyService: proxy.NewProxyService(),
-		Host:         host,
-		Method:       method,
-		Password:     password,
-		Port:         port,
+		ProxyService:    proxy.NewProxyService(),
+		Host:            host,
+		Method:          method,
+		Password:        password,
+		Port:            port,
+		ShadowsocksArgs: ssarg,
 	}
-	// for traffic limit
-	err := ss.ConfigLimitHuman(limit)
-	if err != nil {
-		return nil, err
+	if ss.TCPSwitch == "" {
+		ss.TCPSwitch = "true"
+	}
+	if ss.UDPSwitch == "" {
+		ss.UDPSwitch = "true"
 	}
 
-	// for 3 second time out
-	err = ss.ConfigTimeout(timeout)
-	return ss, err
+	return ss, nil
 }
 
 // ConfigLimit config shadowsocks traffic limit
-func (s *ShadowsocksProxy) ConfigLimit(limit uint64) {
-	if limit == 0 {
+func (s *ShadowsocksProxy) ConfigLimit() {
+	if s.Limit == 0 {
 		return
 	}
-	s.ReadLimit = rate.NewLimiter(rate.Limit(limit), int(limit))
-	s.WriteLimit = rate.NewLimiter(rate.Limit(limit), int(limit))
-}
-
-//ConfigLimitHuman is config shadowsocks service traffic limit
-// argument limit can be a human readable like: 4KB 4MB 4GB
-func (s *ShadowsocksProxy) ConfigLimitHuman(limit string) error {
-	if limit != "" {
-		trafficLimit, err := datasize.Parse(limit)
-		if err != nil {
-			log.Err(err)
-			return err
-		}
-		if trafficLimit < 5*1024 {
-			return nil
-		}
-		// logging.Info("server port: %v limit is: %v", s.Port, trafficLimit)
-		s.ReadLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))
-		s.WriteLimit = rate.NewLimiter(rate.Limit(trafficLimit), int(trafficLimit))
-	}
-	return nil
-
+	s.ReadLimiter = rate.NewLimiter(rate.Limit(s.Limit), int(s.Limit))
+	s.WriteLimiter = rate.NewLimiter(rate.Limit(s.Limit), int(s.Limit))
 }
 
 // ConfigTimeout is config shadowsocks timeout
-func (s *ShadowsocksProxy) ConfigTimeout(timeout time.Duration) error {
-	if timeout == 0 {
-		s.TCPTimeout = 3e9
-		s.UDPTimeout = 3e9
-	} else {
-		s.TCPTimeout = timeout
-		s.UDPTimeout = timeout
+func (s *ShadowsocksProxy) ConfigTimeout() {
+	if s.ConnectTimeout == 0 {
+		s.ConnectTimeout = 3e9
 	}
-	// log.Info("%s:%v timeout:%v", s.Host, s.Port, s.TCPTimeout)
-	return nil
 }
 
 // Start proxy
 func (s *ShadowsocksProxy) Start() error {
-	s.ProxyService.Start()
-	if err := s.startTCP(); err != nil {
-		log.Err(err)
-		return err
+	s.ConfigLimit()
+	s.ConfigTimeout()
+	if s.TCPSwitch == "true" || s.UDPSwitch == "true" {
+		s.ProxyService.Start()
 	}
-	if err := s.startUDP(); err != nil {
-		log.Err(err)
-		return err
+
+	if s.TCPSwitch == "true" {
+		if err := s.startTCP(); err != nil {
+			log.Err(err)
+			return err
+		}
 	}
+
+	if s.UDPSwitch == "true" {
+		if err := s.startUDP(); err != nil {
+			log.Err(err)
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -188,7 +180,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				return
 			default:
 			}
-			server.SetDeadline(time.Now().Add(s.TCPTimeout))
+			server.SetDeadline(time.Now().Add(s.ConnectTimeout))
 			lcon, err := server.Accept()
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				continue
@@ -217,7 +209,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 					return
 				}
 				/** 限流装饰器 */
-				lcd, _ = conn.TrafficLimitDecorate(lcd, s.ReadLimit, s.WriteLimit)
+				lcd, _ = conn.TrafficLimitDecorate(lcd, s.ReadLimiter, s.WriteLimiter)
 
 				/** 加密装饰器 */
 				lcd, err = ciphers.CipherDecorate(s.Password, s.Method, lcd)
@@ -232,15 +224,19 @@ func (s *ShadowsocksProxy) startTCP() error {
 					log.Error("read target address error %s. (maybe the crypto method wrong configuration)", err.Error())
 					return
 				}
-
-				rc, err := net.Dial("tcp", targetAddr.String())
+				addr, err := s.dnsReslove(targetAddr)
 				if err != nil {
-					logging.Error("connect target:%s error", targetAddr)
-					logging.Err(err)
+					log.Err(err)
+					return
+				}
+				rc, err := net.Dial("tcp", addr)
+				if err != nil {
+					logging.Error("connect target:%s error cause: %v", targetAddr, err)
 					return
 				}
 				defer rc.Close()
-				s.ConnectionStage(s.TCP.Addr(), lcd.RemoteAddr(), rc.RemoteAddr())
+
+				s.ConnectionStage(s.TCP.Addr(), lcd.RemoteAddr(), rc.RemoteAddr(), targetAddr)
 
 				rc.(*net.TCPConn).SetKeepAlive(true)
 				// logging.Info("tcp %s <----> %s", lcd.RemoteAddr(), targetAddr)
@@ -336,7 +332,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 		return errors.Cause(err)
 	}
 
-	nm := newNATmap(s.UDPTimeout)
+	nm := newNATmap(s.ConnectTimeout)
 	buf := pool.GetUdpBuf()
 	defer pool.PutUdpBuf(buf)
 
@@ -350,7 +346,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 				return
 			default:
 			}
-			server.SetDeadline(time.Now().Add(s.UDPTimeout))
+			server.SetDeadline(time.Now().Add(s.ConnectTimeout))
 			n, raddr, err := server.ReadFrom(buf)
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				continue
@@ -367,15 +363,20 @@ func (s *ShadowsocksProxy) startUDP() error {
 				logging.Error("failed to split target address from packet: %q", buf[:n])
 				continue
 			}
+			addr, err := s.dnsReslove(tgtAddr)
+			if err != nil {
+				log.Err(err)
+				return
+			}
 			// logging.Info("udp %s <----> %s", raddr, tgtAddr)
-			tgtUDPAddr, err := net.ResolveUDPAddr("udp", tgtAddr.String())
+			tgtUDPAddr, err := net.ResolveUDPAddr("udp", addr)
 			if err != nil {
 				logging.Error("failed to resolve target UDP address: %v", err)
 				continue
 			}
 
-			s.ConnectionStage(s.UDP.LocalAddr(), raddr, tgtUDPAddr)
-			payload := buf[len(tgtAddr):n]
+			s.ConnectionStage(s.UDP.LocalAddr(), raddr, tgtUDPAddr, tgtAddr)
+			payload := buf[len(tgtAddr.Raw):n]
 
 			pc := nm.Get(raddr.String())
 			if pc == nil {
@@ -399,13 +400,28 @@ func (s *ShadowsocksProxy) startUDP() error {
 }
 
 // ConnectionStage event
-func (s *ShadowsocksProxy) ConnectionStage(proxy, client, target net.Addr) {
-	s.MessageRoute <- record.ConnectionProxyRequest{
+func (s *ShadowsocksProxy) ConnectionStage(proxyAddr, client, target net.Addr, pr record.IProxyRequest) {
+	pr = record.ConnectionProxyRequest{
 		ConnectionPair: record.ConnectionPair{
 			ClientAddr: client,
-			ProxyAddr:  proxy,
+			ProxyAddr:  proxyAddr,
 			TargetAddr: target,
 		},
+		IProxyRequest: pr,
+	}
+	s.MessageRoute <- pr
+}
+
+func (s *ShadowsocksProxy) dnsReslove(request record.IProxyRequest) (string, error) {
+	if request.GetAType() == record.AtypDomainName {
+		ip := dnsx.GetDNDComponent().MustReslove(request.GetAddress())
+		if ip == nil {
+			return "", errors.New(fmt.Sprintf("dns reslove error: %s .", request.GetAddress()))
+		}
+
+		return fmt.Sprintf("%s:%v", ip.String(), request.GetPort()), nil
+	} else {
+		return request.String(), nil
 	}
 }
 
@@ -483,12 +499,14 @@ func timedCopy(dst net.PacketConn, target net.Addr, src net.PacketConn, timeout 
 		switch role {
 		case remoteServer: // server -> client: add original packet source
 			srcAddr := socks.ParseAddr(raddr.String())
-			copy(buf[len(srcAddr):], buf[:n])
-			copy(buf, srcAddr)
-			_, err = dst.WriteTo(buf[:len(srcAddr)+n], target)
+			srcAddrByte := srcAddr.Raw
+			copy(buf[len(srcAddrByte):], buf[:n])
+			copy(buf, srcAddrByte)
+			_, err = dst.WriteTo(buf[:len(srcAddrByte)+n], target)
 		case relayClient: // client -> user: strip original packet source
 			srcAddr := socks.SplitAddr(buf[:n])
-			_, err = dst.WriteTo(buf[len(srcAddr):n], target)
+			srcAddrByte := srcAddr.Raw
+			_, err = dst.WriteTo(buf[len(srcAddrByte):n], target)
 		case socksClient: // client -> socks5 program: just set RSV and FRAG = 0
 			_, err = dst.WriteTo(append([]byte{0, 0, 0}, buf[:n]...), target)
 		}

@@ -9,9 +9,9 @@ import (
 
 	"github.com/rc452860/vnet/socks"
 
-	"github.com/rc452860/vnet/ciphers"
+	"github.com/rc452860/vnet/network/ciphers"
 
-	"github.com/rc452860/vnet/conn"
+	"github.com/rc452860/vnet/network/conn"
 )
 
 type ShadowsocksClient struct {

@@ -23,10 +23,6 @@ type Traffic struct {
 	Down           uint64 `json:"down,omitempty"`
 }
 
-type ConnectionProxyRequest struct {
-	ConnectionPair
-}
-
 // ConnectionPair is struct represent a proxy connections
 type ConnectionPair struct {
 	ProxyAddr  net.Addr `json:"proxy_addr,omitempty"`
@@ -44,6 +40,50 @@ type GlobalResourceMonitor struct {
 	GlobalSpeeddown          uint64       `json:"global_speeddown,omitempty"`
 	PacketCount              uint64       `json:"packet_count,omitempty"`
 	tick                     time.Duration
+}
+
+const (
+	AtypIPv4       = 1
+	AtypDomainName = 3
+	AtypIPv6       = 4
+)
+
+type IProxyRequest interface {
+	GetPort() int
+	GetAType() int
+	GetAddress() string
+	String() string
+}
+
+type ProxyRequest struct {
+	Address string
+	Port    int
+	AType   int
+}
+
+func NewProxyRequest(address string, port, atype int) *ProxyRequest {
+	return &ProxyRequest{
+		Address: address,
+		Port:    port,
+		AType:   atype,
+	}
+}
+
+func (p *ProxyRequest) GetPort() int {
+	return p.Port
+}
+
+func (p *ProxyRequest) GetAType() int {
+	return p.AType
+}
+
+func (p *ProxyRequest) GetAddress() string {
+	return p.Address
+}
+
+type ConnectionProxyRequest struct {
+	ConnectionPair
+	IProxyRequest
 }
 
 var (

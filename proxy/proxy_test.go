@@ -18,11 +18,10 @@ func Test_LastOneMinute(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		client, _ := net.ResolveTCPAddr("tcp", fmt.Sprintf("1.1.1.1:%v", i+1000))
 		proxy.MessageRoute <- record.ConnectionProxyRequest{
-			ConnectionPair: record.ConnectionPair{
-				ClientAddr: client,
-				ProxyAddr:  proxyAddr,
-				TargetAddr: targetAddr,
-			},
+			ClientAddr:   client,
+			ProxyAddr:    proxyAddr,
+			TargetAddr:   targetAddr,
+			TargetDomain: "baidu.com",
 		}
 		time.Sleep(10 * time.Millisecond)
 	}

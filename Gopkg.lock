@@ -74,7 +74,7 @@
   version = "v1.4.1"
 
 [[projects]]
-  digest = "1:fc0a04eb0e588ad280e11e11b63e5ea84da30ae01d2aa7feb661a777d18b32f3"
+  digest = "1:97df918963298c287643883209a2c3f642e6593379f97ab400c2a2e219ab647d"
   name = "github.com/golang/protobuf"
   packages = ["proto"]
   pruneopts = "UT"
@@ -154,6 +154,14 @@
   revision = "9520e82c474b0a04dd04f8a40959027271bab992"
 
 [[projects]]
+  digest = "1:d64a0aa67f715fd28f5ddfe0d74c06b6d6fe0fed931d77e662f2c4694f6854dc"
+  name = "github.com/miekg/dns"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "56be65265e34e731425e0269a301774938827c60"
+  version = "v1.1.3"
+
+[[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
   name = "github.com/modern-go/concurrent"
   packages = ["."]
@@ -225,12 +233,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:b28fb57f1a8a3705003ab6a9ffd4f12e44e3e77b9052b94b71cc60f74222f550"
+  digest = "1:75c96207f1c2a04970050be21c3b80dc0db1322b210fc660e89dcd2631084a7a"
   name = "golang.org/x/crypto"
   packages = [
     "blowfish",
     "cast5",
     "chacha20poly1305",
+    "ed25519",
+    "ed25519/internal/edwards25519",
     "hkdf",
     "internal/chacha20",
     "internal/subtle",
@@ -247,13 +257,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1cea5c02079247fde34247c1a1b97ff8e450d0869bb712414a90703eb31fb354"
+  digest = "1:017f082ca972d27a7f9f336cb0ad08b01e7024b0da4bc362d127deed2574b83d"
   name = "golang.org/x/net"
   packages = [
     "bpf",
     "internal/iana",
     "internal/socket",
     "ipv4",
+    "ipv6",
   ]
   pruneopts = "UT"
   revision = "927f97764cc334a6575f4b7a1584a147864d5723"
@@ -324,6 +335,7 @@
     "github.com/go-sql-driver/mysql",
     "github.com/jinzhu/gorm",
     "github.com/klauspost/reedsolomon",
+    "github.com/miekg/dns",
     "github.com/pkg/errors",
     "github.com/shirou/gopsutil/cpu",
     "github.com/shirou/gopsutil/disk",
