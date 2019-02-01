@@ -42,8 +42,14 @@ type DbConfig struct {
 	OnlineSyncTime int     `json:"online_sync_time"`
 }
 
+// ShadowsocksOptions is global shadowoscks service config
+// the TCPSwitch is set tcp service enable
+// the UDPSwitch is set udp service enable
+// ConnectTimeout is set Shadowsocks select timeout time. not real connect time
 type ShadowsocksOptions struct {
-	ConnectTimeout int `json:"connect_timeout"`
+	ConnectTimeout int    `json:"connect_timeout"`
+	TCPSwitch      string `json:"tcp_switch"`
+	UDPSwitch      string `json:"udp_switch"`
 }
 
 func DefaultConfig() *Config {
@@ -54,6 +60,8 @@ func DefaultConfig() *Config {
 		},
 		ShadowsocksOptions: ShadowsocksOptions{
 			ConnectTimeout: 3000,
+			TCPSwitch:      "true",
+			UDPSwitch:      "true",
 		},
 		DNSOptions: DnsOptions{
 			DNS1: "8.8.8.8:53",

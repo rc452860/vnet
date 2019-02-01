@@ -389,14 +389,17 @@ func DBTrafficMonitor(ctx context.Context) {
 }
 
 func StartShadowsocks(user User) {
-	con := config.CurrentConfig().ShadowsocksOptions
+	sscon := config.CurrentConfig().ShadowsocksOptions
+
 	err := service.CurrentShadowsocksService().Add("0.0.0.0",
 		user.Method,
 		user.Password,
 		user.Port,
 		server.ShadowsocksArgs{
 			Limit:          user.Limit,
-			ConnectTimeout: time.Duration(con.ConnectTimeout) * time.Millisecond,
+			ConnectTimeout: time.Duration(sscon.ConnectTimeout) * time.Millisecond,
+			TCPSwitch:      sscon.TCPSwitch,
+			UDPSwitch:      sscon.UDPSwitch,
 		})
 	if err != nil {
 		log.Info("[%d] add failure, case %s", user.Port, err.Error())
