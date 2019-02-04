@@ -41,6 +41,8 @@ go get -u -d github.com/rc452860/vnet/...
 go build cmd/server/server.go
 ```
 
+windows 上使用`build.cmd`脚本可以快速编译linux和windows
+
 ## 直接使用方式(无需编译)
 在release页面下载最新的对应的可执行文件并赋予可执行权限
 列如64位linux系统
