@@ -4,7 +4,7 @@ import "testing"
 
 func Test_Reslove(t *testing.T) {
 	d := NewDNSWithPrefer("8.8.8.8:53", "114.114.114.114:53", true)
-	ip, err := d.Reslove("google.com")
+	ip, err := d.Reslove("i.ytimg.com")
 	if err != nil {
 		t.Logf("%-v", err)
 		t.FailNow()

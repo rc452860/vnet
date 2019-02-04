@@ -416,9 +416,11 @@ func (s *ShadowsocksProxy) dnsReslove(request record.IProxyRequest) (string, err
 	if request.GetAType() == record.AtypDomainName {
 		ip := dnsx.GetDNDComponent().MustReslove(request.GetAddress())
 		if ip == nil {
-			return "", errors.New(fmt.Sprintf("dns reslove error: %s .", request.GetAddress()))
+			return "", errors.New(fmt.Sprintf("`dns reslove error: %s .", request.GetAddress()))
 		}
-
+		if ip.To16() != nil {
+			return fmt.Sprintf("[%s]:%v", ip.String(), request.GetPort()), nil
+		}
 		return fmt.Sprintf("%s:%v", ip.String(), request.GetPort()), nil
 	} else {
 		return request.String(), nil
