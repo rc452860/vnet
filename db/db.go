@@ -11,7 +11,6 @@ import (
 
 	"github.com/rc452860/vnet/utils/addr"
 
-	"github.com/rc452860/vnet/proxy"
 	"github.com/rc452860/vnet/record"
 
 	"github.com/AlecAivazis/survey"
@@ -365,7 +364,7 @@ func formatLoad() string {
 // DBTrafficMonitor is should using goroutine start
 func DBTrafficMonitor(ctx context.Context) {
 	traffic := make(chan record.Traffic, 32)
-	proxy.RegisterTrafficHandle(traffic)
+	server.RegisterTrafficHandle(traffic)
 	var data record.Traffic
 	// count traffic
 	for {

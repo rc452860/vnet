@@ -17,7 +17,6 @@ import (
 	"github.com/rc452860/vnet/common/pool"
 	"github.com/rc452860/vnet/network/ciphers"
 	"github.com/rc452860/vnet/network/conn"
-	"github.com/rc452860/vnet/proxy"
 	"github.com/rc452860/vnet/record"
 	"github.com/rc452860/vnet/socks"
 	"golang.org/x/time/rate"
@@ -44,11 +43,11 @@ func init() {
 // ShadowsocksProxy is respect shadowsocks proxy server
 // it have Start and Stop method to control proxy
 type ShadowsocksProxy struct {
-	*proxy.ProxyService `json:"-,omitempty"`
-	Host                string `json:"host,omitempty"`
-	Port                int    `json:"port,omitempty"`
-	Method              string `json:"method,omitempty"`
-	Password            string `json:"password,omitempty"`
+	*ProxyService `json:"-,omitempty"`
+	Host          string `json:"host,omitempty"`
+	Port          int    `json:"port,omitempty"`
+	Method        string `json:"method,omitempty"`
+	Password      string `json:"password,omitempty"`
 	ShadowsocksArgs
 	ReadLimiter  *rate.Limiter `json:"read_limit,omitempty"`
 	WriteLimiter *rate.Limiter `json:"write_limit,omitempty"`
@@ -65,7 +64,7 @@ type ShadowsocksArgs struct {
 // NewShadowsocks is new ShadowsocksProxy object
 func NewShadowsocks(host string, method string, password string, port int, ssarg ShadowsocksArgs) (*ShadowsocksProxy, error) {
 	ss := &ShadowsocksProxy{
-		ProxyService:    proxy.NewProxyService(),
+		ProxyService:    NewProxyService(),
 		Host:            host,
 		Method:          method,
 		Password:        password,
