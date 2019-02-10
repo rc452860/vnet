@@ -2,7 +2,7 @@ package pool
 
 import "sync"
 
-const BufferSize = 4108
+const BufferSize = 4096
 
 var (
 	poolMap map[int]*sync.Pool

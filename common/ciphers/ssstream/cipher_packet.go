@@ -86,13 +86,13 @@ func (c *streamPacket) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 		return n, addr, err
 	}
 
-	pool.GetUdpBuf()
+	pool.GetBuf()
 	decryptr.XORKeyStream(b[ivLen:], b[ivLen:ivLen+n])
 	copy(b, b[ivLen:])
 	return n - ivLen, addr, err
 }
 
 func (c *streamPacket) Close() error {
-	pool.PutUdpBuf(c.buf)
+	pool.PutBuf(c.buf)
 	return c.PacketConn.Close()
 }

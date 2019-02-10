@@ -38,7 +38,7 @@ func GetAEADPacketCiphers(method string) func(string, net.PacketConn) (net.Packe
 			PacketConn:  packCon,
 			IAEADCipher: c,
 			key:         evpBytesToKey(password, c.KeySize()),
-			buf:         pool.GetUdpBuf(),
+			buf:         pool.GetBuf(),
 		}
 		return ap, nil
 	}
