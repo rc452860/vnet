@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/rc452860/vnet/component/dnsx"
+	"github.com/rc452860/vnet/utils/addr"
 
 	"github.com/pkg/errors"
 
@@ -157,8 +158,8 @@ func (s *ShadowsocksProxy) tcpDownload(con conn.IConn, down uint64) {
 
 // start shadowsocks tcp proxy service
 func (s *ShadowsocksProxy) startTCP() error {
-	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	serverAddr := fmt.Sprintf("%s:%d", s.Host, s.Port)
+	tcpAddr, err := net.ResolveTCPAddr("tcp", serverAddr)
 	if err != nil {
 		logging.Error(err.Error())
 		return err
@@ -220,15 +221,15 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 读取目标地址 */
 				targetAddr, err := socks.ReadAddr(lcd)
 				if err != nil {
-					log.Error("read target address error %s. (maybe the crypto method wrong configuration)", err.Error())
+					log.Error("tcp:%v read target address error %s. (maybe the crypto method wrong configuration)", addr.GetPortFromAddr(server.Addr()), err.Error())
 					return
 				}
-				addr, err := s.dnsReslove(targetAddr)
+				resloveAddr, err := s.dnsReslove(targetAddr)
 				if err != nil {
 					log.Err(err)
 					return
 				}
-				rc, err := net.Dial("tcp", addr)
+				rc, err := net.Dial("tcp", resloveAddr)
 				if err != nil {
 					logging.Error("connect target:%s error cause: %v", targetAddr, err)
 					return
@@ -238,7 +239,6 @@ func (s *ShadowsocksProxy) startTCP() error {
 				s.ConnectionStage(s.TCP.Addr(), lcd.RemoteAddr(), rc.RemoteAddr(), targetAddr)
 
 				rc.(*net.TCPConn).SetKeepAlive(true)
-				// logging.Info("tcp %s <----> %s", lcd.RemoteAddr(), targetAddr)
 
 				/** 默认装饰器 */
 				rcd, err := conn.DefaultDecorate(rc, conn.TCP)
@@ -316,8 +316,8 @@ func (s *ShadowsocksProxy) udpDownload(laddr, raddr net.Addr, n uint64) {
 
 // Listen on addr for encrypted packets and basically do UDP NAT.
 func (s *ShadowsocksProxy) startUDP() error {
-	addr := fmt.Sprintf("%s:%d", s.Host, s.Port)
-	server, err := net.ListenPacket("udp", addr)
+	serverAddr := fmt.Sprintf("%s:%d", s.Host, s.Port)
+	server, err := net.ListenPacket("udp", serverAddr)
 	if err != nil {
 		logging.Error("UDP remote listen error: %v", err)
 		return errors.Cause(err)
@@ -359,7 +359,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 			}
 			tgtAddr := socks.SplitAddr(buf[:n])
 			if tgtAddr == nil {
-				logging.Error("failed to split target address from packet: %q", buf[:n])
+				logging.Error("udp:%v read target address error. (maybe the crypto method wrong configuration)", addr.GetPortFromAddr(server.LocalAddr()))
 				continue
 			}
 			addr, err := s.dnsReslove(tgtAddr)
@@ -367,7 +367,6 @@ func (s *ShadowsocksProxy) startUDP() error {
 				log.Err(err)
 				return
 			}
-			// logging.Info("udp %s <----> %s", raddr, tgtAddr)
 			tgtUDPAddr, err := net.ResolveUDPAddr("udp", addr)
 			if err != nil {
 				logging.Error("failed to resolve target UDP address: %v", err)

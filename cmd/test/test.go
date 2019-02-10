@@ -2,20 +2,25 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"syscall"
+	"time"
 )
 
 func main() {
-	c := make(chan os.Signal)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	for {
-		data := <-c
-		fmt.Println(data.String())
-		if data == os.Interrupt {
-			return
-		}
-	}
-
+	go func() {
+		defer func() {
+			if e := recover(); e != nil {
+				fmt.Printf("error %v", e)
+			}
+		}()
+		go func() {
+			defer func() {
+				if e := recover(); e != nil {
+					fmt.Printf("error %v \n", e)
+				}
+			}()
+			panic("this is error")
+		}()
+	}()
+	time.Sleep(1 * time.Second)
+	fmt.Println("aaa")
 }

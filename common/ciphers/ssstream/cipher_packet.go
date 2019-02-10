@@ -2,11 +2,12 @@ package ssstream
 
 import (
 	"crypto/rand"
-	"errors"
+	"fmt"
 	"io"
 	"net"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/rc452860/vnet/common/pool"
 )
 
@@ -42,7 +43,7 @@ func GetStreamPacketCiphers(method string) func(string, net.PacketConn) (net.Pac
 	}
 }
 
-func (c *streamPacket) WriteTo(b []byte, addr net.Addr) (int, error) {
+func (c *streamPacket) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 	c.Lock()
 	defer c.Unlock()
 	ivLen := c.IVLen()
@@ -63,8 +64,13 @@ func (c *streamPacket) WriteTo(b []byte, addr net.Addr) (int, error) {
 	return dataLen, nil
 }
 
-func (c *streamPacket) ReadFrom(b []byte) (int, net.Addr, error) {
-	n, addr, err := c.PacketConn.ReadFrom(b)
+func (c *streamPacket) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
+	defer func() {
+		if e := recover(); e != nil {
+			err = errors.WithStack(errors.New(fmt.Sprintf("%v", e)))
+		}
+	}()
+	n, addr, err = c.PacketConn.ReadFrom(b)
 
 	if err != nil {
 		return n, addr, err

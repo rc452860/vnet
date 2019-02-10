@@ -40,7 +40,7 @@ import (
 
 // Format formats a date based on joda conventions for performance this method recommended to be used
 func Format(format string, date time.Time) string {
-	formatRune := []rune(format)
+	formatRune := []byte(format)
 	lenFormat := len(formatRune)
 	out := ""
 	for i := 0; i < len(formatRune); i++ {
@@ -435,7 +435,7 @@ func Format(format string, date time.Time) string {
 				continue
 			}
 
-			tmp := []rune{}
+			tmp := []byte{}
 			j := 1
 			for ; i+j < lenFormat; j++ {
 				if formatRune[i+j] != r {

@@ -103,6 +103,18 @@ func GetEnableUser() ([]User, error) {
 	return userList, nil
 }
 
+func GetUserWithLevel(level int) ([]User, error) {
+	connect, err := Connect()
+	if err != nil {
+		return nil, err
+	}
+	defer connect.Close()
+
+	var userList []User
+	connect.Where("port != 0 AND enable = 1 AND level = level").Find(&userList)
+	return userList, nil
+}
+
 func DbStarted(ctx context.Context) {
 	conf := config.CurrentConfig()
 	if conf.DbConfig.Host == "" {
@@ -238,7 +250,15 @@ func DBServiceMonitor(ctx context.Context) {
 			return
 		default:
 		}
-		users, err := GetEnableUser()
+		var (
+			users []User
+			err   error
+		)
+		if conf.Level != -1 {
+			users, err = GetEnableUser()
+		} else {
+			users, err = GetUserWithLevel(conf.Level)
+		}
 		if err != nil {
 			log.Err(err)
 			continue

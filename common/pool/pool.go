@@ -4,24 +4,46 @@ import "sync"
 
 const BufferSize = 4108
 
+var (
+	poolMap map[int]*sync.Pool
+)
+
 func init() {
-	pool = &sync.Pool{
-		New: func() interface{} {
-			return make([]byte, BufferSize)
-		},
-	}
+	poolMap = make(map[int]*sync.Pool)
 }
 
-var pool *sync.Pool
-
 func GetBuf() []byte {
-	buf := pool.Get().([]byte)
+	pool := poolMap[BufferSize]
+	if pool == nil {
+		poolMap[BufferSize] = &sync.Pool{
+			New: createAllocFunc(BufferSize),
+		}
+	}
+	buf := poolMap[BufferSize].Get().([]byte)
+	buf = buf[:cap(buf)]
+	return buf
+}
+
+func GetBufBySize(size int) []byte {
+	pool := poolMap[size]
+	if pool == nil {
+		poolMap[size] = &sync.Pool{
+			New: createAllocFunc(size),
+		}
+	}
+	buf := poolMap[size].Get().([]byte)
 	buf = buf[:cap(buf)]
 	return buf
 }
 
 func PutBuf(buf []byte) {
-	pool.Put(buf)
+	poolMap[cap(buf)].Put(buf)
+}
+
+func createAllocFunc(size int) func() interface{} {
+	return func() interface{} {
+		return make([]byte, size)
+	}
 }
 
 // type BytesPool struct {

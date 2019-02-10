@@ -8,6 +8,7 @@ import (
 
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/utils"
+	"github.com/rc452860/vnet/utils/iox"
 )
 
 var (
@@ -40,6 +41,7 @@ type DbConfig struct {
 	NodeId         int     `json:"node_id`
 	SyncTime       int     `json:"sync_time"`
 	OnlineSyncTime int     `json:"online_sync_time"`
+	Level          int     `json:"level"`
 }
 
 // ShadowsocksOptions is global shadowoscks service config
@@ -56,7 +58,8 @@ func DefaultConfig() *Config {
 	return &Config{
 		Mode: "db",
 		DbConfig: DbConfig{
-			Rate: -1,
+			Level: -1,
+			Rate:  -1,
 		},
 		ShadowsocksOptions: ShadowsocksOptions{
 			ConnectTimeout: 3000,
@@ -89,7 +92,7 @@ func LoadDefault() (*Config, error) {
 func LoadConfig(file string) (*Config, error) {
 	utils.RLock(file)
 	defer utils.RUnLock(file)
-	if !utils.IsFileExist(file) {
+	if !iox.IsFileExist(file) {
 		absFile, err := filepath.Abs(file)
 		if err != nil {
 			log.Err(err)
