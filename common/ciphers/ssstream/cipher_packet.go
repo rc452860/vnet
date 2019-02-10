@@ -77,6 +77,10 @@ func (c *streamPacket) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 	}
 	ivLen := c.IVLen()
 
+	if len(b) > cap(c.buf) {
+		return 0, nil, errors.WithStack(io.ErrShortBuffer)
+	}
+
 	if n < ivLen || len(b) < ivLen {
 		return n, addr, ErrShortPacket
 	}
@@ -86,7 +90,6 @@ func (c *streamPacket) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 		return n, addr, err
 	}
 
-	pool.GetBuf()
 	decryptr.XORKeyStream(b[ivLen:], b[ivLen:ivLen+n])
 	copy(b, b[ivLen:])
 	return n - ivLen, addr, err

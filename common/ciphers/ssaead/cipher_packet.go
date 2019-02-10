@@ -2,10 +2,11 @@ package ssaead
 
 import (
 	"crypto/rand"
-	"errors"
 	"io"
 	"net"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/common/pool"
@@ -59,7 +60,7 @@ func (c *aeadPacket) WriteTo(data []byte, addr net.Addr) (int, error) {
 		return 0, err
 	}
 	if MAX_PACKET_SIZE < c.SaltSize()+len(data)+aead.Overhead() {
-		return 0, io.ErrShortBuffer
+		return 0, errors.WithStack(io.ErrShortBuffer)
 	}
 	b := aead.Seal(c.buf[saltSize:saltSize], _zerononce[:aead.NonceSize()], data, nil)
 	_, err = c.PacketConn.WriteTo(c.buf[:saltSize+len(b)], addr)
@@ -84,6 +85,7 @@ func (c *aeadPacket) ReadFrom(b []byte) (int, net.Addr, error) {
 	if len(b) < saltSize+aead.Overhead() {
 		return 0, nil, ErrShortPacket
 	}
+
 	if saltSize+len(c.buf)+aead.Overhead() < len(b) {
 		return 0, nil, io.ErrShortBuffer
 	}
