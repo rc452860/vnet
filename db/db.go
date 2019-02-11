@@ -111,7 +111,7 @@ func GetUserWithLevel(level int) ([]User, error) {
 	defer connect.Close()
 
 	var userList []User
-	connect.Where("port != 0 AND enable = 1 AND level = level").Find(&userList)
+	connect.Where("port != 0 AND enable = 1 AND level >= level").Find(&userList)
 	return userList, nil
 }
 
