@@ -1,8 +1,8 @@
 bin/
-server
-server.exe
-vnet
-vnet.exe
+/server
+/server.exe
+/vnet
+/vnet.exe
 config.json
 *.test.exe
 *.pprof
