@@ -27,8 +27,17 @@ window直接运行exe
 
 linx:
 ```
-chmod +x server && ./server
+wget https://github.com/rc452860/vnet/releases/download/v0.0.4/vnet_linux_amd64 -O vnet && chmod +x vnet && ./vnet
+#配置好数据库后按ctrl + c退出使用nohup启动
+nohup ./vnet>vnet.log 2>&1 &
 ```
+
+重新启动
+```
+kill -9 $(ps aux | grep '[v]net' | awk '{print $2}') && nohup ./vnet>vnet.log 2>&1 &
+```
+
+
 
 ## 编译方式
 ```
