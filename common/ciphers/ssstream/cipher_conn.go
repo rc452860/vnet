@@ -78,8 +78,10 @@ func (s *streamConn) Read(b []byte) (n int, err error) {
 	if len(buf) < len(b) {
 		pool.PutBuf(buf)
 		buf = make([]byte, len(b))
+	} else {
+		defer pool.PutBuf(buf)
 	}
-	defer pool.PutBuf(buf)
+
 	buf = buf[:len(b)]
 	n, err = s.IConn.Read(buf)
 	if err != nil {

@@ -12,7 +12,6 @@ import (
 	"crypto/rand"
 
 	"github.com/rc452860/vnet/common/log"
-	"github.com/rc452860/vnet/common/pool"
 	"golang.org/x/crypto/hkdf"
 )
 
@@ -42,7 +41,7 @@ func GetAEADConnCipher(method string) func(string, connect.IConn) (connect.IConn
 			key:         evpBytesToKey(password, c.KeySize()),
 			wNonce:      make([]byte, c.NonceSize()),
 			rNonce:      make([]byte, c.NonceSize()),
-			readBuffer:  bytes.NewBuffer(pool.GetBuf()[:0]),
+			readBuffer:  new(bytes.Buffer),
 		}
 		var err error
 		sc.Encrypter, err = sc.NewEncrypter(sc.key, salt)

@@ -14,9 +14,11 @@ func Test_GetLastOneMinuteOnlineByPort(t *testing.T) {
 	for i := 0; i < 10; i++ {
 
 		eventbus.GetEventBus().Publish("record:proxyRequest", ConnectionProxyRequest{
-			ProxyAddr:  addr.ParseAddrFromString("tcp", "0.0.0.0:8080"),
-			ClientAddr: addr.ParseAddrFromString("tcp", fmt.Sprintf("192.168.1.1:%v", i)),
-			TargetAddr: addr.ParseAddrFromString("tcp", fmt.Sprintf("192.168.1.2:%v", i)),
+			ConnectionPair: ConnectionPair{
+				ProxyAddr:  addr.ParseAddrFromString("tcp", "0.0.0.0:8080"),
+				ClientAddr: addr.ParseAddrFromString("tcp", fmt.Sprintf("192.168.1.1:%v", i)),
+				TargetAddr: addr.ParseAddrFromString("tcp", fmt.Sprintf("192.168.1.2:%v", i)),
+			},
 		})
 		time.Sleep(5 * time.Millisecond)
 	}

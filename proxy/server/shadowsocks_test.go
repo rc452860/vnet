@@ -22,7 +22,7 @@ func mockUDPServer(t *testing.T) {
 		t.FailNow()
 		return
 	}
-	buf := pool.GetUdpBuf()
+	buf := pool.GetBufBySize(pool.UDP_MAX_PACKET_SIZE)
 	n, addr, err := conn.ReadFrom(buf)
 	if "hello" == string(buf[:n]) {
 		t.Logf(string(buf[:n]))
@@ -36,7 +36,8 @@ func Test_NewServer(t *testing.T) {
 	t.Logf("--------------------rc4-md5 success--------------------")
 	testShadowsocksProxy(t, "0.0.0.0", "aes-128-cfb", "killer", 8080)
 	t.Logf("--------------------aes-128-cfb success--------------------")
-
+	testShadowsocksProxy(t, "0.0.0.0", "aes-128-gcm", "killer", 8080)
+	t.Logf("--------------------aes-128-gcm success--------------------")
 }
 
 func testShadowsocksProxy(t *testing.T, host, method, password string, port int) {
@@ -63,6 +64,7 @@ func testShadowsocksProxy(t *testing.T, host, method, password string, port int)
 	response, err := client.Get("http://baidu.com")
 	if err != nil {
 		t.Error(err)
+		ss.Stop()
 		return
 	}
 	if response.StatusCode < 200 && response.StatusCode > 400 {

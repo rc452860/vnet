@@ -6,6 +6,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/rc452860/vnet/socks"
+
 	"github.com/rc452860/vnet/record"
 )
 
@@ -18,10 +20,12 @@ func Test_LastOneMinute(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		client, _ := net.ResolveTCPAddr("tcp", fmt.Sprintf("1.1.1.1:%v", i+1000))
 		proxy.MessageRoute <- record.ConnectionProxyRequest{
-			ClientAddr:   client,
-			ProxyAddr:    proxyAddr,
-			TargetAddr:   targetAddr,
-			TargetDomain: "baidu.com",
+			ConnectionPair: record.ConnectionPair{
+				ClientAddr: client,
+				ProxyAddr:  proxyAddr,
+				TargetAddr: targetAddr,
+			},
+			IProxyRequest: socks.NewSSProtocol(socks.AtypDomainName, 3306, "baidu.com"),
 		}
 		time.Sleep(10 * time.Millisecond)
 	}

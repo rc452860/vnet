@@ -2,10 +2,14 @@
 package socks
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
 	"strconv"
+
+	"github.com/pkg/errors"
 )
 
 // UDPEnabled is the toggle for UDP support
@@ -63,6 +67,65 @@ func NewSocks5Addr(raw []byte, atype int) *Socks5Addr {
 	}
 	addr.process()
 	return addr
+}
+
+func NewSSProtocol(atype, port int, address string) *Socks5Addr {
+	ss := &Socks5Addr{
+		AType:   atype,
+		Port:    port,
+		Address: address,
+	}
+	ss.GetRaw()
+	return ss
+}
+
+func (ss *Socks5Addr) GetRaw() (raw []byte, err error) {
+	if ss.Raw != nil {
+		return ss.Raw, nil
+	}
+
+	buf := new(bytes.Buffer)
+	var data []interface{}
+	switch ss.AType {
+	case AtypDomainName:
+		domainLen := len(ss.Address)
+		data = []interface{}{
+			uint8(ss.AType),
+			uint8(domainLen),
+			[]byte(ss.Address),
+			uint16(ss.Port),
+		}
+	case AtypIPv4:
+		data = []interface{}{
+			uint8(ss.AType),
+			[]byte(net.ParseIP(ss.Address).To4()),
+			uint16(ss.Port),
+		}
+	case AtypIPv6:
+		data = []interface{}{
+			uint8(ss.AType),
+			[]byte(net.ParseIP(ss.Address).To16()),
+			uint16(ss.Port),
+		}
+	}
+	for _, v := range data {
+		err := binary.Write(buf, binary.BigEndian, v)
+		if err != nil {
+			return nil, errors.Wrap(errors.WithStack(err), "GetRaw is errors")
+		}
+	}
+	raw = make([]byte, buf.Len())
+	copy(raw, buf.Bytes())
+	ss.Raw = raw
+	return raw, nil
+}
+
+func (ss *Socks5Addr) MustGetRaw() []byte {
+	raw, err := ss.GetRaw()
+	if err != nil {
+		return nil
+	}
+	return raw
 }
 
 func (s *Socks5Addr) GetAddress() string {

@@ -4,20 +4,19 @@ import (
 	"testing"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/rc452860/vnet/common/log"
 )
 
-func Test_GetEnableUser(t *testing.T) {
-	logging := log.GetLogger("root")
+// func Test_GetEnableUser(t *testing.T) {
+// 	logging := log.GetLogger("root")
 
-	ssNodeList, err := GetEnableUser()
-	if err != nil {
-		t.Error(err)
-	}
-	for _, item := range ssNodeList {
-		logging.Info("item: %v", item)
-	}
-}
+// 	ssNodeList, err := GetEnableUser()
+// 	if err != nil {
+// 		t.Error(err)
+// 	}
+// 	for _, item := range ssNodeList {
+// 		logging.Info("item: %v", item)
+// 	}
+// }
 
 func TestFormatLoad(t *testing.T) {
 	t.Log(formatLoad())

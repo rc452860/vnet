@@ -2,6 +2,7 @@ package pool
 
 import "sync"
 
+const UDP_MAX_PACKET_SIZE = 64 * 1204
 const BufferSize = 4096
 
 var (

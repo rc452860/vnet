@@ -47,7 +47,7 @@ func (this *ShadowsocksClient) TcpProxy(con conn.IConn, target string, port int)
 		return err
 	}
 	addr := socks.ParseAddr(fmt.Sprintf("%s:%v", target, port))
-	_, err = proxys.Write(addr)
+	_, err = proxys.Write(addr.MustGetRaw())
 	if err != nil {
 		log.Err(err)
 		return err
