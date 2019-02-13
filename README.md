@@ -90,3 +90,8 @@ chacha20-ietf-poly1305
 ## 注意事项
 config.json配置文件中的所有时间单位都为毫秒
 升级后续删除原有config.json重新生成
+
+
+## 本人使用的 vps 推荐
+- [vultr](https://www.vultr.com/?ref=6992791)
+- [cloudcone 美国vps良心价](https://app.cloudcone.com/?ref=1956)
