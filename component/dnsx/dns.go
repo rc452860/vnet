@@ -57,6 +57,10 @@ func (d *DNS) MustReslove(domain string) net.IP {
 }
 
 func (d *DNS) Reslove(domain string) (addr net.IP, err error) {
+	ip := net.ParseIP(domain)
+	if ip != nil {
+		return ip, nil
+	}
 	key4 := fmt.Sprintf("%s,%s", IPV4, domain)
 	key6 := fmt.Sprintf("%s,%s", IPV6, domain)
 
