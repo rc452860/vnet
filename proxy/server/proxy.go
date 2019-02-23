@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rc452860/vnet/utils/addr"
@@ -35,6 +36,8 @@ type ProxyService struct {
 	Status                   string             `json:"status"`
 	Cancel                   context.CancelFunc `json:"-"`
 	Tick                     time.Duration      `json:"-"`
+	TCPLock                  *sync.Mutex
+	UDPLock                  *sync.Mutex
 }
 
 func NewProxyService() *ProxyService {
@@ -105,11 +108,12 @@ func (this *ProxyService) traffic(data record.Traffic) {
 func (this *ProxyService) proxyRequest(data record.ConnectionProxyRequest) {
 	eventbus.GetEventBus().Publish("record:proxyRequest", data)
 	key := addr.GetIPFromAddr(data.ClientAddr)
-	if this.LastOneMinuteConnections.Get(key) == nil {
+	last := this.LastOneMinuteConnections.Get(key)
+	if last == nil {
 		this.LastOneMinuteConnections.Put(key, []record.ConnectionProxyRequest{data}, this.Tick)
 	} else {
-		last := this.LastOneMinuteConnections.Get(key).([]record.ConnectionProxyRequest)
-		this.LastOneMinuteConnections.Put(key, append(last, data), this.Tick)
+		swap := last.([]record.ConnectionProxyRequest)
+		this.LastOneMinuteConnections.Put(key, append(swap, data), this.Tick)
 	}
 
 	// just print tcp log
@@ -146,7 +150,7 @@ func (this *ProxyService) Start() error {
 }
 
 func (this *ProxyService) Stop() error {
-	log.Info("proxy stop")
+	start := time.Now()
 	this.Cancel()
 	if this.TCP != nil {
 		err := this.TCP.Close()
@@ -161,5 +165,6 @@ func (this *ProxyService) Stop() error {
 		}
 	}
 	this.Status = "stop"
+	log.Info("proxy stop consume %v", time.Since(start).Seconds())
 	return nil
 }

@@ -11,6 +11,7 @@ import (
 
 	"github.com/rc452860/vnet/component/dnsx"
 	"github.com/rc452860/vnet/utils/addr"
+	"github.com/rc452860/vnet/utils/goroutine"
 
 	"github.com/pkg/errors"
 
@@ -166,8 +167,8 @@ func (s *ShadowsocksProxy) startTCP() error {
 	}
 	s.TCP = server
 
-	go func() {
-		defer server.Close()
+	go goroutine.Protect(func() {
+		defer s.clearTCP()
 		for {
 			select {
 			case <-s.ProxyService.Done():
@@ -188,7 +189,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				continue
 			}
 
-			go func() {
+			go goroutine.Protect(func() {
 				defer lcon.Close()
 				/** 默认装饰器 */
 				lcd, err := conn.DefaultDecorate(lcon, conn.TCP)
@@ -248,9 +249,9 @@ func (s *ShadowsocksProxy) startTCP() error {
 					}
 					logging.Error("relay error: %v", err)
 				}
-			}()
+			})
 		}
-	}()
+	})
 	return nil
 }
 
@@ -268,17 +269,12 @@ func relayTCP(left, right net.Conn) (int64, int64, error) {
 		}
 	}()
 
-	go func() {
-		defer func() {
-			if e := recover(); e != nil {
-				log.Error("panic in timedCopy: %v", e)
-			}
-		}()
+	go goroutine.Protect(func() {
 		n, err := io.Copy(right, left)
 		right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
 		left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
 		ch <- res{n, err}
-	}()
+	})
 
 	n, err := io.Copy(left, right)
 	right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
@@ -341,8 +337,8 @@ func (s *ShadowsocksProxy) startUDP() error {
 
 	// logging.Info("listening UDP on %s", addr)
 
-	go func() {
-		defer server.Close()
+	go goroutine.Protect(func() {
+		defer s.clearUDP()
 		for {
 			select {
 			case <-s.ProxyService.Done():
@@ -397,7 +393,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 				continue
 			}
 		}
-	}()
+	})
 	return nil
 }
 
@@ -478,12 +474,12 @@ func (m *natmap) Del(key string) net.PacketConn {
 
 func (m *natmap) Add(peer net.Addr, dst, src net.PacketConn) {
 	m.Set(peer.String(), src)
-	go func() {
+	go goroutine.Protect(func() {
 		timedCopy(dst, peer, src, m.timeout)
 		if pc := m.Del(peer.String()); pc != nil {
 			pc.Close()
 		}
-	}()
+	})
 }
 
 // copy from src to dst at target with read timeout
@@ -513,4 +509,12 @@ func timedCopy(dst net.PacketConn, target net.Addr, src net.PacketConn, timeout 
 			return errors.Cause(err)
 		}
 	}
+}
+
+func (s *ShadowsocksProxy) clearUDP() {
+
+}
+
+func (s *ShadowsocksProxy) clearTCP() {
+
 }

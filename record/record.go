@@ -127,11 +127,12 @@ func (g *GlobalResourceMonitor) trafficStatistics(data Traffic) {
 }
 func (g *GlobalResourceMonitor) lastOneMinuteConnections(data ConnectionProxyRequest) {
 	key := addr.GetIPFromAddr(data.ClientAddr)
-	if g.LastOneMinuteConnections.Get(key) == nil {
+	last := g.LastOneMinuteConnections.Get(key)
+	if last == nil {
 		g.LastOneMinuteConnections.Put(key, []ConnectionProxyRequest{data}, g.tick)
 	} else {
-		last := g.LastOneMinuteConnections.Get(key).([]ConnectionProxyRequest)
-		g.LastOneMinuteConnections.Put(key, append(last, data), g.tick)
+		swap := last.([]ConnectionProxyRequest)
+		g.LastOneMinuteConnections.Put(key, append(swap, data), g.tick)
 	}
 }
 
