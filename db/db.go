@@ -164,7 +164,7 @@ func DbStarted(ctx context.Context) {
 	if conf.DbConfig.SyncTime == 0 {
 		survey.AskOne(&survey.Input{
 			Message: "what is your want database sync time (unit: Millisencod)?",
-			Default: "3000",
+			Default: "60000",
 		}, &conf.DbConfig.SyncTime, nil)
 	}
 

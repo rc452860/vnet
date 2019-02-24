@@ -58,8 +58,10 @@ func DefaultConfig() *Config {
 	return &Config{
 		Mode: "db",
 		DbConfig: DbConfig{
-			Level: -1,
-			Rate:  -1,
+			Level:          -1,
+			Rate:           -1,
+			SyncTime:       60000,
+			OnlineSyncTime: 60000,
 		},
 		ShadowsocksOptions: ShadowsocksOptions{
 			ConnectTimeout: 3000,
@@ -67,8 +69,9 @@ func DefaultConfig() *Config {
 			UDPSwitch:      "true",
 		},
 		DNSOptions: DnsOptions{
-			DNS1: "8.8.8.8:53",
-			DNS2: "8.8.4.4:53",
+			DNS1:       "8.8.8.8:53",
+			DNS2:       "8.8.4.4:53",
+			IPV4Prefer: true,
 		},
 	}
 }
