@@ -44,7 +44,9 @@ func GetAEADPacketCiphers(method string) func(string, net.PacketConn) (net.Packe
 		return ap, nil
 	}
 }
-
+func (c *aeadPacket) GetKey() []byte {
+	return c.key
+}
 func (c *aeadPacket) WriteTo(data []byte, addr net.Addr) (int, error) {
 	c.Lock()
 	defer c.Unlock()

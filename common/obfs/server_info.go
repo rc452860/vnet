@@ -27,6 +27,8 @@ type ServerInfo interface {
 	GetRecvIv() []byte
 	SetKeyStr(key string)
 	GetKeyStr() string
+	SetKey(key []byte)
+	GetKey() []byte
 	SetHeadLen(len int)
 	GetHeadLen() int
 	SetTCPMss(mss int)
@@ -63,97 +65,105 @@ func NewServerInfo() ServerInfo {
 }
 
 func (s *serverInfo) GetHost() string {
-	panic("not implemented")
+	return s.Host
 }
 
 func (s *serverInfo) SetHost(host string) {
-	panic("not implemented")
+	s.Host = host
 }
 
 func (s *serverInfo) GetPort() int {
-	panic("not implemented")
+	return s.Port
 }
 
 func (s *serverInfo) SetPort(port int) {
-	panic("not implemented")
+	s.Port = port
 }
 
 func (s *serverInfo) GetClient() net.IP {
-	panic("not implemented")
+	return s.Client
 }
 
 func (s *serverInfo) SetClient(client net.IP) {
-	panic("not implemented")
+	s.Client = client
 }
 
 func (s *serverInfo) GetProtocolParam() string {
-	panic("not implemented")
+	return s.ProtocolParam
 }
 
 func (s *serverInfo) SetProtocolParam(protocolParam string) {
-	panic("not implemented")
+	s.ProtocolParam = protocolParam
 }
 
 func (s *serverInfo) GetObfsParam() string {
-	panic("not implemented")
+	return s.ObfsParam
 }
 
 func (s *serverInfo) SetObfsParam(obfsParam string) {
-	panic("not implemented")
+	s.ObfsParam = obfsParam
 }
 
 func (s *serverInfo) SetIv(iv []byte) {
-	panic("not implemented")
+	s.Iv = iv
 }
 
 func (s *serverInfo) GetIv() []byte {
-	panic("not implemented")
+	return s.Iv
 }
 
 func (s *serverInfo) SetRecvIv(iv []byte) {
-	panic("not implemented")
+	s.RecvIv = iv
 }
 
 func (s *serverInfo) GetRecvIv() []byte {
-	panic("not implemented")
+	return s.RecvIv
 }
 
 func (s *serverInfo) SetKeyStr(key string) {
-	panic("not implemented")
+	s.KeyStr = key
 }
 
 func (s *serverInfo) GetKeyStr() string {
-	panic("not implemented")
+	return s.KeyStr
+}
+
+func (s *serverInfo) SetKey(key []byte) {
+	s.Key = key
+}
+
+func (s *serverInfo) GetKey() []byte {
+	return s.Key
 }
 
 func (s *serverInfo) SetHeadLen(len int) {
-	panic("not implemented")
+	s.HeadLen = len
 }
 
 func (s *serverInfo) GetHeadLen() int {
-	panic("not implemented")
+	return s.HeadLen
 }
 
 func (s *serverInfo) SetTCPMss(mss int) {
-	panic("not implemented")
+	s.TCPMss = mss
 }
 
 func (s *serverInfo) GetTCPMss() int {
-	panic("not implemented")
+	return s.TCPMss
 }
 
 func (s *serverInfo) SetBufferSize(size int) {
-	panic("not implemented")
+	s.BufferSize = size
 }
 
 func (s *serverInfo) GetBufferSize() int {
-	panic("not implemented")
+	return s.BufferSize
 }
 
 func (s *serverInfo) SetOverhead(size int) {
-	panic("not implemented")
+	s.Overhead = size
 }
 
 func (s *serverInfo) GetOverhead() int {
-	panic("not implemented")
+	return s.Overhead
 }

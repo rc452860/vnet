@@ -11,6 +11,7 @@ import (
 	"crypto/md5"
 	"crypto/rand"
 
+	"github.com/rc452860/vnet/common/ciphers"
 	"github.com/rc452860/vnet/common/log"
 	"golang.org/x/crypto/hkdf"
 )
@@ -62,6 +63,7 @@ type IAEADCipher interface {
 
 type aeadConn struct {
 	connect.IConn
+	ciphers.ICipher
 	IAEADCipher
 	key        []byte
 	rNonce     []byte
@@ -69,6 +71,10 @@ type aeadConn struct {
 	readBuffer *bytes.Buffer
 	Encrypter  cipher.AEAD
 	Decrypter  cipher.AEAD
+}
+
+func (a *aeadConn) GetKey() []byte {
+	return a.key
 }
 
 func (a *aeadConn) Read(b []byte) (n int, err error) {

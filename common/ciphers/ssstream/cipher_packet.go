@@ -36,11 +36,15 @@ func GetStreamPacketCiphers(method string) func(string, net.PacketConn) (net.Pac
 		sc := &streamPacket{
 			PacketConn:    packet,
 			IStreamCipher: c,
-			key:           evpBytesToKey(password, c.KeyLen()),
+			key:           EvpBytesToKey(password, c.KeyLen()),
 			buf:           pool.GetBuf(),
 		}
 		return sc, nil
 	}
+}
+
+func (c *streamPacket) GetKey() []byte {
+	return c.key
 }
 
 func (c *streamPacket) WriteTo(b []byte, addr net.Addr) (n int, err error) {

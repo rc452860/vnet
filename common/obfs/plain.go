@@ -17,6 +17,14 @@ func NewPlain(method string) Plain {
 	}
 }
 
+func (p *plain) GetMethod() string {
+	return p.Method
+}
+
+func (p *plain) SetMethod(method string) {
+	p.Method = method
+}
+
 func (p *plain) InitData() []byte {
 	return []byte{}
 }
@@ -33,53 +41,54 @@ func (p *plain) SetServerInfo(s ServerInfo) {
 	p.ServerInfo = s
 }
 
-func (p *plain) ClientPreEncrypt(buf []byte) error {
-	return nil
+func (p *plain) ClientPreEncrypt(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ClientEncode(buf []byte) error {
-	return nil
+func (p *plain) ClientEncode(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ClientDecode(buf []byte) (bool, error) {
-	return false, nil
+//ClientDecode buffer_to_recv, is_need_to_encode_and_send_back
+func (p *plain) ClientDecode(buf []byte) ([]byte, bool, error) {
+	return buf, false, nil
 }
 
-func (p *plain) ClientPostDecrypt(buf []byte) error {
-	return nil
+func (p *plain) ClientPostDecrypt(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ServerPreEncrypt(buf []byte) error {
-	return nil
+func (p *plain) ServerPreEncrypt(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ServerEncode(buf []byte) error {
-	return nil
+func (p *plain) ServerEncode(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
 //buffer_to_recv, is_need_decrypt, is_need_to_encode_and_send_back
-func (p *plain) ServerDecode(buf []byte) (bool, bool, error) {
-	return true, false, nil
+func (p *plain) ServerDecode(buf []byte) ([]byte, bool, bool, error) {
+	return buf, true, false, nil
 }
 
-func (p *plain) ServerPostDecrypt(buf []byte) (bool, error) {
-	return false, nil
+func (p *plain) ServerPostDecrypt(buf []byte) ([]byte, bool, error) {
+	return buf, false, nil
 }
 
-func (p *plain) ClientUDPPreEncrypt(buf []byte) error {
-	return nil
+func (p *plain) ClientUDPPreEncrypt(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ClientUDPPostDecrypt(buf []byte) error {
-	return nil
+func (p *plain) ClientUDPPostDecrypt(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ServerUDPPreEncrypt(buf []byte) error {
-	return nil
+func (p *plain) ServerUDPPreEncrypt(buf []byte) ([]byte, error) {
+	return buf, nil
 }
 
-func (p *plain) ServerUDPPostDecrypt(buf []byte) (string, error) {
-	return "", nil
+func (p *plain) ServerUDPPostDecrypt(buf []byte) ([]byte, string, error) {
+	return buf, "", nil
 }
 
 func (p *plain) Dispose() {

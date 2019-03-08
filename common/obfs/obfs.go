@@ -5,21 +5,23 @@ type PlainFactory func(string) Plain
 // Plain interface
 type Plain interface {
 	InitData() []byte
+	GetMethod() string
+	SetMethod(method string)
 	GetOverhead(direction bool) int
 	GetServerInfo() ServerInfo
 	SetServerInfo(s ServerInfo)
-	ClientPreEncrypt(buf []byte) error
-	ClientEncode(buf []byte) error
-	ClientDecode(buf []byte) (bool, error)
-	ClientPostDecrypt(buf []byte) error
-	ServerPreEncrypt(buf []byte) error
-	ServerEncode(buf []byte) error
-	ServerDecode(buf []byte) (bool, bool, error)
-	ServerPostDecrypt(buf []byte) (bool, error)
-	ClientUDPPreEncrypt(buf []byte) error
-	ClientUDPPostDecrypt(buf []byte) error
-	ServerUDPPreEncrypt(buf []byte) error
-	ServerUDPPostDecrypt(buf []byte) (string, error)
+	ClientPreEncrypt(buf []byte) ([]byte, error)
+	ClientEncode(buf []byte) ([]byte, error)
+	ClientDecode(buf []byte) ([]byte, bool, error)
+	ClientPostDecrypt(buf []byte) ([]byte, error)
+	ServerPreEncrypt(buf []byte) ([]byte, error)
+	ServerEncode(buf []byte) ([]byte, error)
+	ServerDecode(buf []byte) ([]byte, bool, bool, error)
+	ServerPostDecrypt(buf []byte) ([]byte, bool, error)
+	ClientUDPPreEncrypt(buf []byte) ([]byte, error)
+	ClientUDPPostDecrypt(buf []byte) ([]byte, error)
+	ServerUDPPreEncrypt(buf []byte) ([]byte, error)
+	ServerUDPPostDecrypt(buf []byte) ([]byte, string, error)
 	Dispose()
 	GetHeadSize(buf []byte, defaultValue int) int
 }

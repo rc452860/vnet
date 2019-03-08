@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"io"
 
+	"github.com/rc452860/vnet/common/ciphers"
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/common/pool"
 	connect "github.com/rc452860/vnet/network/conn"
@@ -57,9 +58,14 @@ type IStreamCipher interface {
 type streamConn struct {
 	connect.IConn
 	IStreamCipher
+	ciphers.ICipher
 	key       []byte
 	Encrypter cipher.Stream
 	Decrypter cipher.Stream
+}
+
+func (s *streamConn) GetKey() []byte {
+	return s.key
 }
 
 func (s *streamConn) Read(b []byte) (n int, err error) {
