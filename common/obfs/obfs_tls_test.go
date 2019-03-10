@@ -209,6 +209,7 @@ func MD5(data []byte) []byte {
 	return hash.Sum(nil)
 }
 
+// ExampleOtlsClientDecode is test obfs function normal
 func ExampleOtlsClientDecode() {
 
 	tc := InitObfs()

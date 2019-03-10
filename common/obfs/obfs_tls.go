@@ -2,8 +2,6 @@ package obfs
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha1"
 	"encoding/binary"
 	"encoding/hex"
 	"math"
@@ -456,28 +454,6 @@ func (otls *ObfsTLS) DecodeErrorReturn(buf []byte) ([]byte, bool, bool, error) {
 	}
 
 	return buf, true, false, nil
-}
-
-func conbineToBytes(data ...interface{}) []byte {
-	buf := new(bytes.Buffer)
-	for _, item := range data {
-		binary.Write(buf, binary.BigEndian, item)
-	}
-	return buf.Bytes()
-}
-
-func MustHexDecode(data string) []byte {
-	result, err := hex.DecodeString(data)
-	if err != nil {
-		return []byte{}
-	}
-	return result
-}
-
-func hmacsha1(key, data []byte) []byte {
-	mac := hmac.New(sha1.New, key)
-	mac.Write(data)
-	return mac.Sum(nil)
 }
 
 func matchBegin(str1, str2 []byte) bool {
