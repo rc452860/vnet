@@ -109,10 +109,9 @@ func (trafficService *TrafficService) RecordTrafficLog(data *rpcx.PushUserTraffi
 		whenUp.String(),
 		whenDown.String(),
 		whenPort.String()[:whenPort.Len()-1])
-	log.Info(updateUserTrafficSQL)
-	db.Begin()
-	db.Exec(updateUserTrafficSQL)
-	db.Commit()
+	tx := db.Begin()
+	tx.Exec(updateUserTrafficSQL)
+	tx.Commit()
 	// TODO 如果有报错打印日志 暂时忽略错误
 	if db.GetErrors() != nil && len(db.GetErrors()) > 0 {
 		for _, item := range db.GetErrors() {

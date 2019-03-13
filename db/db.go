@@ -337,8 +337,8 @@ func UpdateTrafficByUser(users map[int]User) {
 		if v.Up+v.Down < 64*1024 {
 			continue
 		}
-		whenUp.WriteString(fmt.Sprintf(" WHEN %v THEN u+%v", v.Port, float32(v.Up)*conf.Rate))
-		whenDown.WriteString(fmt.Sprintf(" WHEN %v THEN d+%v", v.Port, float32(v.Down)*conf.Rate))
+		whenUp.WriteString(fmt.Sprintf(" WHEN %v THEN u+%v", v.Port, float32(v.Down)*conf.Rate))
+		whenDown.WriteString(fmt.Sprintf(" WHEN %v THEN d+%v", v.Port, float32(v.Up)*conf.Rate))
 		whenPort.WriteString(fmt.Sprintf("%v,", v.Port))
 		traffic, err := datasize.HumanSize((v.Up + v.Down) * uint64(conf.Rate))
 		if err != nil {
@@ -365,8 +365,8 @@ func UpdateTrafficByUser(users map[int]User) {
 	portStr := whenPort.String()
 	user := fmt.Sprintf("UPDATE user SET u = CASE port%s END,"+
 		"d = CASE port%s END,t = unix_timestamp() WHERE port IN (%s)",
-		whenDown.String(),
 		whenUp.String(),
+		whenDown.String(),
 		portStr[:len(portStr)-1])
 
 	inserStr := insertBuf.String()
