@@ -55,6 +55,15 @@ func HumanSize(bytes uint64) (s string, err error) {
 	s = defaultDatasize.HumanReadable()
 	return
 }
+
+func MustHumanSize(bytes uint64) string {
+	result, err := HumanSize(bytes)
+	if err != nil {
+		return ""
+	}
+	return result
+}
+
 func (b ByteSize) Bytes() uint64 {
 	return uint64(b)
 }

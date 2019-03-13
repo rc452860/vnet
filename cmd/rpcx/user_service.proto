@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package club.vnet.rpcx;
+option csharp_namespace = "club.vnet.rpcx";
+option go_package = "rpcx";
+option java_package = "club.vnet.rpcx";
+option java_multiple_files = true;
+
+// import "google/protobuf/any.proto";
+// import "google/protobuf/empty.proto";
+
+
+service UserService{
+    rpc PullEnableUsers (PullEnableUsersRequest) returns (PullEnableUsersResponse);
+    rpc PushUserTraffic (PushUserTrafficRequest) returns (PushUserTrafficResponse);
+    rpc PullSsNodeConfig (SsNodeReuqest) returns(SsNodeResponse);
+}
+
+
+message PullEnableUsersRequest{
+    int64 node_id = 1;
+    string token = 2;
+    int64 updateTime = 3;
+}
+
+message PullEnableUsersResponse{
+    repeated EnableUser enable_users = 1;
+}
+
+message EnableUser{
+    int64 id = 1;
+    uint32 port =2;
+    string password  =3;
+    uint64 limit = 4;
+}
+
+message PushUserTrafficRequest{
+    repeated TrafficInfo traffic_info = 1;
+    int64 node_id = 2;
+    string token = 3;
+}
+
+message TrafficInfo{
+    int64 uid = 1;
+    int64 port = 2;
+    uint64 upload = 3;
+    uint64 download = 4;
+}
+
+message PushUserTrafficResponse{}
+
+message SsNodeReuqest{
+    int64 node_id = 1;
+    string token = 2;
+}
+
+message SsNodeResponse{
+    string method = 1;
+}

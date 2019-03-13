@@ -27,7 +27,7 @@ type User struct {
 	Id             int64  `gorm:"column:id;primary_key"`
 	Port           int    `gorm:"column:port"`
 	Enable         bool   `gorm:"column:enable"`
-	Update         int64  `gorm:"column:u"`
+	Upload         int64  `gorm:"column:u"`
 	Download       int64  `gorm:"column:d"`
 	TransferEnable int64  `gorm:"column:transfer_enable"`
 	Method         string `gorm:"column:method"`
