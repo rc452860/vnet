@@ -1,0 +1,4 @@
+{
+    "ds":"root:killer@tcp(localhost:3306)/ssrpanel_dev?parseTime=true&loc=Local",
+    "rpcPort":"5050"
+}

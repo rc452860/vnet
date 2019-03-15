@@ -1,0 +1,5 @@
+{
+    "RpcAddress":"localhost:5050",
+    "token":"abc",
+    "nodeId":"2"
+}

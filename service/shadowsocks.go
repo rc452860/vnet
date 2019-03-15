@@ -25,6 +25,45 @@ func NewShadowsocksService() *ShadowsocksService {
 	}
 }
 
+func (this *ShadowsocksService) AddAndStart(host string, method string, password string, port int, args server.ShadowsocksArgs) error {
+	proxy := this.Get(port)
+	if proxy == nil {
+		proxy, err := server.NewShadowsocks(host, method, password, port, args)
+		if err != nil {
+			return err
+		}
+		this.Servers[port] = proxy
+		proxy.Start()
+		return err
+	} else {
+		dif := false
+		if proxy.Host != host {
+			dif = true
+		}
+		if proxy.Method != method {
+			dif = true
+		}
+		if proxy.Password != password {
+			dif = true
+		}
+
+		if !proxy.ShadowsocksArgs.CompareTo(args) {
+			dif = true
+		}
+		// restart proxy
+		if dif {
+			proxy.Stop()
+			proxy, err := server.NewShadowsocks(host, method, password, port, args)
+			if err != nil {
+				return err
+			}
+			this.Servers[port] = proxy
+			proxy.Start()
+		}
+		return nil
+	}
+}
+
 func (this *ShadowsocksService) Add(host string, method string, password string, port int, args server.ShadowsocksArgs) error {
 	proxy := this.Get(port)
 

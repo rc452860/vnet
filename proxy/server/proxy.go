@@ -67,7 +67,6 @@ func (this *ProxyService) TrafficMeasure() {
 	go this.speed()
 	go this.route()
 	<-this.Done()
-	log.Info("close traffic measure")
 }
 
 func (this *ProxyService) route() {
@@ -75,7 +74,6 @@ func (this *ProxyService) route() {
 		var data interface{}
 		select {
 		case <-this.Done():
-			log.Info("close countClose")
 			return
 		case data = <-this.MessageRoute:
 		}
@@ -150,7 +148,6 @@ func (this *ProxyService) Start() error {
 }
 
 func (this *ProxyService) Stop() error {
-	start := time.Now()
 	this.Cancel()
 	if this.TCP != nil {
 		err := this.TCP.Close()
@@ -165,6 +162,5 @@ func (this *ProxyService) Stop() error {
 		}
 	}
 	this.Status = "stop"
-	log.Info("proxy stop consume %v", time.Since(start).Seconds())
 	return nil
 }

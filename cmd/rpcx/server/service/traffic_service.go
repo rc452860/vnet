@@ -23,9 +23,11 @@ type TrafficService struct {
 }
 
 func NewTrafficService() *TrafficService {
-	return &TrafficService{
+	instance := &TrafficService{
 		TrafficChan: make(chan *rpcx.PushUserTrafficRequest, 1024),
 	}
+	instance.Start()
+	return instance
 }
 
 func GetTrafficServiceInstance() *TrafficService {
@@ -86,6 +88,9 @@ func (trafficService *TrafficService) RecordTrafficLog(data *rpcx.PushUserTraffi
 	whenDown := new(bytes.Buffer)
 	whenPort := new(bytes.Buffer)
 	for _, item := range data.TrafficInfo {
+		if item.Upload+item.Download == 0 {
+			continue
+		}
 		traffic := datasize.MustHumanSize(uint64(item.Download+item.Upload) * uint64(ssNode.TrafficRate))
 		whenUp.WriteString(fmt.Sprintf(" WHEN %v THEN u+%v", item.Port, float32(item.Download)*ssNode.TrafficRate))
 		whenDown.WriteString(fmt.Sprintf(" WHEN %v THEN d+%v", item.Port, float32(item.Upload)*ssNode.TrafficRate))

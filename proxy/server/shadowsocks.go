@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/rc452860/vnet/component/dnsx"
 	"github.com/rc452860/vnet/utils/addr"
 	"github.com/rc452860/vnet/utils/goroutine"
 
@@ -55,6 +54,25 @@ type ShadowsocksArgs struct {
 	Limit          uint64        `json:"limit"`
 	TCPSwitch      string        `json:"tcp_switch"`
 	UDPSwitch      string        `json:"udp_switch"`
+	Data           interface{}   `json:"-"`
+}
+
+func (sa ShadowsocksArgs) CompareTo(target ShadowsocksArgs) bool {
+	equal := true
+	if sa.ConnectTimeout != target.ConnectTimeout && target.ConnectTimeout != 0 {
+		equal = false
+	}
+	if sa.Limit != target.Limit {
+		equal = false
+	}
+	if sa.TCPSwitch != target.TCPSwitch {
+		equal = false
+	}
+
+	if sa.UDPSwitch != target.UDPSwitch {
+		equal = false
+	}
+	return equal
 }
 
 // NewShadowsocks is new ShadowsocksProxy object
@@ -73,7 +91,8 @@ func NewShadowsocks(host string, method string, password string, port int, ssarg
 	if ss.UDPSwitch == "" {
 		ss.UDPSwitch = "true"
 	}
-
+	ss.ConfigLimit()
+	ss.ConfigTimeout()
 	return ss, nil
 }
 
@@ -89,12 +108,13 @@ func (s *ShadowsocksProxy) ConfigLimit() {
 // ConfigTimeout is config shadowsocks timeout
 func (s *ShadowsocksProxy) ConfigTimeout() {
 	if s.ConnectTimeout == 0 {
-		s.ConnectTimeout = 3e9
+		s.ConnectTimeout = 3 * time.Second
 	}
 }
 
 // Start proxy
 func (s *ShadowsocksProxy) Start() error {
+	log.Info("start shadowsocks tcp:%s udp:%s method:%s passwd:%s limit:%v on:%v", s.TCPSwitch, s.UDPSwitch, s.Method, s.Password, s.ShadowsocksArgs.Limit, s.Port)
 	s.ConfigLimit()
 	s.ConfigTimeout()
 	if s.TCPSwitch == "true" || s.UDPSwitch == "true" {
@@ -120,7 +140,10 @@ func (s *ShadowsocksProxy) Start() error {
 
 // Stop proxy
 func (s *ShadowsocksProxy) Stop() error {
+	start := time.Now()
+	defer log.Info("proxy stop %v consume %v", s.Port, time.Since(start).Nanoseconds())
 	return s.ProxyService.Stop()
+
 }
 
 // statistics tcpUpload traffic
@@ -411,18 +434,19 @@ func (s *ShadowsocksProxy) ConnectionStage(proxyAddr, client, target net.Addr, p
 }
 
 func (s *ShadowsocksProxy) dnsReslove(request record.IProxyRequest) (string, error) {
-	if request.GetAType() == record.AtypDomainName {
-		ip := dnsx.GetDNDComponent().MustReslove(request.GetAddress())
-		if ip == nil {
-			return "", errors.New(fmt.Sprintf("`dns reslove error: %s .", request.GetAddress()))
-		}
-		if ip.To16() != nil {
-			return fmt.Sprintf("[%s]:%v", ip.String(), request.GetPort()), nil
-		}
-		return fmt.Sprintf("%s:%v", ip.String(), request.GetPort()), nil
-	} else {
-		return request.String(), nil
-	}
+	// if request.GetAType() == record.AtypDomainName {
+	// 	ip := dnsx.GetDNDComponent().MustReslove(request.GetAddress())
+	// 	if ip == nil {
+	// 		return "", errors.New(fmt.Sprintf("`dns reslove error: %s .", request.GetAddress()))
+	// 	}
+	// 	if ip.To16() != nil {
+	// 		return fmt.Sprintf("[%s]:%v", ip.String(), request.GetPort()), nil
+	// 	}
+	// 	return fmt.Sprintf("%s:%v", ip.String(), request.GetPort()), nil
+	// } else {
+	// 	return request.String(), nil
+	// }
+	return request.String(), nil
 }
 
 func (s *ShadowsocksProxy) String() string {

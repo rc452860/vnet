@@ -14,6 +14,8 @@ service UserService{
     rpc PullEnableUsers (PullEnableUsersRequest) returns (PullEnableUsersResponse);
     rpc PushUserTraffic (PushUserTrafficRequest) returns (PushUserTrafficResponse);
     rpc PullSsNodeConfig (SsNodeReuqest) returns(SsNodeResponse);
+    rpc PushSsNodeOnlineLog (SsNodeOnlineLogRequest) returns(SsNodeOnlineLogResponse);
+    rpc PushSsNodeInfo (SsNodeInfoRequest) returns(SsNodeInfoResponse);
 }
 
 
@@ -32,6 +34,7 @@ message EnableUser{
     uint32 port =2;
     string password  =3;
     uint64 limit = 4;
+    bool enable =5;
 }
 
 message PushUserTrafficRequest{
@@ -56,4 +59,27 @@ message SsNodeReuqest{
 
 message SsNodeResponse{
     string method = 1;
+    int32 tcp =2;
+    int32 udp = 3;
+    int32 traffic_rate = 4;
+}
+
+message SsNodeOnlineLogRequest{
+    int64 node_id = 1;
+    string token = 2;
+    int32 online_user = 3;
+}
+
+message SsNodeOnlineLogResponse{
+
+}
+
+message SsNodeInfoRequest{
+    int64 node_id = 1;
+    string token = 2;
+    string load = 3;
+}
+
+message SsNodeInfoResponse{
+
 }
