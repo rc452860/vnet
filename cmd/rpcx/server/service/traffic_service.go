@@ -104,7 +104,9 @@ func (trafficService *TrafficService) RecordTrafficLog(data *rpcx.PushUserTraffi
 			ssNode.TrafficRate,
 			traffic))
 	}
-
+	if buf.Len() <= 1 {
+		return
+	}
 	db.Exec("INSERT INTO `user_traffic_log` (`id`, `user_id`, `u`, `d`, " +
 		"`node_id`, `rate`, `traffic`, `log_time`) VALUES" + buf.String()[:buf.Len()-1])
 

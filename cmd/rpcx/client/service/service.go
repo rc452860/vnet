@@ -143,14 +143,20 @@ func VnetTrafficTask() error {
 
 		currentUp = item.UpBytes
 		currentDown = item.DownBytes
+
+		// filter
+		if currentUp+currentDown == lastUp+lastDown {
+			continue
+		}
+		log.Info("%v", currentUp-lastUp)
 		tmp := &rpcx.TrafficInfo{
 			Uid:      user.Id,
 			Port:     int64(item.Port),
 			Upload:   currentUp - lastUp,
 			Download: currentDown - lastDown,
 		}
-		cacheService.Put(upKey, currentUp, 1*time.Minute)
-		cacheService.Put(downKey, currentDown, 1*time.Minute)
+		cacheService.Put(upKey, currentUp, 10*time.Minute)
+		cacheService.Put(downKey, currentDown, 10*time.Minute)
 		trafficInfos = append(trafficInfos, tmp)
 	}
 	log.Info("traiifc task report data length:%v", len(trafficInfos))
