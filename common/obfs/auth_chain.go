@@ -3,6 +3,8 @@ package obfs
 import (
 	"bytes"
 
+	"github.com/rc452860/vnet/common/cache"
+	"github.com/rc452860/vnet/common/obfs"
 	"github.com/rc452860/vnet/utils/binaryx"
 )
 
@@ -83,6 +85,17 @@ func (authBase *AuthBase) NotMatchReturn(buf []byte) ([]byte, bool) {
 	return buf, false
 }
 
+type ObfsAUthChainData struct {
+	Name         stirng
+	UserId       cache.Cache
+	LastClientId []byte
+	ConnectionId int
+	MaxClient    int
+	MaxBuffer    int
+}
+
+/*----------------------------------AuthChainA----------------------------------*/
+
 type AuthChainA struct {
 	AuthBase
 	RecvBuf        []byte
@@ -101,7 +114,112 @@ type AuthChainA struct {
 	ClientOverhead int
 	LastClientHash []byte
 	LastServerHash []byte
-	RandomClient   XorShift128Plus
-	RandomServer   XorShift128Plus
-	
+	RandomClient   *XorShift128Plus
+	RandomServer   *XorShift128Plus
+}
+
+func NewAuthChainA() *AuthChainA {
+	return &AuthChainA{
+		AuthBase: {
+			RawTrans:           false,
+			Overhead:           4,
+			NoCompatibleMethod: "auth_chain_a",
+		},
+		RecvBuf:        []byte{},
+		UnintLen:       2800,
+		HasRecvHeader:  false,
+		HasSentHeader:  false,
+		ClientId:       0,
+		ConnectionId:   0,
+		MaxTimeDif:     60 * 60 * 24,
+		Salt:           []byte("auth_chain_a"),
+		PackId:         1,
+		RecvId:         1,
+		UserIdNum:      0,
+		ClientOverhead: 4,
+		LastClientHash: []byte{},
+		LastServerHash: []byte{},
+		RandomClient:   NewXorShift128Plus(),
+		RandomServer:   NewXorShift128Plus(),
+	}
+}
+
+func (a *AuthChainA) InitData() []byte {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) GetMethod() string {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) SetMethod(method string) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) GetOverhead(direction bool) int {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) GetServerInfo() obfs.ServerInfo {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) SetServerInfo(s obfs.ServerInfo) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ClientPreEncrypt(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ClientEncode(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ClientDecode(buf []byte) ([]byte, bool, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ClientPostDecrypt(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ServerPreEncrypt(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ServerEncode(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ServerDecode(buf []byte) ([]byte, bool, bool, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ServerPostDecrypt(buf []byte) ([]byte, bool, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ClientUDPPreEncrypt(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ClientUDPPostDecrypt(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ServerUDPPreEncrypt(buf []byte) ([]byte, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) ServerUDPPostDecrypt(buf []byte) ([]byte, string, error) {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) Dispose() {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) GetHeadSize(buf []byte, defaultValue int) int {
+	panic("not implemented")
 }
