@@ -109,8 +109,8 @@ func VnetTask() error {
 			ssservice.AddAndStart("0.0.0.0", ssNode.Method, item.Password, int(item.Port), server.ShadowsocksArgs{
 				ConnectTimeout: 0,
 				Limit:          item.Limit,
-				TCPSwitch:      ConOpStr(ssNode.Tcp == 1, "true", "false"),
-				UDPSwitch:      ConOpStr(ssNode.Udp == 1, "true", "false"),
+				TCPSwitch:      viper.GetString(config.C_TCP),
+				UDPSwitch:      viper.GetString(config.C_UDP),
 				Data:           item,
 			})
 		}
