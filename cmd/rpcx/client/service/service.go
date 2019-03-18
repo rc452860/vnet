@@ -58,11 +58,14 @@ func VnetStart() {
 	tick := time.Tick(1 * time.Second)
 	count := 0
 	record.GetGRMInstance()
+	var syncTime, addtionSyncTime int
+	syncTime = StringToInt(viper.GetString(config.C_SyncTime))
+	addtionSyncTime = StringToInt(viper.GetString(config.C_AddtionSyncTime))
 	for {
 		<-tick
 		count++
 		// database synchronize time wheel
-		if count%StringToInt(viper.GetString(config.C_SyncTime)) == 0 {
+		if count%syncTime == 0 {
 			err := VnetTask()
 			if err != nil {
 				log.Err(err)
@@ -70,7 +73,7 @@ func VnetStart() {
 		}
 
 		// one minuts time wheel
-		if count%60 == 0 {
+		if count%addtionSyncTime == 0 {
 			err := VnetTrafficTask()
 			if err != nil {
 				log.Err(err)
@@ -94,7 +97,11 @@ func VnetTask() error {
 	if err != nil {
 		return err
 	}
-	log.Info("recive users len:%v", len(r.EnableUsers))
+	if len(r.EnableUsers) > 1 {
+		log.Info("recive users len:%v", len(r.EnableUsers))
+	} else {
+		log.Debug("recive users len:%v", len(r.EnableUsers))
+	}
 	for _, item := range r.EnableUsers {
 		ssservice := CurrentShadowsocksService()
 		// start new service if port not exist,and restart config changed port

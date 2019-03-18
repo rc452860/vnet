@@ -1,5 +1,7 @@
 {
     "RpcAddress":"localhost:5050",
     "token":"abc",
-    "nodeId":"2"
+    "nodeId":"2",
+    "syncTime":"2",
+    "addtionSyncTime":"5"
 }

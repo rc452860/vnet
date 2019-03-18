@@ -21,6 +21,6 @@ func (s *SsNodeInfo) RecordSsNodeInfo(nodeId int64, load string) error {
 	}
 
 	db.Exec("INSERT INTO `ss_node_info` (`id`,`node_id`,`uptime`,`load`,`log_time`)"+
-		"VALUES (NULL,unix_timestamp(),?,?,unix_timestamp())", nodeId, load)
+		"VALUES (NULL,?,unix_timestamp(),?,unix_timestamp())", nodeId, load)
 	return nil
 }

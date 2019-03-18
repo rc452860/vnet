@@ -1,10 +1,13 @@
 package config
 
 const (
-	C_NodeId     = "nodeId"
-	C_Token      = "token"
-	C_RpcAddress = "rpcAddress"
-	C_SyncTime   = "syncTime"
+	C_NodeId          = "nodeId"
+	C_Token           = "token"
+	C_RpcAddress      = "rpcAddress"
+	C_SyncTime        = "syncTime"
+	C_AddtionSyncTime = "addtionSyncTime"
+	C_TCP             = "tcp"
+	C_UDP             = "udp"
 )
 
 type FlagSetting struct {
@@ -35,6 +38,24 @@ var ClientConfig = []FlagSetting{
 		Name:     C_SyncTime,
 		Usage:    "sync time unit(second) default 2",
 		Default:  "2",
+		Required: true,
+	},
+	FlagSetting{
+		Name:     C_AddtionSyncTime,
+		Usage:    "user traffic, server info, online user sync time",
+		Default:  "60",
+		Required: true,
+	},
+	FlagSetting{
+		Name:     C_TCP,
+		Usage:    "allow tcp connection",
+		Default:  "true",
+		Required: true,
+	},
+	FlagSetting{
+		Name:     C_UDP,
+		Usage:    "allow UDP connection",
+		Default:  "true",
 		Required: true,
 	},
 }
