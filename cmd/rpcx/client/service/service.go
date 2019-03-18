@@ -108,7 +108,7 @@ func VnetTask() error {
 		if item.Enable {
 			ssservice.AddAndStart("0.0.0.0", ssNode.Method, item.Password, int(item.Port), server.ShadowsocksArgs{
 				ConnectTimeout: 0,
-				Limit:          item.Limit,
+				Limit:          item.Limit * 1024,
 				TCPSwitch:      viper.GetString(config.C_TCP),
 				UDPSwitch:      viper.GetString(config.C_UDP),
 				Data:           item,
