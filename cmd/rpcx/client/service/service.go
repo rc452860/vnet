@@ -166,7 +166,11 @@ func VnetTrafficTask() error {
 		cacheService.Put(downKey, currentDown, 10*time.Minute)
 		trafficInfos = append(trafficInfos, tmp)
 	}
-	log.Info("traiifc task report data length:%v", len(trafficInfos))
+	if len(trafficInfos) > 0 {
+		log.Info("traiifc task report data length:%v", len(trafficInfos))
+	} else {
+		log.Debug("traiifc task report data length:%v", len(trafficInfos))
+	}
 	_, err := PushUserTraffic(trafficInfos)
 	return err
 }
