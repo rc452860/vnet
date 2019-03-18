@@ -59,8 +59,8 @@ func VnetStart() {
 	count := 0
 	record.GetGRMInstance()
 	var syncTime, addtionSyncTime int
-	syncTime = StringToInt(viper.GetString(config.C_SyncTime))
-	addtionSyncTime = StringToInt(viper.GetString(config.C_AddtionSyncTime))
+	syncTime = StringToInt(viper.GetString(config.C_SyncInterval))
+	addtionSyncTime = StringToInt(viper.GetString(config.C_ReportInterval))
 	for {
 		<-tick
 		count++
