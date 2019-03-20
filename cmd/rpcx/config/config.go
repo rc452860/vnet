@@ -5,9 +5,10 @@ const (
 	C_Token          = "token"
 	C_RpcAddress     = "rpcAddress"
 	C_SyncInterval   = "syncInterval"
-	C_ReportInterval = "addtionSyncTime"
+	C_ReportInterval = "reportInterval"
 	C_TCP            = "tcp"
 	C_UDP            = "udp"
+	C_LIMIT          = "limit"
 )
 
 type FlagSetting struct {
@@ -56,6 +57,12 @@ var ClientConfig = []FlagSetting{
 		Name:     C_UDP,
 		Usage:    "allow UDP connection",
 		Default:  "true",
+		Required: true,
+	},
+	FlagSetting{
+		Name:     C_LIMIT,
+		Usage:    "user speed limit",
+		Default:  "0",
 		Required: true,
 	},
 }

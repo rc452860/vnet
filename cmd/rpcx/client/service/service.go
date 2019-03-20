@@ -108,7 +108,7 @@ func VnetTask() error {
 		if item.Enable {
 			ssservice.AddAndStart("0.0.0.0", ssNode.Method, item.Password, int(item.Port), server.ShadowsocksArgs{
 				ConnectTimeout: 0,
-				Limit:          item.Limit * 1024,
+				Limit:          GetFinalLimit(item.Limit) * 1024,
 				TCPSwitch:      viper.GetString(config.C_TCP),
 				UDPSwitch:      viper.GetString(config.C_UDP),
 				Data:           item,
@@ -302,4 +302,17 @@ func PushSsNodeInfo(load string) (*rpcx.SsNodeInfoResponse, error) {
 
 func formatLoad() string {
 	return fmt.Sprintf("cpu:%v%% mem:%v%% disk:%v%%", service.GetCPUUsage(), service.GetMemUsage(), service.GetDiskUsage())
+}
+
+func GetFinalLimit(limit uint64) uint64 {
+	result, err := strconv.ParseInt(viper.GetString(config.C_LIMIT), 10, 64)
+	if err != nil {
+		log.Error("config limit error:%v", err)
+		return limit
+	}
+	configLimit := uint64(result)
+	if configLimit == 0 || limit < configLimit {
+		return limit
+	}
+	return configLimit
 }
