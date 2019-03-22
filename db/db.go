@@ -13,7 +13,7 @@ import (
 
 	"github.com/rc452860/vnet/record"
 
-	"github.com/AlecAivazis/survey"
+	"gopkg.in/AlecAivazis/survey"
 	"github.com/rc452860/vnet/common/config"
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/service"

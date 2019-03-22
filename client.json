@@ -3,5 +3,6 @@
     "token":"abc",
     "nodeId":"2",
     "syncInterval":"2",
-    "reportInterval":"5"
+    "reportInterval":"5",
+    "limit":"0",
 }
