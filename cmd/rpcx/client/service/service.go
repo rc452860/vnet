@@ -151,8 +151,8 @@ func VnetTrafficTask() error {
 		currentUp = item.UpBytes
 		currentDown = item.DownBytes
 
-		// filter
-		if currentUp+currentDown == lastUp+lastDown {
+		// filter 500k
+		if currentUp+currentDown < lastUp+lastDown+500*1024 {
 			continue
 		}
 		log.Info("%v", currentUp-lastUp)
