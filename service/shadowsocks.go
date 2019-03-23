@@ -36,8 +36,6 @@ func (this *ShadowsocksService) AddAndStart(host string, method string, password
 		proxy.Start()
 		return err
 	} else {
-		fmt.Println(proxy.Method, method, port)
-
 		if proxy.Method != method {
 			proxy.ChangeMethod(method)
 		}
