@@ -34,11 +34,12 @@ func (userService *UserService) PullEnableUsers(ctx context.Context, arg *rpcx.P
 
 	date := time.Now()
 	if userService.getUpdateTime(arg.NodeId, arg.Token).Unix() != time.Unix(0, 0).Unix() && arg.UpdateTime != 0 {
-		fmt.Println(userService.getUpdateTime(arg.NodeId, arg.Token))
+		log.Info("increasing sync")
 		db.Select("id,port,passwd,speed_limit_per_user,enable").
 			Where("updated_at >= ?", userService.getUpdateTime(arg.NodeId, arg.Token).Add(-3*time.Second)).
 			Find(&users)
 	} else {
+		log.Info("full sync")
 		db.Select("id,port,passwd,speed_limit_per_user,enable").
 			Where("enable = 1").
 			Find(&users)
