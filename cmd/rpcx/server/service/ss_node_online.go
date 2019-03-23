@@ -18,6 +18,7 @@ func (s *SsNodeOnlineService) RecordSsNodeOnline(nodeId int64, onlineUsers int32
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 	db.Exec("INSERT INTO `ss_node_online_log` (id,node_id,online_user,log_time) "+
 		" VALUES (NULL,?,?,unix_timestamp())", nodeId, onlineUsers)
 	return nil

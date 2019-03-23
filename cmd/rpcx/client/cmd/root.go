@@ -21,6 +21,7 @@ import (
 
 	"github.com/rc452860/vnet/cmd/rpcx/client/service"
 	"github.com/rc452860/vnet/cmd/rpcx/config"
+	"github.com/rc452860/vnet/common/log"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -75,6 +76,7 @@ func init() {
 func checkRequired() bool {
 	for _, item := range config.ClientConfig {
 		if item.Required && viper.GetString(item.Name) == "" {
+			log.Warn("misee:" + item.Name)
 			return false
 		}
 	}

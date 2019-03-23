@@ -36,29 +36,22 @@ func (this *ShadowsocksService) AddAndStart(host string, method string, password
 		proxy.Start()
 		return err
 	} else {
-		dif := false
-		if proxy.Host != host {
-			dif = true
-		}
+		fmt.Println(proxy.Method, method, port)
+
 		if proxy.Method != method {
-			dif = true
-		}
-		if proxy.Password != password {
-			dif = true
+			proxy.ChangeMethod(method)
 		}
 
-		if !proxy.ShadowsocksArgs.CompareTo(args) {
-			dif = true
+		if proxy.Password != password {
+			proxy.ChangePassword(password)
 		}
-		// restart proxy
-		if dif {
-			proxy.Stop()
-			proxy, err := server.NewShadowsocks(host, method, password, port, args)
-			if err != nil {
-				return err
-			}
-			this.Servers[port] = proxy
-			proxy.Start()
+
+		if proxy.ShadowsocksArgs.Limit != args.Limit {
+			proxy.ChangeLimit(args.Limit)
+		}
+
+		if proxy.ShadowsocksArgs.ConnectTimeout != args.ConnectTimeout {
+			proxy.ChangeTimeout(args.ConnectTimeout)
 		}
 		return nil
 	}

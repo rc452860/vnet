@@ -99,7 +99,9 @@ func NewShadowsocks(host string, method string, password string, port int, ssarg
 // ConfigLimit config shadowsocks traffic limit
 func (s *ShadowsocksProxy) ConfigLimit() {
 	if s.Limit == 0 {
-		return
+		log.Info("port %v config limit is 0, the mean is no limit", s.Port)
+		s.ReadLimiter = nil
+		s.WriteLimiter = nil
 	}
 	s.ReadLimiter = rate.NewLimiter(rate.Limit(s.Limit), int(s.Limit))
 	s.WriteLimiter = rate.NewLimiter(rate.Limit(s.Limit), int(s.Limit))
@@ -110,6 +112,31 @@ func (s *ShadowsocksProxy) ConfigTimeout() {
 	if s.ConnectTimeout == 0 {
 		s.ConnectTimeout = 3 * time.Second
 	}
+}
+
+func (s *ShadowsocksProxy) ChangeLimit(limit uint64) {
+	log.Info("port %v change limit from %v to %v", s.Port, s.Limit, limit)
+	s.Limit = limit
+	s.ConfigLimit()
+}
+
+func (s *ShadowsocksProxy) ChangeTimeout(connectTime time.Duration) {
+	if connectTime == 0 {
+		return
+	}
+	log.Info("port %v change connection timeout from %v to %v", s.Port, s.ConnectTimeout, connectTime)
+	s.ConnectTimeout = connectTime
+	s.ConfigTimeout()
+}
+
+func (s *ShadowsocksProxy) ChangeMethod(method string) {
+	log.Info("port %v change method from %s to %s", s.Port, s.Method, method)
+	s.Method = method
+}
+
+func (s *ShadowsocksProxy) ChangePassword(password string) {
+	log.Info("port %v change password from %s to %s", s.Port, s.Password, password)
+	s.Password = password
 }
 
 // Start proxy
@@ -348,11 +375,6 @@ func (s *ShadowsocksProxy) startUDP() error {
 	s.UDP = server
 	// 去皮流量装饰器
 	server = conn.PacketTrafficConnDecorate(server, s.udpUpload, s.udpDownload)
-	server, err = ciphers.CipherPacketDecorate(s.Password, s.Method, server)
-	if err != nil {
-		logging.Error("UDP CipherPacketDecorate init error: %v", err)
-		return errors.Cause(err)
-	}
 
 	nm := newNATmap(s.ConnectTimeout)
 	buf := pool.GetBuf()
@@ -368,8 +390,14 @@ func (s *ShadowsocksProxy) startUDP() error {
 				return
 			default:
 			}
-			server.SetDeadline(time.Now().Add(s.ConnectTimeout))
-			n, raddr, err := server.ReadFrom(buf)
+			serverWithCiphers, err := ciphers.CipherPacketDecorate(s.Password, s.Method, server)
+			if err != nil {
+				logging.Error("UDP CipherPacketDecorate init error: %v", err)
+				continue
+			}
+
+			serverWithCiphers.SetDeadline(time.Now().Add(s.ConnectTimeout))
+			n, raddr, err := serverWithCiphers.ReadFrom(buf)
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				continue
 			}
@@ -382,7 +410,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 			}
 			tgtAddr := socks.SplitAddr(buf[:n])
 			if tgtAddr == nil {
-				logging.Error("udp:%v read target address error. (maybe the crypto method wrong configuration)", addr.GetPortFromAddr(server.LocalAddr()))
+				logging.Error("udp:%v read target address error. (maybe the crypto method wrong configuration)", addr.GetPortFromAddr(serverWithCiphers.LocalAddr()))
 				continue
 			}
 			addr, err := s.dnsReslove(tgtAddr)
@@ -407,7 +435,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 					continue
 				}
 
-				nm.Add(raddr, server, pc)
+				nm.Add(raddr, serverWithCiphers, pc)
 			}
 
 			_, err = pc.WriteTo(payload, tgtUDPAddr) // accept only UDPAddr despite the signature
@@ -434,18 +462,6 @@ func (s *ShadowsocksProxy) ConnectionStage(proxyAddr, client, target net.Addr, p
 }
 
 func (s *ShadowsocksProxy) dnsReslove(request record.IProxyRequest) (string, error) {
-	// if request.GetAType() == record.AtypDomainName {
-	// 	ip := dnsx.GetDNDComponent().MustReslove(request.GetAddress())
-	// 	if ip == nil {
-	// 		return "", errors.New(fmt.Sprintf("`dns reslove error: %s .", request.GetAddress()))
-	// 	}
-	// 	if ip.To16() != nil {
-	// 		return fmt.Sprintf("[%s]:%v", ip.String(), request.GetPort()), nil
-	// 	}
-	// 	return fmt.Sprintf("%s:%v", ip.String(), request.GetPort()), nil
-	// } else {
-	// 	return request.String(), nil
-	// }
 	return request.String(), nil
 }
 

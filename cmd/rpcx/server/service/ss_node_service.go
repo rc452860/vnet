@@ -44,6 +44,7 @@ func (ssNodeService *SsNodeService) GetSsNodeByIdAndToken(nodeId int64, token st
 		log.Err(err)
 		return nil
 	}
+	defer db.Close()
 	ssNode := &model.SsNode{}
 	db = db.Select("id,token,method,traffic_rate,tcp,udp").Where("id=? and token=?", int(nodeId), token).First(ssNode)
 	if db.RecordNotFound() {
