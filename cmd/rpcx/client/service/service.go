@@ -152,20 +152,19 @@ func VnetTrafficTask() error {
 
 		currentUp = item.UpBytes
 		currentDown = item.DownBytes
-
+		cacheService.Put(upKey, currentUp, 10*time.Second)
+		cacheService.Put(downKey, currentDown, 10*time.Second)
 		// filter 500k
-		if currentUp+currentDown < lastUp+lastDown+500*1024 {
+		if currentUp+currentDown < lastUp+lastDown+1*1024 {
 			continue
 		}
-		log.Info("%v", currentUp-lastUp)
 		tmp := &rpcx.TrafficInfo{
 			Uid:      user.Id,
 			Port:     int64(item.Port),
 			Upload:   currentUp - lastUp,
 			Download: currentDown - lastDown,
 		}
-		cacheService.Put(upKey, currentUp, 10*time.Minute)
-		cacheService.Put(downKey, currentDown, 10*time.Minute)
+
 		trafficInfos = append(trafficInfos, tmp)
 	}
 	if len(trafficInfos) > 0 {
