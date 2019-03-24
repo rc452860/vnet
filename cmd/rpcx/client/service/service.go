@@ -152,10 +152,10 @@ func VnetTrafficTask() error {
 
 		currentUp = item.UpBytes
 		currentDown = item.DownBytes
-		cacheService.Put(upKey, currentUp, 10*time.Second)
-		cacheService.Put(downKey, currentDown, 10*time.Second)
+		cacheService.Put(upKey, currentUp, 10*time.Minute)
+		cacheService.Put(downKey, currentDown, 10*time.Minute)
 		// filter 500k
-		if currentUp+currentDown < lastUp+lastDown+1*1024 {
+		if currentUp+currentDown < lastUp+lastDown+500*1024 {
 			continue
 		}
 		tmp := &rpcx.TrafficInfo{
