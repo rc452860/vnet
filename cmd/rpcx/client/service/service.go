@@ -3,10 +3,8 @@ package service
 import (
 	"context"
 	"fmt"
-	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
+	"sync"
 	"time"
 
 	"github.com/rc452860/vnet/record"
@@ -39,14 +37,18 @@ func Start() {
 
 	log.Info("get node config:( %v )", ssNode)
 
-	// 循环获取用户和监控
-
-	sigs := make(chan os.Signal, 2)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	// fetch user in time wheel
+	wg := new(sync.WaitGroup)
+	wg.Add(1)
 	go goroutine.Protect(func() {
+		defer wg.Done()
 		VnetStart()
 	})
-	<-sigs
+
+	go goroutine.Protect(func() {
+		HttpStart()
+	})
+	wg.Wait()
 }
 
 var (
