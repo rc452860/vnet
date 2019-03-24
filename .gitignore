@@ -1,9 +1,13 @@
 bin/
-/server
-/server.exe
 /vnet
 /vnet.exe
 config.json
 *.test.exe
 *.pprof
 vnet.zip
+/client
+/client.exe
+/server
+/server.exe
+/main
+/main.exe

@@ -7,7 +7,7 @@ import (
 
 var ds string
 
-// 初始化数据库
+// init database
 func InitDS(datasource string) error {
 	_, err := gorm.Open("mysql", datasource)
 	if err != nil {
@@ -17,11 +17,12 @@ func InitDS(datasource string) error {
 	return nil
 }
 
-// 获得数据库连接
+// get database connection
 func GetDB() (*gorm.DB, error) {
 	db, err := gorm.Open("mysql", ds)
 	if err != nil {
 		return nil, err
 	}
+	// db.LogMode(true)
 	return db, nil
 }
