@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/rc452860/vnet/common/ciphers/ssaead"
-	"github.com/rc452860/vnet/common/ciphers/ssstream"
+	aead "github.com/rc452860/vnet/common/ciphers/aead"
+	stream "github.com/rc452860/vnet/common/ciphers/stream"
 	connect "github.com/rc452860/vnet/network/conn"
 )
 
@@ -14,11 +14,11 @@ func CipherDecorate(password, method string, conn connect.IConn) (connect.IConn,
 	if method == "none" {
 		return conn, nil
 	}
-	d := ssstream.GetStreamConnCiphers(method)
+	d := stream.GetStreamConnCiphers(method)
 	if d != nil {
 		return d(password, conn)
 	}
-	d = ssaead.GetAEADConnCipher(method)
+	d = aead.GetAEADConnCipher(method)
 	if d != nil {
 		return d(password, conn)
 	}
@@ -29,11 +29,11 @@ func CipherPacketDecorate(password, method string, conn net.PacketConn) (net.Pac
 	if method == "none" {
 		return conn, nil
 	}
-	d := ssstream.GetStreamPacketCiphers(method)
+	d := stream.GetStreamPacketCiphers(method)
 	if d != nil {
 		return d(password, conn)
 	}
-	d = ssaead.GetAEADPacketCiphers(method)
+	d = aead.GetAEADPacketCiphers(method)
 	if d != nil {
 		return d(password, conn)
 	}
@@ -41,12 +41,12 @@ func CipherPacketDecorate(password, method string, conn net.PacketConn) (net.Pac
 }
 
 func GetSupportCiphers() []string {
-	stream := ssstream.GetStreamCiphers()
+	stream := stream.GetStreamCiphers()
 	list := make([]string, 0, 20)
 	for k, _ := range stream {
 		list = append(list, k)
 	}
-	aeas := ssaead.GetAEADCiphers()
+	aeas := aead.GetAEADCiphers()
 	for k, _ := range aeas {
 		list = append(list, k)
 	}

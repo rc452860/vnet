@@ -106,6 +106,7 @@ func New(interval time.Duration) *Cache {
 	c := &cache{janitor: j}
 	go j.process(c)
 	C := &Cache{c}
+	// this is very interesting,it worth be deep learning
 	runtime.SetFinalizer(C, stopJanitor)
 	return C
 }

@@ -1,17 +1,16 @@
 package main
 
-import "testing"
+import (
+	"database/sql"
+	"fmt"
+)
 
-func Benchmark_panic(t *testing.B) {
-	t.ResetTimer()
-	for i := 0; i < t.N; i++ {
-		func() {
-			defer func() {
-				if e := recover(); e != nil {
-
-				}
-			}()
-			panic(100)
-		}()
+func ExampleTest() {
+	a := &sql.NullInt64{}
+	a = &sql.NullInt64{
+		Int64: 0,
+		Valid: false,
 	}
+	fmt.Println(a)
+	//Output:
 }

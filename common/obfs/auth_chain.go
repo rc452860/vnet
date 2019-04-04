@@ -2,9 +2,12 @@ package obfs
 
 import (
 	"bytes"
+	"math"
+	"sync"
+	"time"
 
 	"github.com/rc452860/vnet/common/cache"
-	"github.com/rc452860/vnet/common/obfs"
+	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/utils/binaryx"
 )
 
@@ -85,13 +88,159 @@ func (authBase *AuthBase) NotMatchReturn(buf []byte) ([]byte, bool) {
 	return buf, false
 }
 
-type ObfsAUthChainData struct {
-	Name         stirng
-	UserId       cache.Cache
-	LastClientId []byte
-	ConnectionId int
+type ClientQueue struct {
+	Front      int
+	Back       int
+	Alloc      *sync.Map
+	Enable     bool
+	LastUpdate time.Time
+	Ref        int
+}
+
+func NewClientQueue(beginID int) *ClientQueue {
+	return &ClientQueue{
+		Front:      beginID - 64,
+		Back:       beginID + 1,
+		Alloc:      new(sync.Map),
+		Enable:     true,
+		LastUpdate: time.Now(),
+		Ref:        0,
+	}
+}
+
+func (c *ClientQueue) Update() {
+	c.LastUpdate = time.Now()
+}
+
+func (c *ClientQueue) AddRef() {
+	c.Ref += 1
+}
+
+func (c *ClientQueue) DelRef() {
+	if c.Ref > 0 {
+		c.Ref -= 1
+	}
+}
+
+func (c *ClientQueue) IsActive() bool {
+	return c.Ref > 0 && time.Now().Sub(c.LastUpdate).Seconds() < 60*10
+}
+
+func (c *ClientQueue) ReEnable(connectionID int) {
+	c.Enable = true
+	c.Front = connectionID - 64
+	c.Back = connectionID + 1
+	c.Alloc = new(sync.Map)
+}
+
+func (c *ClientQueue) Insert(connectionID int) bool {
+	if !c.Enable {
+		log.Warn("obfs auth: not enable")
+		return false
+	}
+	if !c.IsActive() {
+		c.ReEnable(connectionID)
+	}
+	c.Update()
+	if connectionID < c.Front {
+		log.Warn("obfs auth: deprecated ID, someone replay attack")
+		return false
+	}
+	if connectionID > c.Front+0x4000 {
+		log.Warn("obfs auth: wrong ID")
+		return false
+	}
+	if _, ok := c.Alloc.Load(connectionID); ok {
+		log.Warn("obfs auth: deprecated ID, someone replay attack")
+		return false
+	}
+	if c.Back <= connectionID {
+		c.Back = connectionID + 1
+	}
+	c.Alloc.Store(connectionID, 1)
+	for {
+		if _, ok := c.Alloc.Load(c.Back); !ok || c.Front+0x1000 >= c.Back {
+			break
+		}
+		if _, ok := c.Alloc.Load(c.Front); ok {
+			c.Alloc.Delete(c.Front)
+		}
+		c.Front += 1
+	}
+	c.AddRef()
+	return true
+}
+
+type ObfsAuthChainData struct {
+	Name         string
+	UserID       map[int]*cache.LRU
+	LastClientID []byte
+	ConnectionID int
 	MaxClient    int
 	MaxBuffer    int
+}
+
+func (o *ObfsAuthChainData) Update(userID, clientID, connectionID int) {
+	if o.UserID[userID] == nil {
+		o.UserID[userID] = cache.NewLruCache(60 * time.Second)
+	}
+	localClientID := o.UserID[userID]
+	var r *ClientQueue = nil
+	if localClientID != nil {
+		r, _ = localClientID.Get(clientID).(*ClientQueue)
+	}
+	if r != nil {
+		r.Update()
+	}
+}
+
+func (o *ObfsAuthChainData) SetMaxClient(maxClient int){
+	o.MaxClient = maxClient
+	o.MaxBuffer = int(math.Max(float64(maxClient),1024))
+}
+func (o *ObfsAuthChainData) Insert(userID ,clientID,connectionID int) bool{
+	if o.UserID[userID] == nil{
+		o.UserID[userID] = cache.NewLruCache(60 * time.Second)
+	}
+	localClientID := o.UserID[userID]
+	var r ,_ = localClientID.Get(clientID).(*ClientQueue)
+	if r != nil || !r.Enable{
+		if localClientID.First() == nil || localClientID.Len() < o.MaxClient{
+			if !localClientID.IsExist(clientID){
+				// TODO check
+				localClientID.Put(clientID,NewClientQueue(connectionID),60*time.Second)
+			}else{
+				localClientID.Get(clientID).(ClientQueue).ReEnable(connectionID)
+			}
+			return localClientID.Get(clientID).(ClientQueue).Insert(connectionID)
+		}
+
+		localClientIDFirst := localClientID.First()
+		if !localClientID.Get(localClientIDFirst).(ClientQueue).IsActive(){
+			localClientID.Delete(localClientIDFirst)
+			if !localClientID.IsExist(clientID){
+				// TODO check
+				localClientID.Put(clientID,NewClientQueue(connectionID),60*time.Second)
+			}else{
+				localClientID.Get(clientID).(ClientQueue).ReEnable(connectionID)
+			}
+			return localClientID.Get(clientID).(ClientQueue).Insert(connectionID)
+		}
+
+		log.Warn("%s: no inactive client",o.Name)
+		return false
+	}else{
+		return localClientID.Get(clientID).(ClientQueue).Insert(connectionID)
+	}
+}
+
+func  (o *ObfsAuthChainData) Remove(userID,clientID int){
+	localClientID := o.UserID[userID]
+	if localClientID != nil{
+		if localClientID.IsExist(clientID){
+			localClientID.Get(clientID).(ClientQueue).DelRef()
+		}
+	}
 }
 
 /*----------------------------------AuthChainA----------------------------------*/
@@ -101,15 +250,16 @@ type AuthChainA struct {
 	RecvBuf        []byte
 	UnintLen       int
 	HasSentHeader  bool
+
 	HasRecvHeader  bool
-	ClientId       int
-	ConnectionId   int
+	ClientID       int
+	ConnectionID   int
 	MaxTimeDif     int
 	Salt           []byte
-	PackId         int
-	RecvId         int
-	UserId         int
-	UserIdNum      int
+	PackID         int
+	RecvID         int
+	UserID         int
+	UserIDNum      int
 	UserKey        []byte
 	ClientOverhead int
 	LastClientHash []byte
@@ -120,7 +270,7 @@ type AuthChainA struct {
 
 func NewAuthChainA() *AuthChainA {
 	return &AuthChainA{
-		AuthBase: {
+		AuthBase: AuthBase{
 			RawTrans:           false,
 			Overhead:           4,
 			NoCompatibleMethod: "auth_chain_a",
@@ -129,13 +279,13 @@ func NewAuthChainA() *AuthChainA {
 		UnintLen:       2800,
 		HasRecvHeader:  false,
 		HasSentHeader:  false,
-		ClientId:       0,
-		ConnectionId:   0,
+		ClientID:       0,
+		ConnectionID:   0,
 		MaxTimeDif:     60 * 60 * 24,
 		Salt:           []byte("auth_chain_a"),
-		PackId:         1,
-		RecvId:         1,
-		UserIdNum:      0,
+		PackID:         1,
+		RecvID:         1,
+		UserIDNum:      0,
 		ClientOverhead: 4,
 		LastClientHash: []byte{},
 		LastServerHash: []byte{},
@@ -160,11 +310,11 @@ func (a *AuthChainA) GetOverhead(direction bool) int {
 	panic("not implemented")
 }
 
-func (a *AuthChainA) GetServerInfo() obfs.ServerInfo {
+func (a *AuthChainA) GetServerInfo() serverInfo {
 	panic("not implemented")
 }
 
-func (a *AuthChainA) SetServerInfo(s obfs.ServerInfo) {
+func (a *AuthChainA) SetServerInfo(s ServerInfo) {
 	panic("not implemented")
 }
 
