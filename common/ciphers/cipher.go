@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/rand"
+	"github.com/rc452860/vnet/utils/bytesx"
 	"io"
 
 	"github.com/pkg/errors"
@@ -73,7 +74,7 @@ func (s *SSCipher) Encrypt(src []byte) (result []byte, err error) {
 	}
 	if s.Stream != nil {
 		dst := make([]byte, len(src))
-		s.Stream.XORKeyStream(src, dst)
+		s.Stream.XORKeyStream(dst, src)
 		return dst, nil
 	}
 	if s.AEAD != nil {
@@ -121,7 +122,7 @@ func (s *SSCipher) Decrypt(ciphertext []byte) (result []byte, err error) {
 	}
 	if s.Stream != nil {
 		buf := make([]byte, len(ciphertext))
-		s.Stream.XORKeyStream(ciphertext, buf)
+		s.Stream.XORKeyStream(buf, ciphertext)
 		return buf, nil
 	}
 
@@ -173,6 +174,8 @@ type Encryptor struct {
 	IVOut        []byte
 	IVIn         []byte
 	IVSent       bool
+	IVLen        int
+	IVBuf        *bytes.Buffer
 	EncodeCipher *SSCipher
 	DecodeCipher *SSCipher
 }
@@ -180,6 +183,7 @@ type Encryptor struct {
 func NewEncryptor(method, key string) (result *Encryptor, err error) {
 	result = new(Encryptor)
 	result.IVSent = false
+	result.Method = method
 	// if method is stream then
 	if cp := stream.GetStreamCipher(method); cp != nil {
 		result.IVOut = make([]byte, cp.IVLen())
@@ -187,6 +191,7 @@ func NewEncryptor(method, key string) (result *Encryptor, err error) {
 			return nil, err
 		}
 		result.Key = evpBytesToKey(key, cp.KeyLen())
+		result.IVLen = cp.IVLen()
 	}
 
 	if cp := aead.GetAEADCipher(method); cp != nil {
@@ -195,10 +200,48 @@ func NewEncryptor(method, key string) (result *Encryptor, err error) {
 			return nil, err
 		}
 		result.Key = evpBytesToKey(key, cp.KeySize())
-
+		result.IVLen = cp.SaltSize()
 	}
 
 	result.EncodeCipher, err = NewCipher(OP_ENCRYPT, method, result.Key, result.IVOut)
-
+	result.IVBuf = new(bytes.Buffer)
 	return result, err
+}
+
+func (e *Encryptor) Encrypt(src []byte) (result []byte, err error) {
+	result, err = e.EncodeCipher.Encrypt(src)
+	if err != nil {
+		return result, err
+	}
+	if !e.IVSent {
+		return bytesx.ContactSlice(e.IVOut, result), nil
+	} else {
+		return result, nil
+	}
+}
+
+func (e *Encryptor) Decrypt(ciphertext []byte) (result []byte, err error) {
+	if len(ciphertext) == 0 {
+		return ciphertext, nil
+	}
+	if e.DecodeCipher != nil {
+		return e.DecodeCipher.Decrypt(ciphertext)
+	}
+
+	if e.IVBuf.Len()<e.IVLen{
+		e.IVBuf.Write(ciphertext)
+	}
+
+	if e.IVBuf.Len() > e.IVLen {
+		buf := e.IVBuf.Bytes()
+		decipherIV := buf[:e.IVLen]
+		e.DecodeCipher, err = NewCipher(OP_DECRYPT, e.Method, e.Key, decipherIV)
+		if err != nil {
+			return nil, err
+		}
+		remainBuf := buf[e.IVLen:]
+		return e.DecodeCipher.Decrypt(remainBuf)
+	} else {
+		return []byte{}, nil
+	}
 }

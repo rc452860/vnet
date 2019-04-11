@@ -2,7 +2,11 @@ package obfs
 
 import (
 	"bytes"
+	"github.com/rc452860/vnet/common/ciphers"
+	"github.com/rc452860/vnet/utils/randomx"
 	"math"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -180,6 +184,17 @@ type ObfsAuthChainData struct {
 	MaxBuffer    int
 }
 
+func NewObfsAuthChainData(name string) *ObfsAuthChainData {
+	result := &ObfsAuthChainData{
+		Name:         name,
+		UserID:       make(map[int]*cache.LRU),
+		LastClientID: []byte{},
+		ConnectionID: 0,
+	}
+	result.SetMaxClient(64)
+	return result
+}
+
 func (o *ObfsAuthChainData) Update(userID, clientID, connectionID int) {
 	if o.UserID[userID] == nil {
 		o.UserID[userID] = cache.NewLruCache(60 * time.Second)
@@ -194,51 +209,51 @@ func (o *ObfsAuthChainData) Update(userID, clientID, connectionID int) {
 	}
 }
 
-func (o *ObfsAuthChainData) SetMaxClient(maxClient int){
+func (o *ObfsAuthChainData) SetMaxClient(maxClient int) {
 	o.MaxClient = maxClient
-	o.MaxBuffer = int(math.Max(float64(maxClient),1024))
+	o.MaxBuffer = int(math.Max(float64(maxClient), 1024))
 }
-func (o *ObfsAuthChainData) Insert(userID ,clientID,connectionID int) bool{
-	if o.UserID[userID] == nil{
+func (o *ObfsAuthChainData) Insert(userID, clientID, connectionID int) bool {
+	if o.UserID[userID] == nil {
 		o.UserID[userID] = cache.NewLruCache(60 * time.Second)
 	}
 	localClientID := o.UserID[userID]
-	var r ,_ = localClientID.Get(clientID).(*ClientQueue)
-	if r != nil || !r.Enable{
-		if localClientID.First() == nil || localClientID.Len() < o.MaxClient{
-			if !localClientID.IsExist(clientID){
+	var r, _ = localClientID.Get(clientID).(*ClientQueue)
+	if r != nil || !r.Enable {
+		if localClientID.First() == nil || localClientID.Len() < o.MaxClient {
+			if !localClientID.IsExist(clientID) {
 				// TODO check
-				localClientID.Put(clientID,NewClientQueue(connectionID),60*time.Second)
-			}else{
-				localClientID.Get(clientID).(ClientQueue).ReEnable(connectionID)
+				localClientID.Put(clientID, NewClientQueue(connectionID), 60*time.Second)
+			} else {
+				localClientID.Get(clientID).(*ClientQueue).ReEnable(connectionID)
 			}
-			return localClientID.Get(clientID).(ClientQueue).Insert(connectionID)
+			return localClientID.Get(clientID).(*ClientQueue).Insert(connectionID)
 		}
 
 		localClientIDFirst := localClientID.First()
-		if !localClientID.Get(localClientIDFirst).(ClientQueue).IsActive(){
+		if !localClientID.Get(localClientIDFirst).(*ClientQueue).IsActive() {
 			localClientID.Delete(localClientIDFirst)
-			if !localClientID.IsExist(clientID){
+			if !localClientID.IsExist(clientID) {
 				// TODO check
-				localClientID.Put(clientID,NewClientQueue(connectionID),60*time.Second)
-			}else{
-				localClientID.Get(clientID).(ClientQueue).ReEnable(connectionID)
+				localClientID.Put(clientID, NewClientQueue(connectionID), 60*time.Second)
+			} else {
+				localClientID.Get(clientID).(*ClientQueue).ReEnable(connectionID)
 			}
-			return localClientID.Get(clientID).(ClientQueue).Insert(connectionID)
+			return localClientID.Get(clientID).(*ClientQueue).Insert(connectionID)
 		}
 
-		log.Warn("%s: no inactive client",o.Name)
+		log.Warn("%s: no inactive client", o.Name)
 		return false
-	}else{
-		return localClientID.Get(clientID).(ClientQueue).Insert(connectionID)
+	} else {
+		return localClientID.Get(clientID).(*ClientQueue).Insert(connectionID)
 	}
 }
 
-func  (o *ObfsAuthChainData) Remove(userID,clientID int){
+func (o *ObfsAuthChainData) Remove(userID, clientID int) {
 	localClientID := o.UserID[userID]
-	if localClientID != nil{
-		if localClientID.IsExist(clientID){
-			localClientID.Get(clientID).(ClientQueue).DelRef()
+	if localClientID != nil {
+		if localClientID.IsExist(clientID) {
+			localClientID.Get(clientID).(*ClientQueue).DelRef()
 		}
 	}
 }
@@ -247,50 +262,54 @@ func  (o *ObfsAuthChainData) Remove(userID,clientID int){
 
 type AuthChainA struct {
 	AuthBase
-	RecvBuf        []byte
-	UnintLen       int
-	HasSentHeader  bool
+	RecvBuf       []byte
+	UnintLen      int
+	HasSentHeader bool
 
-	HasRecvHeader  bool
-	ClientID       int
-	ConnectionID   int
-	MaxTimeDif     int
-	Salt           []byte
-	PackID         int
-	RecvID         int
-	UserID         int
-	UserIDNum      int
-	UserKey        []byte
-	ClientOverhead int
-	LastClientHash []byte
-	LastServerHash []byte
-	RandomClient   *XorShift128Plus
-	RandomServer   *XorShift128Plus
+	HasRecvHeader     bool
+	ClientID          int
+	ConnectionID      int
+	MaxTimeDif        int
+	Salt              []byte
+	PackID            int
+	RecvID            int
+	UserID            int
+	UserIDNum         int
+	UserKey           []byte
+	ClientOverhead    int
+	LastClientHash    []byte
+	LastServerHash    []byte
+	RandomClient      *XorShift128Plus
+	RandomServer      *XorShift128Plus
+	ObfsAuthChainData *ObfsAuthChainData
+	Encryptor *ciphers.Encryptor
 }
 
-func NewAuthChainA() *AuthChainA {
+func NewAuthChainA(method string) *AuthChainA {
 	return &AuthChainA{
 		AuthBase: AuthBase{
+			Method:             method,
 			RawTrans:           false,
 			Overhead:           4,
 			NoCompatibleMethod: "auth_chain_a",
 		},
-		RecvBuf:        []byte{},
-		UnintLen:       2800,
-		HasRecvHeader:  false,
-		HasSentHeader:  false,
-		ClientID:       0,
-		ConnectionID:   0,
-		MaxTimeDif:     60 * 60 * 24,
-		Salt:           []byte("auth_chain_a"),
-		PackID:         1,
-		RecvID:         1,
-		UserIDNum:      0,
-		ClientOverhead: 4,
-		LastClientHash: []byte{},
-		LastServerHash: []byte{},
-		RandomClient:   NewXorShift128Plus(),
-		RandomServer:   NewXorShift128Plus(),
+		RecvBuf:           []byte{},
+		UnintLen:          2800,
+		HasRecvHeader:     false,
+		HasSentHeader:     false,
+		ClientID:          0,
+		ConnectionID:      0,
+		MaxTimeDif:        60 * 60 * 24,
+		Salt:              []byte("auth_chain_a"),
+		PackID:            1,
+		RecvID:            1,
+		UserIDNum:         0,
+		ClientOverhead:    4,
+		LastClientHash:    []byte{},
+		LastServerHash:    []byte{},
+		RandomClient:      NewXorShift128Plus(),
+		RandomServer:      NewXorShift128Plus(),
+		ObfsAuthChainData: NewObfsAuthChainData(method),
 	}
 }
 
@@ -298,24 +317,18 @@ func (a *AuthChainA) InitData() []byte {
 	panic("not implemented")
 }
 
-func (a *AuthChainA) GetMethod() string {
-	panic("not implemented")
-}
-
-func (a *AuthChainA) SetMethod(method string) {
-	panic("not implemented")
-}
-
 func (a *AuthChainA) GetOverhead(direction bool) int {
-	panic("not implemented")
-}
-
-func (a *AuthChainA) GetServerInfo() serverInfo {
-	panic("not implemented")
+	return a.Overhead
 }
 
 func (a *AuthChainA) SetServerInfo(s ServerInfo) {
-	panic("not implemented")
+	a.SetServerInfo(s)
+	var maxClient int
+	maxClient, err := strconv.Atoi(strings.Split(s.GetProtocolParam(), "#")[0])
+	if err != nil {
+		maxClient = 64
+	}
+	a.ObfsAuthChainData.SetMaxClient(maxClient)
 }
 
 func (a *AuthChainA) ClientPreEncrypt(buf []byte) ([]byte, error) {
@@ -371,5 +384,68 @@ func (a *AuthChainA) Dispose() {
 }
 
 func (a *AuthChainA) GetHeadSize(buf []byte, defaultValue int) int {
+	panic("not implemented")
+}
+
+func (a *AuthChainA) trapezoidRandomFloat(d float64) float64 {
+	if d == 0 {
+		return randomx.Float64()
+	}
+	s := randomx.Float64()
+	tmp := 1 - d
+	return (math.Sqrt(tmp * tmp + 4 * d * s) - tmp) / (2 * d)
+}
+
+func (a *AuthChainA) trapezoidRandomInt(maxVal,d float64) int{
+	v := a.trapezoidRandomFloat(d)
+	return int(v*maxVal)
+}
+
+func (a *AuthChainA) rndDataLen(bufSize int, lastHash []byte,random XorShift128Plus) int {
+	if bufSize > 1440 {
+		return 0
+	}
+	random.InitFromBinLen(lastHash, bufSize)
+	if bufSize > 1300 {
+		return int(random.Next()) % 31
+	}
+	if bufSize >900 {
+		return int(random.Next()) % 127
+	}
+	if bufSize >400 {
+		return int(random.Next()) % 521
+	}
+	return int(random.Next()) % 1024
+}
+
+func (a *AuthChainA) udpRndDataLen(lastHash []byte,random XorShift128Plus) int{
+	random.InitFromBin(lastHash)
+	return int(random.Next()) % 127
+}
+
+func  (a *AuthChainA) rndStartPos(randLen int, random XorShift128Plus) int{
+	if randLen >  0{
+		return int(randomx.Int64() % 8589934609 % int64(randLen))
+	}
+	return 0
+}
+
+
+func (a *AuthChainA) rndData(bufSize int, buf []byte, lastHashe []byte, random XorShift128Plus) []byte {
+	randLen := a.rndDataLen(bufSize,lastHashe,random)
+	rndDataBuf := randomx.RandomBytes(randLen)
+	if bufSize == 0 {
+		return rndDataBuf
+	}else {
+		if randLen > 0{
+			startPos := a.rndStartPos(randLen,random)
+			return conbineToBytes(rndDataBuf[:startPos],buf,rndDataBuf[startPos:])
+		}else{
+			return buf
+		}
+	}
+}
+
+func (a *AuthChainA) packClientData(buf []byte){
 	panic("not implemented")
 }

@@ -221,26 +221,31 @@ func ExampleOtlsClientDecode() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _, _, err = ts.ServerDecode(result)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, err = ts.ServerEncode([]byte{})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _, err = tc.ClientDecode(result)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _ = tc.ClientEncode([]byte{})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _, _, err = ts.ServerDecode(result)
 	if err != nil {
 		fmt.Println(err)
@@ -253,37 +258,37 @@ func ExampleOtlsClientDecode() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _, _, err = ts.ServerDecode(result)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Printf("result: %x\n", result)
-
 	result, err = ts.ServerEncode([]byte{0x01, 0x02})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _, err = tc.ClientDecode(result)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Printf("result: %x\n", result)
-
 	result, err = tc.ClientEncode(bytes.Repeat([]byte{0x01, 0x02}, 2048))
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
+	fmt.Printf("result: %x\n", result)
 	result, _, _, err = ts.ServerDecode(result)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Printf("result: %v\n", len(result))
-
 	result, err = ts.ServerEncode(bytes.Repeat([]byte{0x01, 0x02}, 2048))
 	if err != nil {
 		fmt.Println(err)

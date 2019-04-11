@@ -53,3 +53,56 @@ func ExampleEncrypto() {
 	//b1c5a0097220c3db3e0b23b98c8b3cddd292fd9ddf769e8b7494de52f6d958b19712f10f08a096878b
 	//6675636b796f75
 }
+
+func TestEncryptorEncryptForStream(t *testing.T) {
+	encryptor, err := NewEncryptor("aes-128-cfb", "killer")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	raw := []byte("abc")
+	fmt.Println(hex.EncodeToString(raw))
+	result, err := encryptor.Encrypt(raw)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("ciphertext result: " + hex.EncodeToString(result))
+	result, err = encryptor.Decrypt(result)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("plain text: " + hex.EncodeToString(result))
+	if hex.EncodeToString(result) != "616263"{
+		t.Fail()
+	}
+	//Output:
+}
+
+func TestEncryptorEncryptForAead(t *testing.T) {
+	encryptor, err := NewEncryptor("aes-128-gcm", "killer")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	raw := []byte("abc")
+	fmt.Println(hex.EncodeToString(raw))
+	result, err := encryptor.Encrypt(raw)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("ciphertext result: " + hex.EncodeToString(result))
+
+	result, err = encryptor.Decrypt(result)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("plain text: " + hex.EncodeToString(result))
+	if hex.EncodeToString(result) != "616263"{
+		t.Fail()
+	}
+}
+

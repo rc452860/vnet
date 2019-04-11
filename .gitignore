@@ -6,3 +6,4 @@ bin/
 config.json
 *.test.exe
 *.pprof
+.idea/

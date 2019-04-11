@@ -27,7 +27,6 @@ func (l *lrucache) Put(key interface{}, payload interface{}, ttl time.Duration) 
 		Expired: time.Now().Add(ttl),
 		TTL: ttl,
 	})
-	l.len++
 }
 
 func (l *lrucache)  Get(key interface{}) interface{} {
@@ -114,7 +113,7 @@ func NewLruCache(interval time.Duration) *LRU {
 		interval: interval,
 		stop:     make(chan struct{}),
 	}
-	c := &lrucache{lruJanitor: j,len:0}
+	c := &lrucache{lruJanitor: j}
 	go j.process(c)
 	lru := &LRU{c}
 	// this is very interesting,it worth be deep learning
