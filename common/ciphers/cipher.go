@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/cipher"
 	"crypto/rand"
+	"github.com/rc452860/vnet/common/ciphers/block"
 	"github.com/rc452860/vnet/utils/bytesx"
 	"io"
 
@@ -30,6 +31,7 @@ type SSCipher struct {
 	OP int
 	cipher.Stream
 	cipher.AEAD
+	cipher.BlockMode
 	IV             []byte
 	AEADWriteNonce []byte
 	AEADReadNonce  []byte
@@ -63,6 +65,18 @@ func NewCipher(op int, method string, key, iv []byte) (*SSCipher, error) {
 			AEADReadBuffer: new(bytes.Buffer),
 			AEADWriteNonce: make([]byte, cpInstance.NonceSize()),
 			AEADReadNonce:  make([]byte, cpInstance.NonceSize()),
+		}, nil
+	}
+	if cp := block.GetBlockCipher(method); cp != nil {
+		cpInstance, err := cp.NewBlock(key, iv,op == OP_ENCRYPT)
+		if err != nil {
+			return nil, err
+		}
+		return &SSCipher{
+			BlockMode: cpInstance,
+			Method:    method,
+			IV:        iv,
+			OP:        op,
 		}, nil
 	}
 	return nil, errors.WithStack(errors.New("unreachable code"))
@@ -112,6 +126,11 @@ func (s *SSCipher) Encrypt(src []byte) (result []byte, err error) {
 			}
 		}
 		return dst.Bytes(), err
+	}
+	if s.BlockMode != nil {
+		dst := make([]byte, len(src))
+		s.BlockMode.CryptBlocks(dst, src)
+		return dst, nil
 	}
 	return nil, errors.WithStack(errors.New("unreachable code"))
 }
@@ -165,6 +184,11 @@ func (s *SSCipher) Decrypt(ciphertext []byte) (result []byte, err error) {
 		}
 		return dst.Bytes(), nil
 	}
+	if s.BlockMode != nil {
+		dst := make([]byte, len(ciphertext))
+		s.BlockMode.CryptBlocks(dst, ciphertext)
+		return dst, nil
+	}
 	return nil, errors.WithStack(errors.New("unknow ciphers"))
 }
 
@@ -203,6 +227,41 @@ func NewEncryptor(method, key string) (result *Encryptor, err error) {
 		result.IVLen = cp.SaltSize()
 	}
 
+	if cp := block.GetBlockCipher(method); cp != nil {
+		result.IVOut = make([]byte, cp.IVLen())
+		if _, err := io.ReadFull(rand.Reader, result.IVOut); err != nil {
+			return nil, err
+		}
+		result.Key = evpBytesToKey(key, cp.KeyLen())
+		result.IVLen = cp.IVLen()
+	}
+
+	result.EncodeCipher, err = NewCipher(OP_ENCRYPT, method, result.Key, result.IVOut)
+	result.IVBuf = new(bytes.Buffer)
+	return result, err
+}
+
+func NewEncryptorWithIv(method, key string, iv []byte) (result *Encryptor, err error) {
+	result = new(Encryptor)
+	result.IVSent = false
+	result.Method = method
+	// if method is stream then
+	if cp := stream.GetStreamCipher(method); cp != nil {
+		result.Key = evpBytesToKey(key, cp.KeyLen())
+		result.IVLen = cp.IVLen()
+	}
+
+	if cp := aead.GetAEADCipher(method); cp != nil {
+		result.Key = evpBytesToKey(key, cp.KeySize())
+		result.IVLen = cp.SaltSize()
+	}
+
+	if cp := block.GetBlockCipher(method); cp != nil {
+		result.Key = evpBytesToKey(key, cp.KeyLen())
+		result.IVLen = cp.IVLen()
+	}
+
+	result.IVOut = iv[:result.IVLen]
 	result.EncodeCipher, err = NewCipher(OP_ENCRYPT, method, result.Key, result.IVOut)
 	result.IVBuf = new(bytes.Buffer)
 	return result, err
@@ -224,11 +283,12 @@ func (e *Encryptor) Decrypt(ciphertext []byte) (result []byte, err error) {
 	if len(ciphertext) == 0 {
 		return ciphertext, nil
 	}
+
 	if e.DecodeCipher != nil {
 		return e.DecodeCipher.Decrypt(ciphertext)
 	}
 
-	if e.IVBuf.Len()<e.IVLen{
+	if e.IVBuf.Len() <= e.IVLen {
 		e.IVBuf.Write(ciphertext)
 	}
 

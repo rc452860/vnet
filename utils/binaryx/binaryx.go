@@ -35,3 +35,16 @@ func LEUInt16ToBytes(data uint16) []byte {
 	binary.LittleEndian.PutUint16(buf, data)
 	return buf
 }
+
+func LEBytesToUint16(data []byte) uint16{
+	if len(data) < 2{
+		return 0
+	}
+	return binary.LittleEndian.Uint16(data)
+}
+
+func BEUInt32ToBytes(data uint32) []byte{
+	buf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(buf, data)
+	return buf
+}

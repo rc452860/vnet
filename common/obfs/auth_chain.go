@@ -2,7 +2,9 @@ package obfs
 
 import (
 	"bytes"
+	"encoding/base64"
 	"github.com/rc452860/vnet/common/ciphers"
+	"github.com/rc452860/vnet/utils/bytesx"
 	"github.com/rc452860/vnet/utils/randomx"
 	"math"
 	"strconv"
@@ -259,7 +261,6 @@ func (o *ObfsAuthChainData) Remove(userID, clientID int) {
 }
 
 /*----------------------------------AuthChainA----------------------------------*/
-
 type AuthChainA struct {
 	AuthBase
 	RecvBuf       []byte
@@ -282,7 +283,7 @@ type AuthChainA struct {
 	RandomClient      *XorShift128Plus
 	RandomServer      *XorShift128Plus
 	ObfsAuthChainData *ObfsAuthChainData
-	Encryptor *ciphers.Encryptor
+	Encryptor         *ciphers.Encryptor
 }
 
 func NewAuthChainA(method string) *AuthChainA {
@@ -393,15 +394,15 @@ func (a *AuthChainA) trapezoidRandomFloat(d float64) float64 {
 	}
 	s := randomx.Float64()
 	tmp := 1 - d
-	return (math.Sqrt(tmp * tmp + 4 * d * s) - tmp) / (2 * d)
+	return (math.Sqrt(tmp*tmp+4*d*s) - tmp) / (2 * d)
 }
 
-func (a *AuthChainA) trapezoidRandomInt(maxVal,d float64) int{
+func (a *AuthChainA) trapezoidRandomInt(maxVal, d float64) int {
 	v := a.trapezoidRandomFloat(d)
-	return int(v*maxVal)
+	return int(v * maxVal)
 }
 
-func (a *AuthChainA) rndDataLen(bufSize int, lastHash []byte,random XorShift128Plus) int {
+func (a *AuthChainA) rndDataLen(bufSize int, lastHash []byte, random *XorShift128Plus) int {
 	if bufSize > 1440 {
 		return 0
 	}
@@ -409,43 +410,99 @@ func (a *AuthChainA) rndDataLen(bufSize int, lastHash []byte,random XorShift128P
 	if bufSize > 1300 {
 		return int(random.Next()) % 31
 	}
-	if bufSize >900 {
+	if bufSize > 900 {
 		return int(random.Next()) % 127
 	}
-	if bufSize >400 {
+	if bufSize > 400 {
 		return int(random.Next()) % 521
 	}
 	return int(random.Next()) % 1024
 }
 
-func (a *AuthChainA) udpRndDataLen(lastHash []byte,random XorShift128Plus) int{
+func (a *AuthChainA) udpRndDataLen(lastHash []byte, random XorShift128Plus) int {
 	random.InitFromBin(lastHash)
 	return int(random.Next()) % 127
 }
 
-func  (a *AuthChainA) rndStartPos(randLen int, random XorShift128Plus) int{
-	if randLen >  0{
+func (a *AuthChainA) rndStartPos(randLen int, random *XorShift128Plus) int {
+	if randLen > 0 {
 		return int(randomx.Int64() % 8589934609 % int64(randLen))
 	}
 	return 0
 }
 
-
-func (a *AuthChainA) rndData(bufSize int, buf []byte, lastHashe []byte, random XorShift128Plus) []byte {
-	randLen := a.rndDataLen(bufSize,lastHashe,random)
+func (a *AuthChainA) rndData(bufSize int, buf []byte, lastHashe []byte, random *XorShift128Plus) []byte {
+	randLen := a.rndDataLen(bufSize, lastHashe, random)
 	rndDataBuf := randomx.RandomBytes(randLen)
 	if bufSize == 0 {
 		return rndDataBuf
-	}else {
-		if randLen > 0{
-			startPos := a.rndStartPos(randLen,random)
-			return conbineToBytes(rndDataBuf[:startPos],buf,rndDataBuf[startPos:])
-		}else{
+	} else {
+		if randLen > 0 {
+			startPos := a.rndStartPos(randLen, random)
+			return conbineToBytes(rndDataBuf[:startPos], buf, rndDataBuf[startPos:])
+		} else {
 			return buf
 		}
 	}
 }
 
-func (a *AuthChainA) packClientData(buf []byte){
-	panic("not implemented")
+func (a *AuthChainA) packClientData(buf []byte) ([]byte, error) {
+	buf, err := a.Encryptor.Decrypt(buf)
+	if err != nil {
+		return nil, err
+	}
+	data := a.rndData(len(buf), buf, a.LastClientHash, a.RandomClient)
+	macKey := bytesx.ContactSlice(a.UserKey, binaryx.BEUInt32ToBytes(uint32((a.PackID))))
+	length := len(buf) ^ int(binaryx.LEBytesToUint16(a.LastServerHash[14:]))
+	data = bytesx.ContactSlice(binaryx.LEUInt16ToBytes(uint16(length)), data)
+	a.LastClientHash = hmacmd5(macKey, data)
+	data = bytesx.ContactSlice(data, a.LastClientHash[:2])
+	a.PackID = a.PackID + 1&0xFFFFFFFF
+	return data, nil
+}
+
+func (a *AuthChainA) packAuthData(authData, buf []byte) (result []byte, err error) {
+	data := authData
+	data = bytesx.ContactSlice(data, binaryx.LEUInt16ToBytes(uint16(a.GetServerInfo().GetOverhead())), binaryx.LEUInt16ToBytes(0))
+	mac_key := bytesx.ContactSlice(a.GetServerInfo().GetIv(), a.GetServerInfo().GetKey())
+
+	check_head := randomx.RandomBytes(4)
+	a.LastClientHash = hmacmd5(mac_key, check_head)
+	check_head = bytesx.ContactSlice(check_head, a.LastClientHash[:8])
+
+	param := a.GetServerInfo().GetProtocolParam()
+	if strings.Contains(param, ":") {
+		items := strings.Split(param, ":")
+		var uidBytes []byte
+		if len(items) > 1 {
+			a.UserKey = []byte(items[1])
+			uidInt, err := strconv.Atoi(items[0])
+			if err != nil {
+				return nil, err
+			}
+			uidBytes = binaryx.LEUInt16ToBytes(uint16((uidInt)))
+		} else {
+			uidBytes = randomx.RandomBytes(4)
+		}
+		if a.UserKey == nil {
+			a.UserKey = a.GetServerInfo().GetKey()
+		}
+		encryptor, err := ciphers.NewEncryptorWithIv("aes-128-cbc",
+			string(bytesx.ContactSlice([]byte(base64.StdEncoding.EncodeToString(a.UserKey)), a.Salt)),
+			bytes.Repeat([]byte{0x00}, 16))
+		if err != nil {
+			return nil, err
+		}
+		uid := binaryx.LEBytesToUint16(uidBytes) ^ binaryx.LEBytesToUint16(a.LastClientHash[8:12])
+		uidBytes := binaryx.LEUInt16ToBytes(uid)
+		dataCipherText,err := encryptor.Encrypt(data)
+		if err != nil{
+			return nil,err
+		}
+		data = bytesx.ContactSlice(uidBytes,dataCipherText)
+		a.LastServerHash = hmacmd5(a.UserKey,data)
+		data = bytesx.ContactSlice(check_head,data,a.LastServerHash[:4])
+		a.Encryptor = encryptor.
+
+	}
 }
