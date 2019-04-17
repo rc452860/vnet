@@ -412,7 +412,7 @@ func (otls *ObfsTLS) ClientUDPPostDecrypt(buf []byte) ([]byte, error) {
 	panic("not implemented")
 }
 
-func (otls *ObfsTLS) ServerUDPPreEncrypt(buf []byte) ([]byte, error) {
+func (otls *ObfsTLS) ServerUDPPreEncrypt(buf,uid []byte) ([]byte, error) {
 	panic("not implemented")
 }
 

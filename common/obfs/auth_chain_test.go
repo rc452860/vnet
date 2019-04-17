@@ -2,6 +2,8 @@ package obfs
 
 import (
 	"bytes"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 )
 
@@ -26,4 +28,13 @@ func ExampleXorShift128Plus() {
 	//Output:
 	//&{72340172838076673 72340172838076673}
 	//&{11655686789823302041 3472380973156407715}
+}
+
+
+func ExampleHashMd5(){
+	md5Data := md5.Sum([]byte("aaa"))
+	fmt.Println(hex.EncodeToString(md5Data[:]))
+
+	//Output:
+	//47bce5c74f589f4867dbd57e9ca9f808
 }

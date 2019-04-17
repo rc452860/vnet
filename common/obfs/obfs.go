@@ -20,7 +20,7 @@ type Plain interface {
 	ServerPostDecrypt(buf []byte) ([]byte, bool, error)
 	ClientUDPPreEncrypt(buf []byte) ([]byte, error)
 	ClientUDPPostDecrypt(buf []byte) ([]byte, error)
-	ServerUDPPreEncrypt(buf []byte) ([]byte, error)
+	ServerUDPPreEncrypt(buf,uid []byte) ([]byte, error)
 	ServerUDPPostDecrypt(buf []byte) ([]byte, string, error)
 	Dispose()
 	GetHeadSize(buf []byte, defaultValue int) int

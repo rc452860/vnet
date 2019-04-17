@@ -2,9 +2,13 @@ package obfs
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/base64"
+	"encoding/hex"
+	"github.com/pkg/errors"
 	"github.com/rc452860/vnet/common/ciphers"
 	"github.com/rc452860/vnet/utils/bytesx"
+	"github.com/rc452860/vnet/utils/opeator"
 	"github.com/rc452860/vnet/utils/randomx"
 	"math"
 	"strconv"
@@ -178,30 +182,30 @@ func (c *ClientQueue) Insert(connectionID int) bool {
 }
 
 type ObfsAuthChainData struct {
-	Name         string
-	UserID       map[int]*cache.LRU
-	LastClientID []byte
-	ConnectionID int
-	MaxClient    int
-	MaxBuffer    int
+	Name          string
+	UserID        map[string]*cache.LRU
+	LocalClientId []byte
+	ConnectionID  int
+	MaxClient     int
+	MaxBuffer     int
 }
 
 func NewObfsAuthChainData(name string) *ObfsAuthChainData {
 	result := &ObfsAuthChainData{
-		Name:         name,
-		UserID:       make(map[int]*cache.LRU),
-		LastClientID: []byte{},
-		ConnectionID: 0,
+		Name:          name,
+		UserID:        make(map[string]*cache.LRU),
+		LocalClientId: []byte{},
+		ConnectionID:  0,
 	}
 	result.SetMaxClient(64)
 	return result
 }
 
-func (o *ObfsAuthChainData) Update(userID, clientID, connectionID int) {
-	if o.UserID[userID] == nil {
-		o.UserID[userID] = cache.NewLruCache(60 * time.Second)
+func (o *ObfsAuthChainData) Update(userID []byte, clientID, connectionID int) {
+	if o.UserID[string(userID)] == nil {
+		o.UserID[string(userID)] = cache.NewLruCache(60 * time.Second)
 	}
-	localClientID := o.UserID[userID]
+	localClientID := o.UserID[string(userID)]
 	var r *ClientQueue = nil
 	if localClientID != nil {
 		r, _ = localClientID.Get(clientID).(*ClientQueue)
@@ -215,11 +219,11 @@ func (o *ObfsAuthChainData) SetMaxClient(maxClient int) {
 	o.MaxClient = maxClient
 	o.MaxBuffer = int(math.Max(float64(maxClient), 1024))
 }
-func (o *ObfsAuthChainData) Insert(userID, clientID, connectionID int) bool {
-	if o.UserID[userID] == nil {
-		o.UserID[userID] = cache.NewLruCache(60 * time.Second)
+func (o *ObfsAuthChainData) Insert(userID []byte, clientID, connectionID int) bool {
+	if o.UserID[string(userID)] == nil {
+		o.UserID[string(userID)] = cache.NewLruCache(60 * time.Second)
 	}
-	localClientID := o.UserID[userID]
+	localClientID := o.UserID[string(userID)]
 	var r, _ = localClientID.Get(clientID).(*ClientQueue)
 	if r != nil || !r.Enable {
 		if localClientID.First() == nil || localClientID.Len() < o.MaxClient {
@@ -251,8 +255,8 @@ func (o *ObfsAuthChainData) Insert(userID, clientID, connectionID int) bool {
 	}
 }
 
-func (o *ObfsAuthChainData) Remove(userID, clientID int) {
-	localClientID := o.UserID[userID]
+func (o *ObfsAuthChainData) Remove(userID string, clientID int) {
+	localClientID := o.UserID[string(userID)]
 	if localClientID != nil {
 		if localClientID.IsExist(clientID) {
 			localClientID.Get(clientID).(*ClientQueue).DelRef()
@@ -274,7 +278,7 @@ type AuthChainA struct {
 	Salt              []byte
 	PackID            int
 	RecvID            int
-	UserID            int
+	UserID            []byte
 	UserIDNum         int
 	UserKey           []byte
 	ClientOverhead    int
@@ -332,8 +336,35 @@ func (a *AuthChainA) SetServerInfo(s ServerInfo) {
 	a.ObfsAuthChainData.SetMaxClient(maxClient)
 }
 
-func (a *AuthChainA) ClientPreEncrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
+func (a *AuthChainA) ClientPreEncrypt(buf []byte) (result []byte, err error) {
+	result = []byte{}
+	// seem not be used. copy from shadowsocksr python version
+	//ognDataLen := len(buf)
+	if !a.HasSentHeader {
+		headSize := a.GetHeadSize(buf, 30)
+		dataLen := int(math.Min(float64(headSize), float64(randomx.RandIntRange(0, 31)+headSize)))
+		packAuthData, err := a.packAuthData(a.AuthData(), buf[:dataLen])
+		if err != nil {
+			return nil, err
+		}
+		result = bytesx.ContactSlice(result, packAuthData)
+		buf = buf[dataLen:]
+		a.HasSentHeader = true
+	}
+	for len(buf) > a.UnintLen {
+		packClientData, err := a.packClientData(buf[:a.UnintLen])
+		if err != nil {
+			return nil, err
+		}
+		result = bytesx.ContactSlice(result, packClientData)
+		buf = buf[a.UnintLen:]
+	}
+	packClientData, err := a.packClientData(buf)
+	if err != nil {
+		return nil, err
+	}
+	result = bytesx.ContactSlice(result, packClientData)
+	return result, nil
 }
 
 func (a *AuthChainA) ClientEncode(buf []byte) ([]byte, error) {
@@ -344,12 +375,86 @@ func (a *AuthChainA) ClientDecode(buf []byte) ([]byte, bool, error) {
 	panic("not implemented")
 }
 
-func (a *AuthChainA) ClientPostDecrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
+func (a *AuthChainA) ClientPostDecrypt(buf []byte) (result []byte, err error) {
+	if a.RawTrans {
+		return buf, nil
+	}
+	result = []byte{}
+	a.RecvBuf = bytesx.ContactSlice(a.RecvBuf, buf)
+	for len(a.RecvBuf) > 4 {
+		macKey := bytesx.ContactSlice(a.UserKey, binaryx.LEUint32ToBytes(uint32(a.RecvID)))
+		dataLen := int(binaryx.LEBytesToUint16(a.RecvBuf[:2]) ^ binaryx.LEBytesToUint16(a.LastServerHash[14:16]))
+		randLen := a.rndDataLen(dataLen, a.LastServerHash, a.RandomServer)
+		length := dataLen + randLen
+		if length > 4096 {
+			a.RawTrans = true
+			a.RecvBuf = []byte{}
+			return nil, errors.WithStack(errors.New("client_post_decrypt data error"))
+		}
+
+		if length+4 > len(a.RecvBuf) {
+			break
+		}
+
+		serverHash := hmacmd5(macKey, a.RecvBuf[:length+2])
+		if bytes.Equal(serverHash[:2], a.RecvBuf[length+2:length+4]) {
+			log.Info("%s checksum error, data: %s", a.NoCompatibleMethod, hex.EncodeToString(a.RecvBuf[:length]))
+			a.RawTrans = true
+			a.RecvBuf = []byte{}
+			return nil, errors.WithStack(errors.New("client_post_decrypt data uncorrect checksum"))
+		}
+
+		pos := 2
+		if dataLen > 0 && randLen > 0 {
+			pos = 2 + a.rndStartPos(randLen, a.RandomServer)
+		}
+		cleartext, err := a.Encryptor.Decrypt(a.RecvBuf[pos : dataLen+pos])
+		if err != nil {
+			return nil, err
+		}
+		result = bytesx.ContactSlice(result, cleartext)
+		a.LastServerHash = serverHash
+		if a.RecvID == 1 {
+			a.GetServerInfo().SetTCPMss(int(binaryx.LEBytesToUint16(result[:2])))
+			result = result[2:]
+		}
+		a.RecvID = (a.RecvID + 1) & 0xFFFFFFFF
+		a.RecvBuf = a.RecvBuf[length+4:]
+	}
+	return result, nil
 }
 
-func (a *AuthChainA) ServerPreEncrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
+func (a *AuthChainA) ServerPreEncrypt(buf []byte) (result []byte, err error) {
+	if a.RawTrans {
+		return buf, nil
+	}
+	result = []byte{}
+	if a.PackID == 1 {
+		var tcpMass int
+		if a.GetServerInfo().GetTCPMss() < 1500 {
+			tcpMass = a.GetServerInfo().GetTCPMss()
+		} else {
+			tcpMass = 1500
+		}
+		a.GetServerInfo().SetTCPMss(tcpMass)
+		buf = bytesx.ContactSlice(binaryx.LEUInt16ToBytes(uint16(tcpMass)), buf)
+		a.UnintLen = tcpMass - a.ClientOverhead
+	}
+
+	for len(buf) > a.UnintLen {
+		packServerData, err := a.packServerData(buf[:a.UnintLen])
+		if err != nil {
+			return nil, err
+		}
+		result = bytesx.ContactSlice(result, packServerData)
+		buf = buf[:a.UnintLen]
+	}
+	packServerData, err := a.packServerData(buf)
+	if err != nil {
+		return nil, err
+	}
+	result = bytesx.ContactSlice(result, packServerData)
+	return result, nil
 }
 
 func (a *AuthChainA) ServerEncode(buf []byte) ([]byte, error) {
@@ -360,28 +465,304 @@ func (a *AuthChainA) ServerDecode(buf []byte) ([]byte, bool, bool, error) {
 	panic("not implemented")
 }
 
-func (a *AuthChainA) ServerPostDecrypt(buf []byte) ([]byte, bool, error) {
+func (a *AuthChainA) ServerPostDecrypt(buf []byte) (result []byte, sendback bool, err error) {
+	if a.RawTrans {
+		return buf, false, nil
+	}
+	a.RecvBuf = bytesx.ContactSlice(a.RecvBuf, buf)
+	result = []byte{}
+	sendback = false
+
+	var md5Data []byte
+	if !a.HasRecvHeader {
+		if len(a.RecvBuf) >= 12 || opeator.IntIn(len(a.RecvBuf), []int{7, 8}) {
+			rectLen := int(math.Min(float64(len(a.RecvBuf)), float64(12)))
+			macKey := bytesx.ContactSlice(a.GetServerInfo().GetRecvIv(), a.GetServerInfo().GetKey())
+			md5Data = hmacmd5(macKey, a.RecvBuf[:4])
+			if !bytes.Equal(md5Data[:rectLen-4], a.RecvBuf[4:rectLen]) {
+				result, sendback = a.NotMatchReturn(a.RecvBuf)
+				err = nil
+				return
+			}
+		}
+
+		if len(a.RecvBuf) < 12+24 {
+			return []byte{}, false, nil
+		}
+
+		a.LastClientHash = md5Data
+		var uid int
+		var uidPack []byte
+
+		uid = int(binaryx.LEBytesToUInt32(a.RecvBuf[12:16]) ^ binaryx.LEBytesToUInt32(md5Data[8:12]))
+		a.UserIDNum = uid
+		uidPack = binaryx.LEUint32ToBytes(uint32(uid))
+		if a.GetServerInfo().GetUsers()[string(uidPack)] != "" {
+			a.UserID = uidPack
+			a.UserKey = []byte(a.GetServerInfo().GetUsers()[string(uidPack)])
+			a.GetServerInfo().UpdateUserFunc(uidPack)
+		} else {
+			a.UserIDNum = 0
+			if len(a.GetServerInfo().GetUsers()) == 0 {
+				a.UserKey = a.GetServerInfo().GetKey()
+			} else {
+				a.UserKey = a.GetServerInfo().GetRecvIv()
+			}
+		}
+
+		md5Data = hmacmd5(a.UserKey, a.RecvBuf[12:12+20])
+		if !bytes.Equal(md5Data[:4], a.RecvBuf[32:36]) {
+			log.Error("%s data uncorrect auth HMAC-MD5 from %s:%v, data %s",
+				a.NoCompatibleMethod, a.GetServerInfo().
+					GetClient().String(),
+				a.GetServerInfo().GetPort(),
+				hex.EncodeToString(a.RecvBuf))
+			if len(a.RecvBuf) < 36 {
+				return []byte{}, false, nil
+			}
+			result, sendback = a.NotMatchReturn(a.RecvBuf)
+			return
+		}
+		a.LastServerHash = md5Data
+		encryptor, err := ciphers.NewEncryptorWithIv("aes-128-cbc",
+			string(bytesx.ContactSlice([]byte(base64.StdEncoding.EncodeToString(a.UserKey)), a.Salt)),
+			bytes.Repeat([]byte{0x00}, 16))
+		if err != nil {
+			return nil, false, err
+		}
+		head, err := encryptor.Decrypt(bytesx.ContactSlice(bytes.Repeat([]byte{0x00}, 16), a.RecvBuf[16:32]))
+		if err != nil {
+			return nil, false, err
+		}
+		a.ClientOverhead = int(binaryx.LEBytesToUint16(head[12:16]))
+
+		utcTime := binaryx.LEBytesToUInt32(head[:4])
+		clientId := binaryx.LEBytesToUInt32(head[4:8])
+		connectionId := binaryx.LEBytesToUInt32(head[8:12])
+		timeDif := int(int64(utcTime) - time.Now().Unix()&0xFFFFFFFF)
+		if timeDif < -a.MaxTimeDif || timeDif > a.MaxTimeDif {
+			log.Info("%s: wrong timestamp, time_dif %v, data %s",
+				a.NoCompatibleMethod,
+				timeDif,
+				hex.EncodeToString(head))
+			result, sendback = a.NotMatchReturn(a.RecvBuf)
+			return result, sendback, nil
+		} else if a.ObfsAuthChainData.Insert(a.UserID, int(clientId), int(connectionId)) {
+			a.HasRecvHeader = true
+			a.ClientID = int(clientId)
+			a.ConnectionID = int(connectionId)
+		} else {
+			log.Info("%s: auth fail, data %s", a.NoCompatibleMethod, hex.EncodeToString(result))
+			result, sendback = a.NotMatchReturn(a.RecvBuf)
+			return result, sendback, nil
+		}
+		a.Encryptor, err = ciphers.NewEncryptor(
+			"rc4",
+			string(
+				bytesx.ContactSlice(
+					[]byte(base64.StdEncoding.EncodeToString(a.UserKey)),
+					[]byte(base64.StdEncoding.EncodeToString(a.LastClientHash)),
+				),
+			),
+		)
+		a.RecvBuf = a.RecvBuf[36:]
+		a.HasRecvHeader = true
+		sendback = true
+
+		for len(a.RecvBuf) > 4 {
+			macKey := bytesx.ContactSlice(a.UserKey, binaryx.LEUint32ToBytes(uint32(a.RecvID)))
+			dataLen := binaryx.LEBytesToUint16(a.RecvBuf[:2]) ^ binaryx.LEBytesToUint16(a.LastClientHash[14:16])
+			randLen := a.rndDataLen(int(dataLen), a.LastClientHash, a.RandomClient)
+			length := int(dataLen) + randLen
+			if length >= 4096 {
+				a.RawTrans = true
+				a.RecvBuf = []byte{}
+				if a.RecvID == 1 {
+					log.Info("%s: over size ", a.NoCompatibleMethod)
+					return bytes.Repeat([]byte{byte('E')}, 2048), false, nil
+				} else {
+					return nil, false, errors.WithStack(errors.New("server_post_decrype data error"))
+				}
+			}
+			if length+4 > len(a.RecvBuf) {
+				break
+			}
+
+			clientHash := hmacmd5(macKey, a.RecvBuf[:length+2])
+			if bytes.Equal(clientHash[:2], a.RecvBuf[length+2:length+4]) {
+				log.Info("%s: checksum error, data %s", a.NoCompatibleMethod, hex.EncodeToString(a.RecvBuf[:length]))
+				a.RawTrans = true
+				a.RecvBuf = []byte{}
+				if a.RecvID == 1 {
+					return bytes.Repeat([]byte{byte('E')}, 2048), false, nil
+				} else {
+					return nil, false, errors.WithStack(errors.New("server_post_decrype data uncorrect checksum"))
+				}
+			}
+			a.RecvID = (a.RecvID + 1) & 0xFFFFFFFF
+			pos := 2
+			if dataLen > 0 && randLen > 0 {
+				pos = 2 + a.rndStartPos(randLen, a.RandomClient)
+			}
+			clearText, err := a.Encryptor.Decrypt(a.RecvBuf[pos : int(dataLen)+pos])
+			if err != nil {
+				return nil, false, err
+			}
+			result = bytesx.ContactSlice(result, clearText)
+			a.LastClientHash = clientHash
+			a.RecvBuf = a.RecvBuf[length+4:]
+			if dataLen == 0 {
+				sendback = true
+			}
+		}
+
+		if len(result) > 0 {
+			a.ObfsAuthChainData.Update(a.UserID, a.ClientID, a.ConnectionID)
+		}
+		return result, sendback, nil
+
+	}
+
 	panic("not implemented")
 }
 
 func (a *AuthChainA) ClientUDPPreEncrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
+
+	if a.UserKey == nil {
+		param := a.GetServerInfo().GetProtocolParam()
+		if strings.Contains(param, ":") {
+			items := strings.Split(param, ":")
+			if len(items) > 1 {
+				md5Data := md5.Sum([]byte(items[1]))
+				a.UserKey = md5Data[:]
+				uidInt, err := strconv.Atoi(items[0])
+				if err != nil {
+					return nil, err
+				}
+				uidPack := binaryx.LEUInt16ToBytes(uint16((uidInt)))
+				a.UserID = uidPack
+			}
+		}
+		if a.UserKey == nil {
+			a.UserID = randomx.RandomBytes(4)
+			a.UserKey = a.GetServerInfo().GetKey()
+		}
+	}
+	authData := randomx.RandomBytes(3)
+	macKey := a.GetServerInfo().GetKey()
+	md5Data := hmacmd5(macKey, authData)
+	uid := binaryx.LEBytesToUInt32(a.UserID) ^ binaryx.LEBytesToUInt32(md5Data[0:4])
+	uidPack := binaryx.LEUint32ToBytes(uid)
+	randLen := a.udpRndDataLen(md5Data, a.RandomClient)
+	rc4Key := bytesx.ContactSlice(
+		[]byte(base64.StdEncoding.EncodeToString(a.UserKey)),
+		[]byte(base64.StdEncoding.EncodeToString(md5Data)),
+	)
+	encryptor, err := ciphers.NewEncryptor("rc4", string(rc4Key))
+	if err != nil {
+		return nil, err
+	}
+	result, err := encryptor.Encrypt(buf)
+	if err != nil {
+		return nil, err
+	}
+	result = bytesx.ContactSlice(result, randomx.RandomBytes(randLen), authData, uidPack)
+	return bytesx.ContactSlice(result, hmacmd5(a.UserKey, result)), nil
+
 }
 
 func (a *AuthChainA) ClientUDPPostDecrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
+	if len(buf) < 8 {
+		return []byte{}, nil
+	}
+	if bytes.Equal(hmacmd5(a.UserKey, buf[:len(buf)-1])[:1], buf[len(buf)-1:]) {
+		return []byte{}, nil
+	}
+	macKey := a.GetServerInfo().GetKey()
+	md5Data := hmacmd5(macKey, buf[len(buf)-8:len(buf)-1])
+	randLen := a.udpRndDataLen(md5Data, a.RandomServer)
+	rc4Key := bytesx.ContactSlice(
+		[]byte(base64.StdEncoding.EncodeToString(a.UserKey)),
+		[]byte(base64.StdEncoding.EncodeToString(md5Data)),
+	)
+	encryptor, err := ciphers.NewEncryptor("rc4", string(rc4Key))
+	if err != nil {
+		return nil, err
+	}
+	return encryptor.Decrypt(buf[:len(buf)-8-randLen])
 }
 
-func (a *AuthChainA) ServerUDPPreEncrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
+func (a *AuthChainA) ServerUDPPreEncrypt(buf,uid []byte) ([]byte, error) {
+	var userKey []byte
+	if a.GetServerInfo().GetUsers()[string(uid)] != ""{
+		userKey = []byte(a.GetServerInfo().GetUsers()[string(uid)])
+	}else{
+		uid = nil
+		if len(a.GetServerInfo().GetUsers()) == 0{
+			userKey = a.GetServerInfo().GetKey()
+		}else{
+			userKey = a.GetServerInfo().GetRecvIv()
+		}
+	}
+	authData := randomx.RandomBytes(7)
+	macKey := a.GetServerInfo().GetKey()
+	md5Data :=  hmacmd5(macKey,authData)
+	randLen := a.udpRndDataLen(md5Data,a.RandomServer)
+	rc4Key := bytesx.ContactSlice(
+		[]byte(base64.StdEncoding.EncodeToString(a.UserKey)),
+		[]byte(base64.StdEncoding.EncodeToString(md5Data)),
+	)
+	encryptor, err := ciphers.NewEncryptor("rc4", string(rc4Key))
+	if err != nil {
+		return nil, err
+	}
+	result,err := encryptor.Encrypt(buf)
+	if err !=nil{
+		return nil,err
+	}
+	result = bytesx.ContactSlice(result,randomx.RandomBytes(randLen))
+	result = bytesx.ContactSlice(result,hmacmd5(userKey,result)[:1])
+	return result,nil
 }
 
 func (a *AuthChainA) ServerUDPPostDecrypt(buf []byte) ([]byte, string, error) {
-	panic("not implemented")
+	macKey := a.GetServerInfo().GetKey()
+	md5Data := hmacmd5(macKey,buf[len(buf)-8:len(buf)-5])
+	uid := binaryx.LEBytesToUInt32(buf[len(buf)-5:len(buf)-1]) ^ binaryx.LEBytesToUInt32(md5Data[:4])
+	uidPack := binaryx.LEUint32ToBytes(uid)
+	var userKey []byte
+	if a.GetServerInfo().GetUsers()[string(uidPack)] != ""{
+		userKey = []byte(a.GetServerInfo().GetUsers()[string(uidPack)])
+	}else{
+		userKey = nil
+		if len(a.GetServerInfo().GetUsers()) == 0{
+			userKey = a.GetServerInfo().GetKey()
+		}else{
+			userKey = a.GetServerInfo().GetRecvIv()
+		}
+	}
+	if bytes.Equal(hmacmd5(userKey, buf[:len(buf)-1])[:1], buf[len(buf)-1:]) {
+		return []byte{}, "",nil
+	}
+	randLen := a.udpRndDataLen(md5Data,a.RandomServer)
+	rc4Key := bytesx.ContactSlice(
+		[]byte(base64.StdEncoding.EncodeToString(a.UserKey)),
+		[]byte(base64.StdEncoding.EncodeToString(md5Data)),
+	)
+	encryptor, err := ciphers.NewEncryptor("rc4", string(rc4Key))
+	if err != nil {
+		return nil, "",err
+	}
+	result,err := encryptor.Decrypt(buf[:len(buf)-8-randLen])
+	if err !=nil{
+		return nil,"",err
+	}
+	return result,string(uidPack),nil
 }
 
+
 func (a *AuthChainA) Dispose() {
-	panic("not implemented")
+	a.ObfsAuthChainData.Remove(string(a.UserID),a.ClientID)
 }
 
 func (a *AuthChainA) GetHeadSize(buf []byte, defaultValue int) int {
@@ -419,7 +800,7 @@ func (a *AuthChainA) rndDataLen(bufSize int, lastHash []byte, random *XorShift12
 	return int(random.Next()) % 1024
 }
 
-func (a *AuthChainA) udpRndDataLen(lastHash []byte, random XorShift128Plus) int {
+func (a *AuthChainA) udpRndDataLen(lastHash []byte, random *XorShift128Plus) int {
 	random.InitFromBin(lastHash)
 	return int(random.Next()) % 127
 }
@@ -453,56 +834,106 @@ func (a *AuthChainA) packClientData(buf []byte) ([]byte, error) {
 	}
 	data := a.rndData(len(buf), buf, a.LastClientHash, a.RandomClient)
 	macKey := bytesx.ContactSlice(a.UserKey, binaryx.BEUInt32ToBytes(uint32((a.PackID))))
-	length := len(buf) ^ int(binaryx.LEBytesToUint16(a.LastServerHash[14:]))
+	length := len(buf) ^ int(binaryx.LEBytesToUint16(a.LastClientHash[14:]))
 	data = bytesx.ContactSlice(binaryx.LEUInt16ToBytes(uint16(length)), data)
 	a.LastClientHash = hmacmd5(macKey, data)
 	data = bytesx.ContactSlice(data, a.LastClientHash[:2])
-	a.PackID = a.PackID + 1&0xFFFFFFFF
+	a.PackID = (a.PackID + 1) & 0xFFFFFFFF
+	return data, nil
+}
+
+func (a *AuthChainA) packServerData(buf []byte) ([]byte, error) {
+	buf, err := a.Encryptor.Encrypt(buf)
+	if err != nil {
+		return nil, err
+	}
+	data := a.rndData(len(buf), buf, a.LastServerHash, a.RandomClient)
+	macKey := bytesx.ContactSlice(a.UserKey, binaryx.BEUInt32ToBytes(uint32((a.PackID))))
+	length := len(buf) ^ int(binaryx.LEBytesToUint16(a.LastServerHash[14:]))
+	data = bytesx.ContactSlice(binaryx.LEUInt16ToBytes(uint16(length)), data)
+	a.LastServerHash = hmacmd5(macKey, data)
+	data = bytesx.ContactSlice(data, a.LastServerHash[:2])
+	a.PackID = (a.PackID + 1) & 0xFFFFFFFF
 	return data, nil
 }
 
 func (a *AuthChainA) packAuthData(authData, buf []byte) (result []byte, err error) {
 	data := authData
 	data = bytesx.ContactSlice(data, binaryx.LEUInt16ToBytes(uint16(a.GetServerInfo().GetOverhead())), binaryx.LEUInt16ToBytes(0))
-	mac_key := bytesx.ContactSlice(a.GetServerInfo().GetIv(), a.GetServerInfo().GetKey())
+	macKey := bytesx.ContactSlice(a.GetServerInfo().GetIv(), a.GetServerInfo().GetKey())
 
-	check_head := randomx.RandomBytes(4)
-	a.LastClientHash = hmacmd5(mac_key, check_head)
-	check_head = bytesx.ContactSlice(check_head, a.LastClientHash[:8])
+	checkHead := randomx.RandomBytes(4)
+	a.LastClientHash = hmacmd5(macKey, checkHead)
+	checkHead = bytesx.ContactSlice(checkHead, a.LastClientHash[:8])
 
 	param := a.GetServerInfo().GetProtocolParam()
+	var uidPack []byte
 	if strings.Contains(param, ":") {
 		items := strings.Split(param, ":")
-		var uidBytes []byte
 		if len(items) > 1 {
 			a.UserKey = []byte(items[1])
 			uidInt, err := strconv.Atoi(items[0])
 			if err != nil {
 				return nil, err
 			}
-			uidBytes = binaryx.LEUInt16ToBytes(uint16((uidInt)))
+			uidPack = binaryx.LEUInt16ToBytes(uint16((uidInt)))
 		} else {
-			uidBytes = randomx.RandomBytes(4)
+			uidPack = randomx.RandomBytes(4)
 		}
-		if a.UserKey == nil {
-			a.UserKey = a.GetServerInfo().GetKey()
-		}
-		encryptor, err := ciphers.NewEncryptorWithIv("aes-128-cbc",
-			string(bytesx.ContactSlice([]byte(base64.StdEncoding.EncodeToString(a.UserKey)), a.Salt)),
-			bytes.Repeat([]byte{0x00}, 16))
-		if err != nil {
-			return nil, err
-		}
-		uid := binaryx.LEBytesToUint16(uidBytes) ^ binaryx.LEBytesToUint16(a.LastClientHash[8:12])
-		uidBytes := binaryx.LEUInt16ToBytes(uid)
-		dataCipherText,err := encryptor.Encrypt(data)
-		if err != nil{
-			return nil,err
-		}
-		data = bytesx.ContactSlice(uidBytes,dataCipherText)
-		a.LastServerHash = hmacmd5(a.UserKey,data)
-		data = bytesx.ContactSlice(check_head,data,a.LastServerHash[:4])
-		a.Encryptor = encryptor.
-
+	} else {
+		uidPack = randomx.RandomBytes(4)
 	}
+
+	if a.UserKey == nil {
+		a.UserKey = a.GetServerInfo().GetKey()
+	}
+
+	encryptor, err := ciphers.NewEncryptorWithIv("aes-128-cbc",
+		string(bytesx.ContactSlice([]byte(base64.StdEncoding.EncodeToString(a.UserKey)), a.Salt)),
+		bytes.Repeat([]byte{0x00}, 16))
+	if err != nil {
+		return nil, err
+	}
+
+	uid := binaryx.LEBytesToUint16(uidPack) ^ binaryx.LEBytesToUint16(a.LastClientHash[8:12])
+	uidPack = binaryx.LEUInt16ToBytes(uid)
+	dataCipherText, err := encryptor.Encrypt(data)
+	if err != nil {
+		return nil, err
+	}
+	data = bytesx.ContactSlice(uidPack, dataCipherText[16:])
+	a.LastServerHash = hmacmd5(a.UserKey, data)
+	data = bytesx.ContactSlice(checkHead, data, a.LastServerHash[:4])
+	rc4Key := bytesx.ContactSlice(
+		[]byte(base64.StdEncoding.EncodeToString(a.UserKey)),
+		[]byte(base64.StdEncoding.EncodeToString(a.LastClientHash)),
+	)
+	a.Encryptor, err = ciphers.NewEncryptor(string(rc4Key), "rc4")
+	if err != nil {
+		return nil, err
+	}
+
+	packClientData, err := a.packClientData(buf)
+	if err != nil {
+		return nil, err
+	}
+	return bytesx.ContactSlice(data, packClientData), nil
+}
+
+func (a *AuthChainA) AuthData() []byte {
+	utcTime := uint32(time.Now().Unix() & 0xFFFFFFFF)
+	if a.ObfsAuthChainData.ConnectionID > 0xFF000000 {
+		a.ObfsAuthChainData.LocalClientId = []byte{}
+	}
+	if a.ObfsAuthChainData.LocalClientId == nil {
+		a.ObfsAuthChainData.LocalClientId = randomx.RandomBytes(4)
+		log.Info("local_client_id %s", hex.EncodeToString(a.ObfsAuthChainData.LocalClientId))
+		a.ObfsAuthChainData.ConnectionID = int(binaryx.LEBytesToUInt32(randomx.RandomBytes(4)) & 0xFFFFFFFF)
+	}
+	a.ObfsAuthChainData.ConnectionID += 1
+	return bytesx.ContactSlice(
+		binaryx.LEUint32ToBytes(uint32(utcTime)),
+		a.ObfsAuthChainData.LocalClientId,
+		binaryx.LEUint32ToBytes(uint32(a.ObfsAuthChainData.ConnectionID)),
+	)
 }

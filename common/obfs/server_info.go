@@ -37,23 +37,29 @@ type ServerInfo interface {
 	GetBufferSize() int
 	SetOverhead(size int)
 	GetOverhead() int
+	GetUsers() map[string]string
+	SetUsers(users map[string]string)
+	UpdateUserFunc(uid []byte)
+	SetUpdateUserFunc(func(uid []byte))
 }
 
 type serverInfo struct {
-	Host          string
-	Port          int
-	Client        net.IP
-	ClientPort    int
-	ProtocolParam string
-	ObfsParam     string
-	Iv            []byte
-	RecvIv        []byte
-	KeyStr        string
-	Key           []byte
-	HeadLen       int
-	TCPMss        int
-	BufferSize    int
-	Overhead      int
+	Host           string
+	Port           int
+	Client         net.IP
+	ClientPort     int
+	ProtocolParam  string
+	ObfsParam      string
+	Iv             []byte
+	RecvIv         []byte
+	KeyStr         string
+	Key            []byte
+	HeadLen        int
+	TCPMss         int
+	BufferSize     int
+	Overhead       int
+	Users          map[string]string
+	updateUserFunc func(uid []byte)
 }
 
 // InitServerInfo init ServerInfo default value
@@ -61,6 +67,7 @@ func NewServerInfo() ServerInfo {
 	return &serverInfo{
 		TCPMss:  TCP_MSS,
 		HeadLen: DEFAULT_HEAD_LEN,
+		Users:   make(map[string]string),
 	}
 }
 
@@ -166,4 +173,22 @@ func (s *serverInfo) SetOverhead(size int) {
 
 func (s *serverInfo) GetOverhead() int {
 	return s.Overhead
+}
+
+func (s *serverInfo) GetUsers() map[string]string {
+	return s.Users
+}
+
+func (s *serverInfo) SetUsers(users map[string]string) {
+	s.Users = users
+}
+
+func (s *serverInfo) UpdateUserFunc(uid []byte) {
+	if s.updateUserFunc != nil{
+		s.updateUserFunc(uid)
+	}
+}
+
+func (s *serverInfo) SetUpdateUserFunc(f func ([]byte)){
+	s.updateUserFunc = f
 }
