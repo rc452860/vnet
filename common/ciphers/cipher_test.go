@@ -6,6 +6,7 @@ import (
 	"crypto/cipher"
 	"encoding/hex"
 	"fmt"
+	"github.com/rc452860/vnet/utils/bytesx"
 	"testing"
 )
 
@@ -181,6 +182,15 @@ func TestEncryptor_Decrypt_RC4(t *testing.T) {
 		return
 	}
 	fmt.Println(hex.EncodeToString(result))
+
+	encryptor, _ = NewEncryptor("rc4", "a2lsbGVybCPp7mlgedshQ+TWgabdtQ==")
+	cleartext, _ := encryptor.Decrypt(bytesx.MustHexDecode("72193e8ab211df"))
+	fmt.Printf("%s|%s\n",hex.EncodeToString(cleartext),string(cleartext))
+	cleartext, _ = encryptor.Decrypt(bytesx.MustHexDecode("72193e8ab211df"))
+	fmt.Printf("%s|%s\n",hex.EncodeToString(cleartext),string(cleartext))
+	cleartext, _ = encryptor.Decrypt(bytesx.MustHexDecode("72193e8ab211df"))
+	fmt.Printf("%s|%s\n",hex.EncodeToString(cleartext),string(cleartext))
+
 }
 
 func ExampleNewCBCDecrypter() {

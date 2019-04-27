@@ -79,11 +79,11 @@ func (p *plain) ClientUDPPreEncrypt(buf []byte) ([]byte, error) {
 	return buf, nil
 }
 
-func (p *plain) ClientUDPPostDecrypt(buf,uid []byte) ([]byte, error) {
+func (p *plain) ClientUDPPostDecrypt(buf []byte) ([]byte, error) {
 	return buf, nil
 }
 
-func (p *plain) ServerUDPPreEncrypt(buf []byte) ([]byte, error) {
+func (p *plain) ServerUDPPreEncrypt(buf,uid []byte) ([]byte, error) {
 	return buf, nil
 }
 

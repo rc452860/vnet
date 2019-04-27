@@ -11,7 +11,7 @@ type LRU struct{
 }
 
 type lrucache struct{
-	mapping *sync.Map
+	mapping sync.Map
 	lruJanitor *lruJanitor
 }
 
@@ -102,8 +102,8 @@ func (j *lruJanitor) process(c *lrucache) {
 	}
 }
 
-func stopLruJanitor(c *Cache) {
-	c.janitor.stop <- struct{}{}
+func stopLruJanitor(c *LRU) {
+	c.lruJanitor.stop <- struct{}{}
 }
 
 
@@ -113,10 +113,12 @@ func NewLruCache(interval time.Duration) *LRU {
 		interval: interval,
 		stop:     make(chan struct{}),
 	}
-	c := &lrucache{lruJanitor: j}
+	c := &lrucache{
+		lruJanitor: j,
+	}
 	go j.process(c)
 	lru := &LRU{c}
 	// this is very interesting,it worth be deep learning
-	runtime.SetFinalizer(lru, stopJanitor)
+	runtime.SetFinalizer(lru, stopLruJanitor)
 	return lru
 }

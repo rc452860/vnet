@@ -68,7 +68,7 @@ func NewCipher(op int, method string, key, iv []byte) (*SSCipher, error) {
 		}, nil
 	}
 	if cp := block.GetBlockCipher(method); cp != nil {
-		cpInstance, err := cp.NewBlock(key, iv,op == OP_ENCRYPT)
+		cpInstance, err := cp.NewBlock(key, iv, op == OP_ENCRYPT)
 		if err != nil {
 			return nil, err
 		}
@@ -194,6 +194,7 @@ func (s *SSCipher) Decrypt(ciphertext []byte) (result []byte, err error) {
 
 type Encryptor struct {
 	Key          []byte
+	KeyStr       string
 	Method       string
 	IVOut        []byte
 	IVIn         []byte
@@ -208,6 +209,7 @@ func NewEncryptor(method, key string) (result *Encryptor, err error) {
 	result = new(Encryptor)
 	result.IVSent = false
 	result.Method = method
+	result.KeyStr = key
 	// if method is stream then
 	if cp := stream.GetStreamCipher(method); cp != nil {
 		result.IVOut = make([]byte, cp.IVLen())
