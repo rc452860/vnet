@@ -29,7 +29,9 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pkg/errors v0.8.1
+	github.com/rs/xid v1.2.1
 	github.com/shirou/gopsutil v2.18.12+incompatible
+	github.com/sirupsen/logrus v1.2.0
 	github.com/stretchr/testify v1.3.0 // indirect
 	github.com/templexxx/cpufeat v0.0.0-20180724012125-cef66df7f161 // indirect
 	github.com/templexxx/xor v0.0.0-20181023030647-4e92f724b73b

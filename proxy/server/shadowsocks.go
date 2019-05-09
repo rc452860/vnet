@@ -3,10 +3,9 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	"github.com/rc452860/vnet/utils/netx"
 	"net"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/rc452860/vnet/component/dnsx"
@@ -24,17 +23,6 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type mode int
-
-var (
-	logging *log.Logging
-	// ShadowsocksServerList Global map for store shadowsocks proxy
-	ShadowsocksServerList map[string]*ShadowsocksProxy
-)
-
-func init() {
-	logging = log.GetLogger("root")
-}
 
 // ShadowsocksProxy is respect shadowsocks proxy server
 // it have Start and Stop method to control proxy
@@ -156,13 +144,13 @@ func (s *ShadowsocksProxy) startTCP() error {
 	serverAddr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp", serverAddr)
 	if err != nil {
-		logging.Error(err.Error())
+		log.Error(err.Error())
 		return err
 	}
 	server, err := net.ListenTCP("tcp", tcpAddr)
-	// logging.Info("listening TCP on %s", addr)
+	// log.Info("listening TCP on %s", addr)
 	if err != nil {
-		logging.Error(err.Error())
+		log.Error(err.Error())
 		return errors.Cause(err)
 	}
 	s.TCP = server
@@ -185,7 +173,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				if strings.Contains(err.Error(), "use of closed network connection") {
 					return
 				}
-				logging.Error(err.Error())
+				log.Error(err.Error())
 				continue
 			}
 
@@ -194,13 +182,13 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 默认装饰器 */
 				lcd, err := conn.DefaultDecorate(lcon, conn.TCP)
 				if err != nil {
-					logging.Err(err)
+					log.Err(err)
 					return
 				}
 				/** 去皮流量记录装饰器 */
 				lcd, err = conn.TrafficDecorate(lcd, s.tcpUpload, s.tcpDownload)
 				if err != nil {
-					logging.Err(err)
+					log.Err(err)
 					return
 				}
 				/** 限流装饰器 */
@@ -209,7 +197,7 @@ func (s *ShadowsocksProxy) startTCP() error {
 				/** 加密装饰器 */
 				lcd, err = ciphers.CipherDecorate(s.Password, s.Method, lcd)
 				if err != nil {
-					logging.Err(err)
+					log.Err(err)
 					return
 				}
 
@@ -226,65 +214,33 @@ func (s *ShadowsocksProxy) startTCP() error {
 				}
 				rc, err := net.Dial("tcp", resloveAddr)
 				if err != nil {
-					logging.Error("connect target:%s error cause: %v", targetAddr, err)
+					log.Error("connect target:%s error cause: %v", targetAddr, err)
 					return
 				}
 				defer rc.Close()
 
 				s.ConnectionStage(s.TCP.Addr(), lcd.RemoteAddr(), rc.RemoteAddr(), targetAddr)
 
-				rc.(*net.TCPConn).SetKeepAlive(true)
+				_ = rc.(*net.TCPConn).SetKeepAlive(true)
 
 				/** 默认装饰器 */
 				rcd, err := conn.DefaultDecorate(rc, conn.TCP)
 				if err != nil {
-					logging.Err(err)
+					log.Err(err)
 					return
 				}
 
-				_, _, err = relayTCP(lcd, rcd)
+				_, _, err = netx.DuplexCopyTcp(lcd, rcd)
 				if err != nil {
 					if err, ok := err.(net.Error); ok && err.Timeout() {
 						return // ignore i/o timeout
 					}
-					logging.Error("relay error: %v", err)
+					log.Error("relay error: %v", err)
 				}
 			})
 		}
 	})
 	return nil
-}
-
-// relay copies between left and right bidirectionally. Returns number of
-// bytes copied from right to left, from left to right, and any error occurred.
-func relayTCP(left, right net.Conn) (int64, int64, error) {
-	type res struct {
-		N   int64
-		Err error
-	}
-	ch := make(chan res)
-	defer func() {
-		if e := recover(); e != nil {
-			log.Error("panic in timedCopy: %v", e)
-		}
-	}()
-
-	go goroutine.Protect(func() {
-		n, err := io.Copy(right, left)
-		right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
-		left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
-		ch <- res{n, err}
-	})
-
-	n, err := io.Copy(left, right)
-	right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
-	left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
-	rs := <-ch
-
-	if err == nil {
-		err = rs.Err
-	}
-	return n, rs.N, errors.Cause(err)
 }
 
 // udp upload traffic count
@@ -319,7 +275,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 	serverAddr := fmt.Sprintf("%s:%d", s.Host, s.Port)
 	server, err := net.ListenPacket("udp", serverAddr)
 	if err != nil {
-		logging.Error("UDP remote listen error: %v", err)
+		log.Error("UDP remote listen error: %v", err)
 		return errors.Cause(err)
 	}
 	s.UDP = server
@@ -327,15 +283,15 @@ func (s *ShadowsocksProxy) startUDP() error {
 	server = conn.PacketTrafficConnDecorate(server, s.udpUpload, s.udpDownload)
 	server, err = ciphers.CipherPacketDecorate(s.Password, s.Method, server)
 	if err != nil {
-		logging.Error("UDP CipherPacketDecorate init error: %v", err)
+		log.Error("UDP CipherPacketDecorate init error: %v", err)
 		return errors.Cause(err)
 	}
 
-	nm := newNATmap(s.ConnectTimeout)
+	nm := netx.NewNatMap(s.ConnectTimeout)
 	buf := pool.GetBuf()
 	defer pool.PutBuf(buf)
 
-	// logging.Info("listening UDP on %s", addr)
+	// log.Info("listening UDP on %s", addr)
 
 	go goroutine.Protect(func() {
 		defer s.clearUDP()
@@ -345,7 +301,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 				return
 			default:
 			}
-			server.SetDeadline(time.Now().Add(s.ConnectTimeout))
+			_ = server.SetDeadline(time.Now().Add(s.ConnectTimeout))
 			n, raddr, err := server.ReadFrom(buf)
 			if opErr, ok := err.(*net.OpError); ok && opErr.Timeout() {
 				continue
@@ -354,22 +310,22 @@ func (s *ShadowsocksProxy) startUDP() error {
 				if strings.Contains(err.Error(), "use of closed network connection") {
 					return
 				}
-				logging.Error("UDP remote read error: %v", err)
+				log.Error("UDP remote read error: %v", err)
 				continue
 			}
 			tgtAddr := socks.SplitAddr(buf[:n])
 			if tgtAddr == nil {
-				logging.Error("udp:%v read target address error. (maybe the crypto method wrong configuration)", addr.GetPortFromAddr(server.LocalAddr()))
+				log.Error("udp:%v read target address error. (maybe the crypto method wrong configuration)", addr.GetPortFromAddr(server.LocalAddr()))
 				continue
 			}
-			addr, err := s.dnsReslove(tgtAddr)
+			targetIP, err := s.dnsReslove(tgtAddr)
 			if err != nil {
 				log.Err(err)
 				return
 			}
-			tgtUDPAddr, err := net.ResolveUDPAddr("udp", addr)
+			tgtUDPAddr, err := net.ResolveUDPAddr("udp", targetIP)
 			if err != nil {
-				logging.Error("failed to resolve target UDP address: %v", err)
+				log.Error("failed to resolve target UDP address: %v", err)
 				continue
 			}
 
@@ -380,7 +336,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 			if pc == nil {
 				pc, err = net.ListenPacket("udp", "")
 				if err != nil {
-					logging.Error("UDP remote listen error: %v", err)
+					log.Error("UDP remote listen error: %v", err)
 					continue
 				}
 
@@ -389,7 +345,7 @@ func (s *ShadowsocksProxy) startUDP() error {
 
 			_, err = pc.WriteTo(payload, tgtUDPAddr) // accept only UDPAddr despite the signature
 			if err != nil {
-				logging.Error("UDP remote write error: %v", err)
+				log.Error("UDP remote write error: %v", err)
 				continue
 			}
 		}
@@ -434,82 +390,6 @@ func (s *ShadowsocksProxy) String() string {
 	return string(result)
 }
 
-// Packet NAT table
-type natmap struct {
-	sync.RWMutex
-	m       map[string]net.PacketConn
-	timeout time.Duration
-}
-
-func newNATmap(timeout time.Duration) *natmap {
-	m := &natmap{}
-	m.m = make(map[string]net.PacketConn)
-	m.timeout = timeout
-	return m
-}
-
-func (m *natmap) Get(key string) net.PacketConn {
-	m.RLock()
-	defer m.RUnlock()
-	return m.m[key]
-}
-
-func (m *natmap) Set(key string, pc net.PacketConn) {
-	m.Lock()
-	defer m.Unlock()
-	m.m[key] = pc
-}
-
-func (m *natmap) Del(key string) net.PacketConn {
-	m.Lock()
-	defer m.Unlock()
-
-	pc, ok := m.m[key]
-	if ok {
-		delete(m.m, key)
-		return pc
-	}
-	return nil
-}
-
-func (m *natmap) Add(peer net.Addr, dst, src net.PacketConn) {
-	m.Set(peer.String(), src)
-	go goroutine.Protect(func() {
-		timedCopy(dst, peer, src, m.timeout)
-		if pc := m.Del(peer.String()); pc != nil {
-			pc.Close()
-		}
-	})
-}
-
-// copy from src to dst at target with read timeout
-func timedCopy(dst net.PacketConn, target net.Addr, src net.PacketConn, timeout time.Duration) error {
-	buf := pool.GetBuf()
-	defer pool.PutBuf(buf)
-	defer func() {
-		if e := recover(); e != nil {
-			log.Error("panic in timedCopy: %v", e)
-		}
-	}()
-
-	for {
-		src.SetReadDeadline(time.Now().Add(timeout))
-		n, raddr, err := src.ReadFrom(buf)
-		if err != nil {
-			return errors.Cause(err)
-		}
-
-		srcAddr := socks.ParseAddr(raddr.String())
-		srcAddrByte := srcAddr.Raw
-		copy(buf[len(srcAddrByte):], buf[:n])
-		copy(buf, srcAddrByte)
-		_, err = dst.WriteTo(buf[:len(srcAddrByte)+n], target)
-
-		if err != nil {
-			return errors.Cause(err)
-		}
-	}
-}
 
 func (s *ShadowsocksProxy) clearUDP() {
 

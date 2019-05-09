@@ -2,15 +2,34 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="fde9fcc1-5b20-4402-af8d-dd977f2d09ef" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/network/conn.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/network/decorate.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/network/listener.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/network/request.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proxy/server/shadowsocksr.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/proxy/server/shadowsocksr_test.go" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/utils/netx/netx.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/cache/lru_cache.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/cache/lru_cache.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/ciphers/cipher.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/ciphers/cipher.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/ciphers/cipher_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/ciphers/cipher_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/array/time_array.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/array/time_array_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/auth/auth.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/file_rotation_write.go.ignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/file_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/file_writer.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/logging.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/log/logging.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/logging_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/pattern_formatter.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/runtime.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/runtime_test.go" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/log/terminal_writer.go" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/common/obfs/auth_chain.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/auth_chain.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/obfs/auth_chain_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/auth_chain_test.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/obfs/plain.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/plain.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/obfs/server_info.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/server_info.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/bytesx/bytesx.go" beforeDir="false" afterPath="$PROJECT_DIR$/utils/bytesx/bytesx.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/obfs/obfs.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/obfs.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/obfs/obfs_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/obfs_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/common/obfs/obfs_tls.go" beforeDir="false" afterPath="$PROJECT_DIR$/common/obfs/obfs_tls.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/network/ciphers/ciphers_test.go" beforeDir="false" afterPath="$PROJECT_DIR$/network/ciphers/ciphers_test.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/proxy/server/shadowsocks.go" beforeDir="false" afterPath="$PROJECT_DIR$/proxy/server/shadowsocks.go" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -21,40 +40,100 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/common/obfs/auth_chain.go">
+        <entry file="file://$PROJECT_DIR$/network/request.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="156">
-              <caret line="725" column="21" selection-start-line="725" selection-start-column="21" selection-end-line="725" selection-end-column="21" />
+            <state relative-caret-position="173">
+              <caret line="85" selection-start-line="85" selection-end-line="85" />
               <folding>
-                <element signature="e#14#430#0" expanded="true" />
+                <element signature="e#17#42#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://D:/dev/Go/src/net/net.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="336">
+              <caret line="156" column="44" lean-forward="true" selection-start-line="156" selection-start-column="44" selection-end-line="156" selection-end-column="44" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/proxy/server/shadowsocksr.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="222">
+              <caret line="39" column="14" selection-start-line="39" selection-start-column="11" selection-end-line="39" selection-end-column="14" />
+              <folding>
+                <element signature="e#16#136#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://D:/dev/Go/src/runtime/proc.go">
+        <entry file="file://D:/dev/Go/src/testing/example.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="304">
-              <caret line="301" selection-start-line="301" selection-end-line="301" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/common/obfs/auth_chain_test.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="145">
-              <caret line="85" column="31" selection-start-line="85" selection-start-column="31" selection-end-line="85" selection-end-column="31" />
+            <state relative-caret-position="184">
+              <caret line="115" selection-start-line="115" selection-end-line="115" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/utils/bytesx/bytesx.go">
+        <entry file="file://D:/dev/Go/src/runtime/panic.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="202">
-              <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+            <state relative-caret-position="164">
+              <caret line="521" selection-start-line="521" selection-end-line="521" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/network/listener.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="230">
+              <caret line="26" selection-start-line="26" selection-end-line="26" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/network/decorate.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="44">
+              <caret line="2" column="7" lean-forward="true" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
+              <folding>
+                <element signature="e#17#234#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/common/log/logging.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret column="11" selection-start-column="11" selection-end-column="11" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/proxy/server/shadowsocksr_test.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="264">
+              <caret line="12" column="5" lean-forward="true" selection-start-line="12" selection-start-column="5" selection-end-line="12" selection-end-column="5" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils/netx/netx.go">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="22">
+              <caret line="18" column="5" selection-start-line="18" selection-start-column="5" selection-end-line="18" selection-end-column="5" />
             </state>
           </provider>
         </entry>
@@ -70,15 +149,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>r</find>
-      <find>UserID</find>
-      <find>UpdateUserFunc</find>
-      <find>cbc</find>
-      <find>macKey</find>
-      <find>2048</find>
-      <find>+ 4</find>
-      <find>contain</find>
-      <find>split</find>
       <find>uidBytes</find>
       <find>rc4</find>
       <find>server_info.iv</find>
@@ -100,9 +170,22 @@
       <find>randlen:</find>
       <find>uid xor</find>
       <find>fmt.*?\n</find>
+      <find>newNATmap</find>
+      <find>timedCopy</find>
+      <find>add</find>
+      <find>dial</find>
+      <find>logging</find>
+      <find>copy</find>
+      <find>listenTcp</find>
+      <find>shadowsocks</find>
+      <find>ssrd</find>
     </findStrings>
     <replaceStrings>
       <replace>uidPack</replace>
+      <replace>log</replace>
+      <replace>ShadowsocksRDecorate</replace>
+      <replace>ShadowsocksRDecorate</replace>
+      <replace>r</replace>
     </replaceStrings>
   </component>
   <component name="GOROOT" path="D:\dev\Go" />
@@ -123,22 +206,40 @@
         <option value="$PROJECT_DIR$/common/ciphers/stream/rc4.go" />
         <option value="$PROJECT_DIR$/utils/opeator/opeator.go" />
         <option value="$PROJECT_DIR$/utils/opeator/opeator_test.go" />
-        <option value="$PROJECT_DIR$/common/obfs/obfs.go" />
-        <option value="$PROJECT_DIR$/common/obfs/obfs_tls.go" />
         <option value="$PROJECT_DIR$/common/obfs/plain.go" />
-        <option value="$PROJECT_DIR$/common/obfs/server_info.go" />
         <option value="$PROJECT_DIR$/common/cache/lru_cache.go" />
         <option value="$PROJECT_DIR$/utils/binaryx/binaryx.go" />
-        <option value="$PROJECT_DIR$/common/ciphers/cipher.go" />
         <option value="$PROJECT_DIR$/utils/bytesx/bytesx.go" />
         <option value="$PROJECT_DIR$/common/ciphers/cipher_test.go" />
-        <option value="$PROJECT_DIR$/common/obfs/auth_chain.go" />
         <option value="$PROJECT_DIR$/common/obfs/auth_chain_test.go" />
+        <option value="$PROJECT_DIR$/common/obfs/obfs_test.go" />
+        <option value="$PROJECT_DIR$/utils/netx/netx.go" />
+        <option value="$PROJECT_DIR$/proxy/server/shadowsocks.go" />
+        <option value="$PROJECT_DIR$/proxy/client/shadowsocks_test.go" />
+        <option value="$PROJECT_DIR$/network/tcp/Dial.go" />
+        <option value="$PROJECT_DIR$/network/tcp/dial.go" />
+        <option value="$PROJECT_DIR$/network/tcp/listener_test.go" />
+        <option value="$PROJECT_DIR$/network/ciphers/ciphers_test.go" />
+        <option value="$PROJECT_DIR$/common/log/logging.go" />
+        <option value="$PROJECT_DIR$/common/obfs/obfs.go" />
+        <option value="$PROJECT_DIR$/common/errorsx/errorsx.go" />
+        <option value="$PROJECT_DIR$/common/obfs/obfs_tls.go" />
+        <option value="$PROJECT_DIR$/common/ciphers/cipher.go" />
+        <option value="$PROJECT_DIR$/network/tcp/tcp_decorate.go" />
+        <option value="$PROJECT_DIR$/common/obfs/server_info.go" />
+        <option value="$PROJECT_DIR$/network/tcp/listener.go" />
+        <option value="$PROJECT_DIR$/network/conn.go" />
+        <option value="$PROJECT_DIR$/network/listener.go" />
+        <option value="$PROJECT_DIR$/proxy/server/shadowsocksr_test.go" />
+        <option value="$PROJECT_DIR$/common/obfs/auth_chain.go" />
+        <option value="$PROJECT_DIR$/network/decorate.go" />
+        <option value="$PROJECT_DIR$/network/request.go" />
+        <option value="$PROJECT_DIR$/proxy/server/shadowsocksr.go" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-10" />
+    <option name="x" value="-24" />
     <option name="width" value="1390" />
     <option name="height" value="1756" />
   </component>
@@ -164,41 +265,50 @@
               <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
               <item name="vnet" type="462c0819:PsiDirectoryNode" />
               <item name="common" type="462c0819:PsiDirectoryNode" />
-              <item name="cache" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
-              <item name="vnet" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
               <item name="ciphers" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
               <item name="vnet" type="462c0819:PsiDirectoryNode" />
               <item name="common" type="462c0819:PsiDirectoryNode" />
-              <item name="ciphers" type="462c0819:PsiDirectoryNode" />
-              <item name="stream" type="462c0819:PsiDirectoryNode" />
+              <item name="log" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
               <item name="vnet" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
+              <item name="common" type="462c0819:PsiDirectoryNode" />
+              <item name="obfs" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
               <item name="vnet" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
-              <item name="binaryx" type="462c0819:PsiDirectoryNode" />
+              <item name="network" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
               <item name="vnet" type="462c0819:PsiDirectoryNode" />
-              <item name="utils" type="462c0819:PsiDirectoryNode" />
-              <item name="bytesx" type="462c0819:PsiDirectoryNode" />
+              <item name="proxy" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
+              <item name="vnet" type="462c0819:PsiDirectoryNode" />
+              <item name="proxy" type="462c0819:PsiDirectoryNode" />
+              <item name="server" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
               <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+            </path>
+            <path>
+              <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="Go Modules &lt;github.com/rc452860/vnet&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+            </path>
+            <path>
+              <item name="vnet" type="b2602c69:ProjectViewProjectNode" />
+              <item name="External Libraries" type="cb654da1:ExternalLibrariesNode" />
+              <item name="Go Modules &lt;github.com/rc452860/vnet&gt;" type="20ee2d1f:SyntheticLibraryElementNode" />
+              <item name="logrus@v1.2.0" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -213,9 +323,9 @@
     <property name="go.gopath.indexing.explicitly.defined" value="true" />
     <property name="go.import.settings.migrated" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../golang.org/x/mobile/example/basic" />
+    <property name="last_opened_file_path" value="D:/work/v2ray-core" />
     <property name="nodejs_package_manager_path" value="npm" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -234,18 +344,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Go Test.TestTestAuthChainUDP in github.com/rc452860/vnet/common/obfs">
-    <configuration name="ExampleAuthChainA in github.com/rc452860/vnet/common/obfs" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="vnet" />
-      <working_directory value="$PROJECT_DIR$/common/obfs" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/rc452860/vnet/common/obfs" />
-      <directory value="$PROJECT_DIR$/" />
-      <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^ExampleAuthChainA$" />
-      <method v="2" />
-    </configuration>
+  <component name="RunManager" selected="Go Test.ExampleShadowsocksR in github.com/rc452860/vnet/proxy/server">
     <configuration name="ExampleAuthChainAClient in github.com/rc452860/vnet/common/obfs" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="vnet" />
       <working_directory value="$PROJECT_DIR$/common/obfs" />
@@ -257,6 +356,28 @@
       <pattern value="^ExampleAuthChainAClient$" />
       <method v="2" />
     </configuration>
+    <configuration name="ExampleLintenTcp in github.com/rc452860/vnet/network/tcp" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="vnet" />
+      <working_directory value="$PROJECT_DIR$/network/tcp" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/rc452860/vnet/network/tcp" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <pattern value="^ExampleLintenTcp$" />
+      <method v="2" />
+    </configuration>
+    <configuration name="ExampleShadowsocksR in github.com/rc452860/vnet/proxy/server" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
+      <module name="vnet" />
+      <working_directory value="$PROJECT_DIR$/proxy/server" />
+      <framework value="gotest" />
+      <kind value="PACKAGE" />
+      <package value="github.com/rc452860/vnet/proxy/server" />
+      <directory value="$PROJECT_DIR$/" />
+      <filePath value="$PROJECT_DIR$/" />
+      <pattern value="^ExampleShadowsocksR$" />
+      <method v="2" />
+    </configuration>
     <configuration name="ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
       <module name="vnet" />
       <working_directory value="$PROJECT_DIR$/common/obfs" />
@@ -266,17 +387,6 @@
       <directory value="$PROJECT_DIR$/" />
       <filePath value="$PROJECT_DIR$/" />
       <pattern value="^ExampleTestAuthChainUDP$" />
-      <method v="2" />
-    </configuration>
-    <configuration name="TestEncryptor_Decrypt_RC4 in github.com/rc452860/vnet/common/ciphers" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
-      <module name="vnet" />
-      <working_directory value="$PROJECT_DIR$/common/ciphers" />
-      <framework value="gotest" />
-      <kind value="PACKAGE" />
-      <package value="github.com/rc452860/vnet/common/ciphers" />
-      <directory value="$PROJECT_DIR$/" />
-      <filePath value="$PROJECT_DIR$/" />
-      <pattern value="^TestEncryptor_Decrypt_RC4$" />
       <method v="2" />
     </configuration>
     <configuration name="TestTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" type="GoTestRunConfiguration" factoryName="Go Test" temporary="true" nameIsGenerated="true">
@@ -292,27 +402,15 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Go Test.ExampleShadowsocksR in github.com/rc452860/vnet/proxy/server" />
+        <item itemvalue="Go Test.ExampleLintenTcp in github.com/rc452860/vnet/network/tcp" />
         <item itemvalue="Go Test.TestTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" />
         <item itemvalue="Go Test.ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" />
         <item itemvalue="Go Test.ExampleAuthChainAClient in github.com/rc452860/vnet/common/obfs" />
-        <item itemvalue="Go Test.TestEncryptor_Decrypt_RC4 in github.com/rc452860/vnet/common/ciphers" />
-        <item itemvalue="Go Test.ExampleAuthChainA in github.com/rc452860/vnet/common/obfs" />
       </list>
     </recent_temporary>
   </component>
   <component name="TestHistory">
-    <history-entry file="ExampleTestAuthChainUDP_in_github_com_rc452860_vnet_common_obfs - 2019.04.27 at 19h 56m 08s.xml">
-      <configuration name="ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="ExampleTestAuthChainUDP_in_github_com_rc452860_vnet_common_obfs - 2019.04.27 at 19h 57m 52s.xml">
-      <configuration name="ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="ExampleTestAuthChainUDP_in_github_com_rc452860_vnet_common_obfs - 2019.04.27 at 19h 57m 58s.xml">
-      <configuration name="ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" configurationId="GoTestRunConfiguration" />
-    </history-entry>
-    <history-entry file="ExampleTestAuthChainUDP_in_github_com_rc452860_vnet_common_obfs - 2019.04.27 at 19h 59m 59s.xml">
-      <configuration name="ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" configurationId="GoTestRunConfiguration" />
-    </history-entry>
     <history-entry file="ExampleTestAuthChainUDP_in_github_com_rc452860_vnet_common_obfs - 2019.04.27 at 20h 03m 36s.xml">
       <configuration name="ExampleTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" configurationId="GoTestRunConfiguration" />
     </history-entry>
@@ -331,26 +429,47 @@
     <history-entry file="TestTestAuthChainUDP_in_github_com_rc452860_vnet_common_obfs - 2019.04.27 at 20h 08m 07s.xml">
       <configuration name="TestTestAuthChainUDP in github.com/rc452860/vnet/common/obfs" configurationId="GoTestRunConfiguration" />
     </history-entry>
+    <history-entry file="ExampleLintenTcp_in_github_com_rc452860_vnet_network_tcp - 2019.04.29 at 14h 46m 49s.xml">
+      <configuration name="ExampleLintenTcp in github.com/rc452860/vnet/network/tcp" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="ExampleLintenTcp_in_github_com_rc452860_vnet_network_tcp - 2019.04.29 at 14h 47m 58s.xml">
+      <configuration name="ExampleLintenTcp in github.com/rc452860/vnet/network/tcp" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="ExampleLintenTcp_in_github_com_rc452860_vnet_network_tcp - 2019.04.29 at 14h 49m 13s.xml">
+      <configuration name="ExampleLintenTcp in github.com/rc452860/vnet/network/tcp" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+    <history-entry file="ExampleShadowsocksR_in_github_com_rc452860_vnet_proxy_server - 2019.05.09 at 23h 40m 23s.xml">
+      <configuration name="ExampleShadowsocksR in github.com/rc452860/vnet/proxy/server" configurationId="GoTestRunConfiguration" />
+    </history-entry>
+  </component>
+  <component name="TodoView">
+    <todo-panel id="selected-file">
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
+    <todo-panel id="all">
+      <are-packages-shown value="true" />
+      <is-autoscroll-to-source value="true" />
+    </todo-panel>
   </component>
   <component name="ToolWindowManager">
     <frame x="-6" y="-6" width="1381" height="885" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49802372" visible="true" weight="0.25094482" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49802372" visible="true" weight="0.21693122" />
       <window_info id="Structure" order="1" sideWeight="0.5019763" side_tool="true" weight="0.25094482" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.32891247" />
+      <window_info anchor="bottom" id="Find" order="1" sideWeight="0.49962208" weight="0.32891247" />
       <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.30901858" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.39920425" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="TODO" order="6" weight="0.32891247" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Database Changes" order="8" />
       <window_info anchor="bottom" id="Version Control" order="9" />
-      <window_info anchor="bottom" id="Terminal" order="10" weight="0.32891247" />
-      <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="10" weight="0.3258278" />
+      <window_info anchor="bottom" id="Event Log" order="11" sideWeight="0.50037795" side_tool="true" weight="0.32891247" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
@@ -421,8 +540,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/common/obfs/auth_chain.go</url>
-          <line>672</line>
-          <properties />
+          <line>676</line>
           <option name="timeStamp" value="90" />
         </line-breakpoint>
       </breakpoints>
@@ -450,344 +568,367 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/cipher_conn.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="70" column="14" lean-forward="true" selection-start-line="70" selection-start-column="14" selection-end-line="70" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/rc4_md5.go">
+    <entry file="file://$PROJECT_DIR$/utils/lock.go">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/aes_cbc.go" />
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/cipher_packet.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/chacha20.go">
+    <entry file="file://$PROJECT_DIR$/utils/iox/iox.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="9" column="20" selection-start-line="9" selection-start-column="20" selection-end-line="9" selection-end-column="20" />
+        <state relative-caret-position="308">
+          <caret line="16" column="1" lean-forward="true" selection-start-line="16" selection-start-column="1" selection-end-line="16" selection-end-column="1" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/stream.go">
+    <entry file="file://$PROJECT_DIR$/network/ciphers/ciphers.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="23" />
+        <state relative-caret-position="440">
+          <caret line="27" column="5" selection-start-line="27" selection-start-column="5" selection-end-line="27" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://D:/dev/Go/src/encoding/hex/hex.go">
+    <entry file="file://$PROJECT_DIR$/service/shadowsocks.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1938">
-          <caret line="107" column="5" selection-start-line="107" selection-start-column="5" selection-end-line="107" selection-end-column="5" />
+        <state relative-caret-position="1647">
+          <caret line="81" column="16" selection-start-line="81" selection-start-column="16" selection-end-line="81" selection-end-column="16" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/aead/aead.go">
+    <entry file="file://$PROJECT_DIR$/utils/goroutine/goroutine.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="399">
-          <caret line="21" column="5" selection-start-line="21" selection-start-column="5" selection-end-line="21" selection-end-column="5" />
+        <state relative-caret-position="88">
+          <caret line="4" column="5" selection-start-line="4" selection-start-column="5" selection-end-line="4" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/aes_ctr.go">
+    <entry file="file://$PROJECT_DIR$/proxy/client/shadowsocks_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="248">
-          <caret line="29" column="24" selection-start-line="29" selection-start-column="18" selection-end-line="29" selection-end-column="24" />
+        <state relative-caret-position="219">
+          <caret line="141" selection-start-line="141" selection-end-line="142" />
         </state>
       </provider>
     </entry>
-    <entry file="file://D:/dev/Go/src/crypto/aes/modes.go">
+    <entry file="file://$PROJECT_DIR$/network/conn/conn.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-104">
-          <caret line="13" column="9" selection-start-line="13" selection-start-column="9" selection-end-line="13" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/crypto/cipher/cbc.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-234">
-          <caret line="45" column="24" lean-forward="true" selection-start-line="45" selection-start-column="24" selection-end-line="45" selection-end-column="24" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/block/aes_cbc.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="276">
-          <caret line="27" column="16" selection-start-line="27" selection-start-column="16" selection-end-line="27" selection-end-column="16" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/crypto/cipher/cfb.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-9">
-          <caret line="37" column="33" selection-start-line="37" selection-start-column="26" selection-end-line="37" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/bf_cfb.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-142" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/aes_cfb.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="238">
-          <caret line="25" column="36" lean-forward="true" selection-end-line="31" />
-          <folding>
-            <element signature="e#16#57#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/block/block.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="7" column="35" lean-forward="true" selection-start-line="7" selection-start-column="35" selection-end-line="7" selection-end-column="49" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/crypto/cipher/cipher.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="334">
-          <caret line="39" column="4" selection-start-line="39" selection-start-column="4" selection-end-line="39" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/crypto/rc4/rc4.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="30" column="5" selection-start-line="30" selection-start-column="5" selection-end-line="30" selection-end-column="5" />
+        <state relative-caret-position="44">
+          <caret line="17" column="14" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="14" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/network/conn/conn_decorate.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/network/conn/conn.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="19" column="21" lean-forward="true" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
+        <state relative-caret-position="79">
+          <caret line="288" column="11" selection-start-line="288" selection-start-column="7" selection-end-line="288" selection-end-column="11" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/common.go">
+    <entry file="file://$PROJECT_DIR$/../../../../pkg/mod/github.com/rs/xid@v1.2.1/id.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="76">
-          <caret line="10" column="18" selection-start-line="10" selection-start-column="5" selection-end-line="10" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/obfs_tls.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="7562">
-          <caret line="414" column="29" selection-start-line="414" selection-start-column="29" selection-end-line="414" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/opeator/opeator.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="209">
-          <caret line="11" selection-end-line="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/testing/servers/http/http.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-553">
-          <caret line="24" column="1" lean-forward="true" selection-start-line="24" selection-start-column="1" selection-end-line="24" selection-end-column="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/obfs_tls_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="26" column="26" selection-start-line="26" selection-start-column="26" selection-end-line="26" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/obfs_test.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/plain.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="266">
-          <caret line="14" column="18" selection-start-line="14" selection-start-column="18" selection-end-line="14" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/obfs.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="418">
-          <caret line="22" column="23" selection-start-line="22" selection-start-column="4" selection-end-line="22" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/opeator/opeator_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="627">
-          <caret line="33" column="43" selection-start-line="33" selection-start-column="43" selection-end-line="33" selection-end-column="43" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/bytes/bytes.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="17" column="5" selection-start-line="17" selection-start-column="5" selection-end-line="17" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/server_info.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="59" column="21" lean-forward="true" selection-start-line="59" selection-start-column="21" selection-end-line="59" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/net/ip.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-1583">
-          <caret line="31" column="5" selection-start-line="31" selection-start-column="5" selection-end-line="31" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/builtin/builtin.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1406">
-          <caret line="74" column="5" selection-start-line="74" selection-start-column="5" selection-end-line="74" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/cache/lru_cache.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="13" column="12" selection-start-line="13" selection-start-column="12" selection-end-line="13" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/cache/cache.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="190">
-          <caret line="14" column="11" selection-start-line="14" selection-start-column="4" selection-end-line="14" selection-end-column="11" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://D:/dev/Go/src/testing/example.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="224">
-          <caret line="115" selection-start-line="115" selection-end-line="115" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../../../../pkg/mod/github.com/pkg/errors@v0.8.1/errors.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="138" column="26" selection-start-line="138" selection-start-column="26" selection-end-line="138" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/stream/rc4.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="278">
-          <caret line="27" column="21" selection-start-line="27" selection-start-column="21" selection-end-line="27" selection-end-column="21" />
-          <folding>
-            <element signature="e#16#57#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/utils/bytesx/bytesx_test.go">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/common.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="122">
-          <caret line="18" lean-forward="true" selection-start-line="18" selection-end-line="18" />
+        <state relative-caret-position="2860">
+          <caret line="144" column="5" selection-start-line="144" selection-start-column="5" selection-end-line="144" selection-end-column="5" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/network/ciphers/ciphers_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-520">
-          <caret line="19" column="13" lean-forward="true" selection-start-line="19" selection-start-column="13" selection-end-line="19" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/cache/cache_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="76">
-          <caret line="8" column="36" lean-forward="true" selection-start-line="8" selection-start-column="36" selection-end-line="8" selection-end-column="36" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/common/ciphers/cipher_test.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="185">
-          <caret line="187" column="57" selection-start-line="187" selection-start-column="57" selection-end-line="187" selection-end-column="57" />
+        <state relative-caret-position="268">
+          <caret line="76" selection-start-line="76" selection-end-line="76" />
           <folding>
-            <element signature="e#17#101#0" expanded="true" />
+            <element signature="e#17#207#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/log/file_rotation_write.go.ignore">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="257">
+          <caret line="50" column="9" selection-start-line="50" selection-start-column="9" selection-end-line="51" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/log/logging_test.go">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/errorsx/errorsx.go" />
+    <entry file="file://D:/dev/Go/src/builtin/builtin.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="85">
+          <caret line="137" column="30" lean-forward="true" selection-start-line="137" selection-start-column="30" selection-end-line="137" selection-end-column="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/obfs/obfs_tls_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5851">
+          <caret line="321" column="29" selection-start-line="321" selection-start-column="29" selection-end-line="321" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/obfs/plain.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2055">
+          <caret line="4" column="4" selection-start-line="4" selection-start-column="4" selection-end-line="4" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/obfs/obfs_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="242">
+          <caret line="14" column="4" selection-start-line="14" selection-start-column="4" selection-end-line="14" selection-end-column="4" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/common/ciphers/cipher.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="133">
-          <caret line="272" selection-start-line="272" selection-end-line="272" />
+        <state relative-caret-position="85">
+          <caret line="207" column="5" selection-start-line="207" selection-start-column="5" selection-end-line="207" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/randomx/randomx.go">
+    <entry file="file://D:/dev/Go/src/net/ip.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="141">
-          <caret line="14" selection-start-line="14" selection-end-line="14" />
+        <state relative-caret-position="-575">
+          <caret line="674" column="5" selection-start-line="674" selection-start-column="5" selection-end-line="674" selection-end-column="5" />
         </state>
       </provider>
     </entry>
-    <entry file="file://D:/dev/Go/src/runtime/panic.go">
+    <entry file="file://$PROJECT_DIR$/utils/addr/addr.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="141">
-          <caret line="689" selection-start-line="689" selection-end-line="689" />
+        <state relative-caret-position="-485">
+          <caret line="8" column="10" selection-start-line="8" selection-start-column="10" selection-end-line="8" selection-end-column="10" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/binaryx/binaryx.go">
+    <entry file="file://$PROJECT_DIR$/common/obfs/auth_chain_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="321">
-          <caret line="49" selection-start-line="49" selection-end-line="49" />
+        <state relative-caret-position="219">
+          <caret line="138" column="4" lean-forward="true" selection-start-line="138" selection-start-column="4" selection-end-line="138" selection-end-column="4" />
         </state>
       </provider>
     </entry>
-    <entry file="file://D:/dev/Go/src/runtime/proc.go">
+    <entry file="file://$PROJECT_DIR$/common/obfs/server_info.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="301" selection-start-line="301" selection-end-line="301" />
+        <state relative-caret-position="123">
+          <caret line="69" column="41" lean-forward="true" selection-start-line="69" selection-start-column="41" selection-end-line="69" selection-end-column="41" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/utils/bytesx/bytesx.go">
+    <entry file="file://$PROJECT_DIR$/network/tcp/listener_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
+        <state relative-caret-position="264">
+          <caret line="16" column="25" selection-start-line="16" selection-start-column="25" selection-end-line="16" selection-end-column="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/net/ipsock.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="233">
+          <caret line="90" column="22" selection-start-line="90" selection-start-column="22" selection-end-line="90" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/net/tcpsock_posix.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="439">
+          <caret line="157" column="23" selection-start-line="157" selection-start-column="23" selection-end-line="157" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/net/dial.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="70">
+          <caret line="605" column="45" lean-forward="true" selection-start-line="605" selection-start-column="45" selection-end-line="605" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/tcp/dial.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="88">
+          <caret line="9" column="5" selection-end-line="20" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/tcp/tcp_decorate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="516">
+          <caret line="175" lean-forward="true" selection-start-line="1" selection-end-line="175" />
+          <folding>
+            <element signature="e#13#159#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/tcp/listener.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="24" column="14" lean-forward="true" selection-start-line="24" selection-start-column="14" selection-end-line="24" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/net/udpsock.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2495">
+          <caret line="86" column="1" lean-forward="true" selection-start-line="86" selection-start-column="1" selection-end-line="86" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/conn.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="396">
+          <caret line="33" column="25" selection-start-line="33" selection-start-column="25" selection-end-line="33" selection-end-column="25" />
+          <folding>
+            <element signature="e#15#93#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/net/tcpsock.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-559">
+          <caret line="224" column="23" selection-start-line="224" selection-start-column="17" selection-end-line="224" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/proxy/server/proxy.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="198">
+          <caret line="25" column="5" selection-start-line="25" selection-start-column="5" selection-end-line="25" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../../../../pkg/mod/github.com/sirupsen/logrus@v1.2.0/exported.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="116" column="5" selection-start-line="116" selection-start-column="5" selection-end-line="116" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/io/io.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="76" column="5" selection-start-line="76" selection-start-column="5" selection-end-line="76" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/socks/socks.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-9">
+          <caret line="119" column="19" lean-forward="true" selection-start-line="119" selection-start-column="19" selection-end-line="119" selection-end-column="19" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/proxy/server/shadowsocks.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-660">
+          <caret line="183" column="31" lean-forward="true" selection-start-line="183" selection-start-column="31" selection-end-line="183" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/log/pattern_formatter.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="164">
+          <caret line="38" column="14" lean-forward="true" selection-start-line="38" selection-start-column="14" selection-end-line="38" selection-end-column="14" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/obfs/obfs_tls.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="151">
+          <caret line="29" column="45" lean-forward="true" selection-start-line="29" selection-start-column="45" selection-end-line="29" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/common/obfs/obfs.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="409">
+          <caret line="33" column="12" selection-start-line="33" selection-start-column="12" selection-end-line="33" selection-end-column="12" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/common/obfs/auth_chain.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="156">
-          <caret line="725" column="21" selection-start-line="725" selection-start-column="21" selection-end-line="725" selection-end-column="21" />
+        <state relative-caret-position="151">
+          <caret line="295" column="29" lean-forward="true" selection-start-line="295" selection-start-column="29" selection-end-line="295" selection-end-column="29" />
           <folding>
             <element signature="e#14#430#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/common/obfs/auth_chain_test.go">
+    <entry file="file://$PROJECT_DIR$/common/log/logging.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="145">
-          <caret line="85" column="31" selection-start-line="85" selection-start-column="31" selection-end-line="85" selection-end-column="31" />
+        <state>
+          <caret column="11" selection-start-column="11" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/netx/netx.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="22">
+          <caret line="18" column="5" selection-start-line="18" selection-start-column="5" selection-end-line="18" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/proxy/server/shadowsocksr_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="264">
+          <caret line="12" column="5" lean-forward="true" selection-start-line="12" selection-start-column="5" selection-end-line="12" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/decorate.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="44">
+          <caret line="2" column="7" lean-forward="true" selection-start-line="2" selection-start-column="7" selection-end-line="2" selection-end-column="7" />
+          <folding>
+            <element signature="e#17#234#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/testing/example.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="184">
+          <caret line="115" selection-start-line="115" selection-end-line="115" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/runtime/panic.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="164">
+          <caret line="521" selection-start-line="521" selection-end-line="521" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/listener.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="230">
+          <caret line="26" selection-start-line="26" selection-end-line="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/proxy/server/shadowsocksr.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="222">
+          <caret line="39" column="14" selection-start-line="39" selection-start-column="11" selection-end-line="39" selection-end-column="14" />
+          <folding>
+            <element signature="e#16#136#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/network/request.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="173">
+          <caret line="85" selection-start-line="85" selection-end-line="85" />
+          <folding>
+            <element signature="e#17#42#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://D:/dev/Go/src/net/net.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="156" column="44" lean-forward="true" selection-start-line="156" selection-start-column="44" selection-end-line="156" selection-end-column="44" />
         </state>
       </provider>
     </entry>

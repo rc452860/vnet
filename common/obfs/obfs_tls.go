@@ -26,6 +26,10 @@ var (
 	DEFAULT_MAX_TIME_DIFF = 60 * 60 * 24
 )
 
+func init(){
+	registerMethod("tls1.2_ticket_auth",NewObfsTLS)
+}
+
 type ObfsAuthData struct {
 	ServerInfo
 	ClientData *cache.Cache
@@ -212,14 +216,6 @@ func (otls *ObfsTLS) ClientDecode(buf []byte) ([]byte, bool, error) {
 	return []byte{}, true, nil
 }
 
-func (otls *ObfsTLS) ClientPostDecrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) ServerPreEncrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
-}
-
 func (otls *ObfsTLS) ServerEncode(buf []byte) ([]byte, error) {
 	if otls.HandshakeStatus == -1 {
 		return buf, nil
@@ -398,34 +394,6 @@ func (otls *ObfsTLS) ServerDecode(buf []byte) ([]byte, bool, bool, error) {
 		return ret, true, true, nil
 	}
 	return []byte{}, false, true, nil
-}
-
-func (otls *ObfsTLS) ServerPostDecrypt(buf []byte) ([]byte, bool, error) {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) ClientUDPPreEncrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) ClientUDPPostDecrypt(buf []byte) ([]byte, error) {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) ServerUDPPreEncrypt(buf,uid []byte) ([]byte, error) {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) ServerUDPPostDecrypt(buf []byte) ([]byte, string, error) {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) Dispose() {
-	panic("not implemented")
-}
-
-func (otls *ObfsTLS) GetHeadSize(buf []byte, defaultValue int) int {
-	panic("not implemented")
 }
 
 func (otls *ObfsTLS) packAuthData(clientId []byte) []byte {

@@ -16,6 +16,7 @@ type Plain interface {
 	ClientPostDecrypt(buf []byte) ([]byte, error)
 	ServerPreEncrypt(buf []byte) ([]byte, error)
 	ServerEncode(buf []byte) ([]byte, error)
+	// ServerDecode return buffer_to_recv, is_need_decrypt, is_need_to_encode_and_send_back
 	ServerDecode(buf []byte) ([]byte, bool, bool, error)
 	ServerPostDecrypt(buf []byte) ([]byte, bool, error)
 	ClientUDPPreEncrypt(buf []byte) ([]byte, error)
@@ -32,4 +33,8 @@ var (
 
 func registerMethod(method string, factory PlainFactory) {
 	method_supported[method] = factory
+}
+
+func GetObfs(method string) Plain{
+	return method_supported[method](method)
 }

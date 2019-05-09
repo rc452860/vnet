@@ -25,6 +25,10 @@ const (
 	MOV_MASK = (1 << (64 - 23)) - 1
 )
 
+func init(){
+	registerMethod("auth_chain_a",NewAuthChainA)
+}
+
 type XorShift128Plus struct {
 	V0 uint64
 	V1 uint64
@@ -289,7 +293,7 @@ type AuthChainA struct {
 	Encryptor         *ciphers.Encryptor
 }
 
-func NewAuthChainA(method string) *AuthChainA {
+func NewAuthChainA(method string) Plain {
 	authBase := NewAuthBase(method)
 	authBase.RawTrans = false
 	authBase.Overhead = 4
