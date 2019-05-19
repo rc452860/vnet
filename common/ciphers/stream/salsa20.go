@@ -23,7 +23,7 @@ func (a *salsa20) KeyLen() int {
 func (a *salsa20) IVLen() int {
 	return a.ivLen
 }
-func (a *salsa20) NewStream(key, iv []byte) (cipher.Stream, error) {
+func (a *salsa20) NewStream(key, iv []byte, _ int) (cipher.Stream, error) {
 	var c salsaStreamCipher
 	copy(c.nonce[:], iv[:8])
 	copy(c.key[:], key[:32])

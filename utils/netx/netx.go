@@ -30,14 +30,14 @@ func DuplexCopyTcp(left, right net.Conn) (up, down int64, err error) {
 
 	go goroutine.Protect(func() {
 		n, err := io.Copy(right, left)
-		err = right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
-		err = left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
+		_ = right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
+		_ = left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
 		ch <- res{n, err}
 	})
 
 	up, err = io.Copy(left, right)
-	err = right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
-	err = left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
+	_ = right.SetDeadline(time.Now()) // wake up the other goroutine blocking on right
+	_ = left.SetDeadline(time.Now())  // wake up the other goroutine blocking on left
 	rs := <-ch
 
 	if err == nil {
@@ -45,7 +45,6 @@ func DuplexCopyTcp(left, right net.Conn) (up, down int64, err error) {
 	}
 	return up, rs.N, errors.Cause(err)
 }
-
 
 // Packet NAT table
 type NatMap struct {

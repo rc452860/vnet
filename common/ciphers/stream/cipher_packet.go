@@ -59,7 +59,7 @@ func (c *streamPacket) WriteTo(b []byte, addr net.Addr) (n int, err error) {
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return 0, err
 	}
-	encryper, err := c.NewStream(c.key, iv)
+	encryper, err := c.NewStream(c.key, iv, 0)
 	encryper.XORKeyStream(c.buf[ivLen:], b)
 	_, err = c.PacketConn.WriteTo(c.buf[:ivLen+dataLen], addr)
 	if err != nil {
@@ -89,7 +89,7 @@ func (c *streamPacket) ReadFrom(b []byte) (n int, addr net.Addr, err error) {
 		return n, addr, ErrShortPacket
 	}
 
-	decryptr, err := c.NewStream(c.key, b[:ivLen])
+	decryptr, err := c.NewStream(c.key, b[:ivLen], 0)
 	if err != nil {
 		return n, addr, err
 	}

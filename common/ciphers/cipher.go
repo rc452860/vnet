@@ -23,8 +23,8 @@ type ICipher interface {
 }
 
 const (
-	OP_ENCRYPT = 1
-	OP_DECRYPT = 2
+	OP_ENCRYPT = 0
+	OP_DECRYPT = 1
 )
 
 type SSCipher struct {
@@ -41,7 +41,7 @@ type SSCipher struct {
 
 func NewCipher(op int, method string, key, iv []byte) (*SSCipher, error) {
 	if cp := stream.GetStreamCipher(method); cp != nil {
-		cpInstance, err := cp.NewStream(key, iv)
+		cpInstance, err := cp.NewStream(key, iv, op)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func NewCipher(op int, method string, key, iv []byte) (*SSCipher, error) {
 		}, nil
 	}
 	if cp := aead.GetAEADCipher(method); cp != nil {
-		cpInstance, err := cp.NewAEAD(key, iv)
+		cpInstance, err := cp.NewAEAD(key, iv, op)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +68,7 @@ func NewCipher(op int, method string, key, iv []byte) (*SSCipher, error) {
 		}, nil
 	}
 	if cp := block.GetBlockCipher(method); cp != nil {
-		cpInstance, err := cp.NewBlock(key, iv, op == OP_ENCRYPT)
+		cpInstance, err := cp.NewBlock(key, iv, op)
 		if err != nil {
 			return nil, err
 		}
@@ -275,6 +275,7 @@ func (e *Encryptor) Encrypt(src []byte) (result []byte, err error) {
 		return result, err
 	}
 	if !e.IVSent {
+		e.IVSent = true
 		return bytesx.ContactSlice(e.IVOut, result), nil
 	} else {
 		return result, nil
@@ -297,6 +298,7 @@ func (e *Encryptor) Decrypt(ciphertext []byte) (result []byte, err error) {
 	if e.IVBuf.Len() > e.IVLen {
 		buf := e.IVBuf.Bytes()
 		decipherIV := buf[:e.IVLen]
+		e.IVIn = decipherIV
 		e.DecodeCipher, err = NewCipher(OP_DECRYPT, e.Method, e.Key, decipherIV)
 		if err != nil {
 			return nil, err

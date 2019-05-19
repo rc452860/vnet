@@ -56,7 +56,7 @@ func (c *aeadPacket) WriteTo(data []byte, addr net.Addr) (int, error) {
 		return 0, err
 	}
 
-	aead, err := c.NewAEAD(c.key, salt)
+	aead, err := c.NewAEAD(c.key, salt, 0)
 
 	if err != nil {
 		return 0, err
@@ -79,7 +79,7 @@ func (c *aeadPacket) ReadFrom(b []byte) (int, net.Addr, error) {
 		return 0, nil, ErrShortPacket
 	}
 	salt := b[:saltSize]
-	aead, err := c.NewAEAD(c.key, salt)
+	aead, err := c.NewAEAD(c.key, salt, 1)
 	if err != nil {
 		return 0, nil, err
 	}

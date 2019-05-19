@@ -5,7 +5,8 @@ import "crypto/cipher"
 type IStreamCipher interface {
 	KeyLen() int
 	IVLen() int
-	NewStream(key []byte, iv []byte) (cipher.Stream, error)
+	// decryptOrEncrypt 0: encrypt 1: decrypt
+	NewStream(key []byte, iv []byte, decryptOrEncrypt int) (cipher.Stream, error)
 }
 
 var streamCiphers = make(map[string]IStreamCipher)

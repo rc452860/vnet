@@ -27,7 +27,7 @@ func GetStreamConnCiphers(method string) func(string, connect.IConn) (connect.IC
 			key:           evpBytesToKey(password, c.KeyLen()),
 		}
 		var err error
-		sc.Encrypter, err = sc.NewStream(sc.key, iv)
+		sc.Encrypter, err = sc.NewStream(sc.key, iv, 0)
 		_, err = conn.Write(iv)
 		return sc, err
 	}
@@ -51,7 +51,7 @@ func (s *streamConn) Read(b []byte) (n int, err error) {
 		if _, err = s.IConn.Read(iv); err != nil {
 			return
 		}
-		s.Decrypter, err = s.NewStream(s.key, iv)
+		s.Decrypter, err = s.NewStream(s.key, iv, 1)
 		if err != nil {
 			log.Error("[Stream Conn] init decrypter failed: %v", err)
 			return 0, err

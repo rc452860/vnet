@@ -2,7 +2,6 @@ package aead
 
 import (
 	"crypto/cipher"
-	"crypto/sha1"
 	"io"
 
 	connect "github.com/rc452860/vnet/network/conn"
@@ -12,7 +11,6 @@ import (
 	"crypto/rand"
 
 	"github.com/rc452860/vnet/common/log"
-	"golang.org/x/crypto/hkdf"
 )
 
 func GetAEADConnCipher(method string) func(string, connect.IConn) (connect.IConn, error) {
@@ -34,7 +32,7 @@ func GetAEADConnCipher(method string) func(string, connect.IConn) (connect.IConn
 			readBuffer:  new(bytes.Buffer),
 		}
 		var err error
-		sc.Encrypter, err = sc.NewAEAD(sc.key, salt)
+		sc.Encrypter, err = sc.NewAEAD(sc.key, salt, 0)
 		_, err = conn.Write(salt)
 		return sc, err
 	}
@@ -67,7 +65,7 @@ func (a *aeadConn) Read(b []byte) (n int, err error) {
 		if _, err = io.ReadFull(a.IConn, salt); err != nil {
 			return
 		}
-		a.Decrypter, err = a.NewAEAD(a.key, salt)
+		a.Decrypter, err = a.NewAEAD(a.key, salt, 1)
 		if err != nil {
 			log.Error("[AEAD Conn] init decrypter failed: %v", err)
 			return 0, err
@@ -166,11 +164,6 @@ func MD5(data []byte) []byte {
 	hash := md5.New()
 	hash.Write(data)
 	return hash.Sum(nil)
-}
-
-func HKDF_SHA1(secret, salt, info, key []byte) error {
-	_, err := io.ReadFull(hkdf.New(sha1.New, secret, salt, info), key)
-	return err
 }
 
 func increment(b []byte) {

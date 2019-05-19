@@ -6,7 +6,7 @@ type IAEADCipher interface {
 	KeySize() int
 	SaltSize() int
 	NonceSize() int
-	NewAEAD(key []byte, salt []byte) (cipher.AEAD, error)
+	NewAEAD(key []byte, salt []byte, decryptOrEncrypt int) (cipher.AEAD, error)
 }
 
 var aeadCiphers = make(map[string]IAEADCipher)

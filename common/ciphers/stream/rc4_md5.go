@@ -21,7 +21,7 @@ func (a *rc4_md5) KeyLen() int {
 func (a *rc4_md5) IVLen() int {
 	return a.ivLen
 }
-func (a *rc4_md5) NewStream(key, iv []byte) (cipher.Stream, error) {
+func (a *rc4_md5) NewStream(key, iv []byte, _ int) (cipher.Stream, error) {
 	h := md5.New()
 	h.Write(key)
 	h.Write(iv)

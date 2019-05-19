@@ -5,7 +5,7 @@ import "crypto/cipher"
 type IBlockCipher interface {
 	KeyLen() int
 	IVLen() int
-	NewBlock(key []byte, iv []byte,encryptor bool) (cipher.BlockMode, error)
+	NewBlock(key []byte, iv []byte, decryptOrEncrypt int) (cipher.BlockMode, error)
 }
 
 var blockCiphers = make(map[string]IBlockCipher)
@@ -21,4 +21,3 @@ func GetBlockCiphers() map[string]IBlockCipher {
 func GetBlockCipher(method string) IBlockCipher {
 	return blockCiphers[method]
 }
-

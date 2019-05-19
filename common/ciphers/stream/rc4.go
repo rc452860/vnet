@@ -22,10 +22,10 @@ func (a *rc4_cryptor) IVLen() int {
 	return a.ivLen
 }
 
-func (a *rc4_cryptor) NewStream(key, iv []byte) (cipher.Stream, error) {
+func (a *rc4_cryptor) NewStream(key, iv []byte, _ int) (cipher.Stream, error) {
 	block, err := rc4.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
-	return block,nil
+	return block, nil
 }

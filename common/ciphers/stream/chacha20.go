@@ -22,6 +22,6 @@ func (a *_chacha20) KeyLen() int {
 func (a *_chacha20) IVLen() int {
 	return a.ivLen
 }
-func (a *_chacha20) NewStream(key, iv []byte) (cipher.Stream, error) {
+func (a *_chacha20) NewStream(key, iv []byte, _ int) (cipher.Stream, error) {
 	return chacha20.NewCipher(key, iv)
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/rc452860/vnet/utils/bytesx"
 	"github.com/rc452860/vnet/utils/opeator"
 	"github.com/rc452860/vnet/utils/randomx"
+	"github.com/sirupsen/logrus"
 	"math"
 	"strconv"
 	"strings"
@@ -25,8 +26,8 @@ const (
 	MOV_MASK = (1 << (64 - 23)) - 1
 )
 
-func init(){
-	registerMethod("auth_chain_a",NewAuthChainA)
+func init() {
+	registerMethod("auth_chain_a", NewAuthChainA)
 }
 
 type XorShift128Plus struct {
@@ -478,10 +479,22 @@ func (a *AuthChainA) ServerPostDecrypt(buf []byte) (result []byte, sendback bool
 	var md5Data []byte
 	if !a.HasRecvHeader {
 		if len(a.RecvBuf) >= 12 || opeator.IntIn(len(a.RecvBuf), []int{7, 8}) {
-			rectLen := int(math.Min(float64(len(a.RecvBuf)), float64(12)))
+			recvLen := int(math.Min(float64(len(a.RecvBuf)), float64(12)))
 			macKey := bytesx.ContactSlice(a.GetServerInfo().GetRecvIv(), a.GetServerInfo().GetKey())
 			md5Data = hmacmd5(macKey, a.RecvBuf[:4])
-			if !bytes.Equal(md5Data[:rectLen-4], a.RecvBuf[4:rectLen]) {
+			logrus.WithFields(
+				logrus.Fields{
+					"md5Data":   hex.EncodeToString(md5Data),
+					"key":       hex.EncodeToString(a.GetServerInfo().GetKey()),
+					"randBytes": hex.EncodeToString(a.RecvBuf[:4]),
+					"recvIV":    hex.EncodeToString(a.GetServerInfo().GetRecvIv()),
+					"recvLen":   recvLen,
+				}).Debug("AuthChainA verify")
+			if !bytes.Equal(md5Data[:recvLen-4], a.RecvBuf[4:recvLen]) {
+				logrus.WithFields(logrus.Fields{
+					"md5Data":     hex.EncodeToString(md5Data[:recvLen-4]),
+					"recvMd5Data": hex.EncodeToString(a.RecvBuf[4:recvLen]),
+				}).Error("AuthChainA verify failed")
 				result, sendback = a.NotMatchReturn(a.RecvBuf)
 				err = nil
 				return
@@ -514,7 +527,11 @@ func (a *AuthChainA) ServerPostDecrypt(buf []byte) (result []byte, sendback bool
 
 		md5Data = hmacmd5(a.UserKey, a.RecvBuf[12:12+20])
 		if !bytes.Equal(md5Data[:4], a.RecvBuf[32:36]) {
-			log.Error("%s data uncorrect auth HMAC-MD5 from %s:%v, data %s",
+			logrus.WithFields(logrus.Fields{
+				"md5Data_4": hex.EncodeToString(md5Data[:4]),
+				"recvBuf_4": hex.EncodeToString(a.RecvBuf[32:36]),
+			}).Debug("auth_chain md5 equal error")
+			logrus.Errorf("%s data uncorrect auth HMAC-MD5 from %s:%v, data %s",
 				a.NoCompatibleMethod, a.GetServerInfo().
 					GetClient().String(),
 				a.GetServerInfo().GetPort(),
@@ -570,62 +587,59 @@ func (a *AuthChainA) ServerPostDecrypt(buf []byte) (result []byte, sendback bool
 		a.RecvBuf = a.RecvBuf[36:]
 		a.HasRecvHeader = true
 		sendback = true
-
-		for len(a.RecvBuf) > 4 {
-			macKey := bytesx.ContactSlice(a.UserKey, binaryx.LEUint32ToBytes(uint32(a.RecvID)))
-			dataLen := binaryx.LEBytesToUint16(a.RecvBuf[:2]) ^ binaryx.LEBytesToUint16(a.LastClientHash[14:16])
-			randLen := a.rndDataLen(int(dataLen), a.LastClientHash, a.RandomClient)
-			length := int(dataLen) + randLen
-			if length >= 4096 {
-				a.RawTrans = true
-				a.RecvBuf = []byte{}
-				if a.RecvID == 1 {
-					log.Info("%s: over size ", a.NoCompatibleMethod)
-					return bytes.Repeat([]byte{byte('E')}, 2048), false, nil
-				} else {
-					return nil, false, errors.WithStack(errors.New("server_post_decrype data error"))
-				}
-			}
-			if length+4 > len(a.RecvBuf) {
-				break
-			}
-
-			clientHash := hmacmd5(macKey, a.RecvBuf[:length+2])
-			if !bytes.Equal(clientHash[:2], a.RecvBuf[length+2:length+4]) {
-				log.Info("%s: checksum error, data %s", a.NoCompatibleMethod, hex.EncodeToString(a.RecvBuf[:length]))
-				a.RawTrans = true
-				a.RecvBuf = []byte{}
-				if a.RecvID == 1 {
-					return bytes.Repeat([]byte{byte('E')}, 2048), false, nil
-				} else {
-					return nil, false, errors.WithStack(errors.New("server_post_decrype data uncorrect checksum"))
-				}
-			}
-			a.RecvID = (a.RecvID + 1) & 0xFFFFFFFF
-			pos := 2
-			if dataLen > 0 && randLen > 0 {
-				pos = 2 + a.rndStartPos(randLen, a.RandomClient)
-			}
-			clearText, err := a.Encryptor.Decrypt(a.RecvBuf[pos : int(dataLen)+pos])
-			if err != nil {
-				return nil, false, err
-			}
-			result = bytesx.ContactSlice(result, clearText)
-			a.LastClientHash = clientHash
-			a.RecvBuf = a.RecvBuf[length+4:]
-			if dataLen == 0 {
-				sendback = true
-			}
-		}
-
-		if len(result) > 0 {
-			a.ObfsAuthChainData.Update(a.UserID, a.ClientID, a.ConnectionID)
-		}
-		return result, sendback, nil
-
 	}
 
-	panic("not implemented")
+	for len(a.RecvBuf) > 4 {
+		macKey := bytesx.ContactSlice(a.UserKey, binaryx.LEUint32ToBytes(uint32(a.RecvID)))
+		dataLen := binaryx.LEBytesToUint16(a.RecvBuf[:2]) ^ binaryx.LEBytesToUint16(a.LastClientHash[14:16])
+		randLen := a.rndDataLen(int(dataLen), a.LastClientHash, a.RandomClient)
+		length := int(dataLen) + randLen
+		if length >= 4096 {
+			a.RawTrans = true
+			a.RecvBuf = []byte{}
+			if a.RecvID == 1 {
+				log.Info("%s: over size ", a.NoCompatibleMethod)
+				return bytes.Repeat([]byte{byte('E')}, 2048), false, nil
+			} else {
+				return nil, false, errors.WithStack(errors.New("server_post_decrype data error"))
+			}
+		}
+		if length+4 > len(a.RecvBuf) {
+			break
+		}
+
+		clientHash := hmacmd5(macKey, a.RecvBuf[:length+2])
+		if !bytes.Equal(clientHash[:2], a.RecvBuf[length+2:length+4]) {
+			log.Info("%s: checksum error, data %s", a.NoCompatibleMethod, hex.EncodeToString(a.RecvBuf[:length]))
+			a.RawTrans = true
+			a.RecvBuf = []byte{}
+			if a.RecvID == 1 {
+				return bytes.Repeat([]byte{byte('E')}, 2048), false, nil
+			} else {
+				return nil, false, errors.WithStack(errors.New("server_post_decrype data uncorrect checksum"))
+			}
+		}
+		a.RecvID = (a.RecvID + 1) & 0xFFFFFFFF
+		pos := 2
+		if dataLen > 0 && randLen > 0 {
+			pos = 2 + a.rndStartPos(randLen, a.RandomClient)
+		}
+		clearText, err := a.Encryptor.Decrypt(a.RecvBuf[pos : int(dataLen)+pos])
+		if err != nil {
+			return nil, false, err
+		}
+		result = bytesx.ContactSlice(result, clearText)
+		a.LastClientHash = clientHash
+		a.RecvBuf = a.RecvBuf[length+4:]
+		if dataLen == 0 {
+			sendback = true
+		}
+	}
+
+	if len(result) > 0 {
+		a.ObfsAuthChainData.Update(a.UserID, a.ClientID, a.ConnectionID)
+	}
+	return result, sendback, nil
 }
 
 func (a *AuthChainA) ClientUDPPreEncrypt(buf []byte) ([]byte, error) {
@@ -722,7 +736,7 @@ func (a *AuthChainA) ServerUDPPreEncrypt(buf, uid []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	result = bytesx.ContactSlice(result, randomx.RandomBytes(randLen),authData)
+	result = bytesx.ContactSlice(result, randomx.RandomBytes(randLen), authData)
 	result = bytesx.ContactSlice(result, hmacmd5(userKey, result)[:1])
 	return result, nil
 }
@@ -844,8 +858,8 @@ func (a *AuthChainA) packServerData(buf []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	data := a.rndData(len(buf), buf, a.LastServerHash, a.RandomClient)
-	macKey := bytesx.ContactSlice(a.UserKey, binaryx.BEUInt32ToBytes(uint32((a.PackID))))
+	data := a.rndData(len(buf), buf, a.LastServerHash, a.RandomServer)
+	macKey := bytesx.ContactSlice(a.UserKey, binaryx.LEUint32ToBytes(uint32(a.PackID)))
 	length := len(buf) ^ int(binaryx.LEBytesToUint16(a.LastServerHash[14:]))
 	data = bytesx.ContactSlice(binaryx.LEUInt16ToBytes(uint16(length)), data)
 	a.LastServerHash = hmacmd5(macKey, data)

@@ -22,10 +22,14 @@ func (a *aes_cfb) KeyLen() int {
 func (a *aes_cfb) IVLen() int {
 	return a.ivLen
 }
-func (a *aes_cfb) NewStream(key, iv []byte) (cipher.Stream, error) {
+func (a *aes_cfb) NewStream(key, iv []byte, decryptOrEncrypt int) (cipher.Stream, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
-	return cipher.NewCFBEncrypter(block, iv), nil
+	if decryptOrEncrypt == 0 {
+		return cipher.NewCFBEncrypter(block, iv), nil
+	} else {
+		return cipher.NewCFBDecrypter(block, iv), nil
+	}
 }

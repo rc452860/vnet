@@ -22,7 +22,7 @@ func (a *aes_ctr) KeyLen() int {
 func (a *aes_ctr) IVLen() int {
 	return a.ivLen
 }
-func (a *aes_ctr) NewStream(key, iv []byte) (cipher.Stream, error) {
+func (a *aes_ctr) NewStream(key, iv []byte, _ int) (cipher.Stream, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err

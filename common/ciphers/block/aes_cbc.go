@@ -20,14 +20,14 @@ func (a *aes_cbc) KeyLen() int {
 func (a *aes_cbc) IVLen() int {
 	return a.ivLen
 }
-func (a *aes_cbc) NewBlock(key, iv []byte,encryptor bool) (cipher.BlockMode, error) {
+func (a *aes_cbc) NewBlock(key, iv []byte, decryptOrEncrypt int) (cipher.BlockMode, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
-	if encryptor{
-		return cipher.NewCBCEncrypter(block, iv),nil
-	}else{
-		return cipher.NewCBCDecrypter(block, iv),nil
+	if decryptOrEncrypt == 0 {
+		return cipher.NewCBCEncrypter(block, iv), nil
+	} else {
+		return cipher.NewCBCDecrypter(block, iv), nil
 	}
 }

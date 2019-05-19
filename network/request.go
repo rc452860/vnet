@@ -2,6 +2,7 @@ package network
 
 import (
 	"github.com/rs/xid"
+	"github.com/sirupsen/logrus"
 	"net"
 	"time"
 )
@@ -76,16 +77,25 @@ func (r *Request) SetWriteDeadline(t time.Time) error {
 	}
 }
 
-func (r *Request) Read(b []byte) (n int, err error){
+func (r *Request) Read(b []byte) (n int, err error) {
 	if r.ISStream {
-		return r.TCPConn.Read(b)
+		n, err = r.TCPConn.Read(b)
+		if err != nil {
+			logrus.WithFields(logrus.Fields{
+				"Request ReadData": string(b[:n]),
+			}).Debug()
+		}
+		return n, err
 	} else {
 		return r.UDPConn.Read(b)
 	}
 }
 
-func (r *Request) Write(b []byte) (n int, err error){
+func (r *Request) Write(b []byte) (n int, err error) {
 	if r.ISStream {
+		logrus.WithFields(logrus.Fields{
+			"Request WriteData": string(b),
+		}).Debug()
 		return r.TCPConn.Write(b)
 	} else {
 		return r.UDPConn.Write(b)

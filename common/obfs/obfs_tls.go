@@ -26,8 +26,8 @@ var (
 	DEFAULT_MAX_TIME_DIFF = 60 * 60 * 24
 )
 
-func init(){
-	registerMethod("tls1.2_ticket_auth",NewObfsTLS)
+func init() {
+	registerMethod("tls1.2_ticket_auth", NewObfsTLS)
 }
 
 type ObfsAuthData struct {
@@ -68,10 +68,6 @@ func NewObfsTLS(method string) Plain {
 		Overhead:        DEFAULT_OVERHEAD,
 		ObfsAuthData:    NewObfsAuthData(),
 	}
-}
-
-func (otls *ObfsTLS) InitData() []byte {
-	panic("not implemented")
 }
 
 func (otls *ObfsTLS) GetOverhead(direction bool) int {
@@ -237,8 +233,8 @@ func (otls *ObfsTLS) ServerEncode(buf []byte) ([]byte, error) {
 				otls.TLSVersion,
 				uint16(len(buf)),
 				buf))
-			return ret.Bytes(), nil
 		}
+		return ret.Bytes(), nil
 	}
 
 	otls.HandshakeStatus |= 8

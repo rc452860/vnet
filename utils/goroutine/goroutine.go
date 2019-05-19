@@ -1,11 +1,14 @@
 package goroutine
 
-import "log"
+import (
+	"github.com/sirupsen/logrus"
+	"runtime/debug"
+)
 
 func Protect(g func()) {
 	defer func() {
-		if x := recover(); x != nil {
-			log.Printf("run time panic: %v", x)
+		if err := recover(); err != nil {
+			logrus.Errorf("run time panic: %s stack: %s", err, string(debug.Stack()))
 		}
 	}()
 	g()
