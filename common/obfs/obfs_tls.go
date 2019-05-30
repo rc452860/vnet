@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
+	"github.com/sirupsen/logrus"
 	"math"
 	"strconv"
 	"strings"
@@ -34,7 +35,7 @@ type ObfsAuthData struct {
 	ServerInfo
 	ClientData *cache.Cache
 	ClientID   []byte
-	StartTIme  int
+	StartTime  int
 	TicketBuf  map[string][]byte
 }
 
@@ -239,7 +240,7 @@ func (otls *ObfsTLS) ServerEncode(buf []byte) ([]byte, error) {
 
 	otls.HandshakeStatus |= 8
 	data := conbineToBytes(otls.TLSVersion, otls.packAuthData(otls.ClientID), byte(0x20), otls.ClientID, MustHexDecode("c02f000005ff01000100"))
-	data = conbineToBytes([]byte{0x20, 0x00}, uint16(len(data)), data) // server hello
+	data = conbineToBytes([]byte{0x20, 0x00}, uint16(len(data)), data) // service hello
 	data = conbineToBytes(byte(0x16), otls.TLSVersion, uint16(len(data)), data)
 	if int(randomx.Float64Range(0, 8)) < 1 {
 		ticket := randomx.RandomBytes(int((randomx.Uint16()%164)*2) + 64)
@@ -358,7 +359,7 @@ func (otls *ObfsTLS) ServerDecode(buf []byte) ([]byte, bool, bool, error) {
 	otls.ClientID = sessionId
 	sha1 := hmacsha1(conbineToBytes(otls.GetServerInfo().GetKey(), sessionId), verifyId[:22])[:10]
 	utcTime := int(binary.BigEndian.Uint32(verifyId[:4]))
-	timeDif := int(uint32(time.Now().Unix()) - uint32(utcTime))
+	timeDif := int(int(time.Now().Unix()) - int(utcTime))
 
 	if otls.GetServerInfo().GetObfsParam() != "" {
 		dif, err := strconv.Atoi(otls.GetServerInfo().GetObfsParam())
@@ -369,8 +370,12 @@ func (otls *ObfsTLS) ServerDecode(buf []byte) ([]byte, bool, bool, error) {
 
 	if otls.MaxTimeDiff > 0 &&
 		(timeDif < -otls.MaxTimeDiff ||
-			timeDif > otls.MaxTimeDiff || int32(utcTime-otls.ObfsAuthData.StartTIme) < int32(otls.MaxTimeDiff/2)) {
-		log.Info("tls_auth wrong time")
+			timeDif > otls.MaxTimeDiff || int32(utcTime-otls.ObfsAuthData.StartTime) < int32(otls.MaxTimeDiff/2)) {
+		logrus.WithFields(logrus.Fields{
+			"reciveUtcTime":uint32(utcTime),
+			"nowUnix":time.Now().Unix(),
+			"timeDif":timeDif,
+		}).Error("tls_auth wrong time")
 		return otls.DecodeErrorReturn(originBuf)
 	}
 

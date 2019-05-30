@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"github.com/rc452860/vnet/common/ciphers/block"
 	"github.com/rc452860/vnet/utils/bytesx"
+	"github.com/sirupsen/logrus"
 	"io"
 
 	"github.com/pkg/errors"
@@ -308,4 +309,43 @@ func (e *Encryptor) Decrypt(ciphertext []byte) (result []byte, err error) {
 	} else {
 		return []byte{}, nil
 	}
+}
+
+func (e *Encryptor) EncryptAll(src,iv []byte) (result []byte, err error) {
+	encrypter,err := NewEncryptorWithIv(e.Method,e.KeyStr,iv)
+	if err != nil{
+		return nil,err
+	}
+	return encrypter.Encrypt(src)
+}
+
+func (e *Encryptor) DecryptAll(ciphertext []byte) (result,iv []byte, err error) {
+	encrypter,err := NewEncryptor(e.Method,e.KeyStr)
+	if err != nil{
+		return nil,nil,err
+	}
+	data,err := encrypter.Decrypt(ciphertext)
+	if err != nil{
+		return nil,nil,err
+	}
+	return data,encrypter.IVIn,nil
+}
+
+func (e *Encryptor) NewIV()(iv []byte,err error){
+	iv = make([]byte, e.IVLen)
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil,err
+	}
+	return iv,err
+}
+
+func (e *Encryptor) MustNewIV() []byte{
+	iv,err := e.NewIV()
+	if err != nil{
+		logrus.WithFields(logrus.Fields{
+			"error":err,
+		}).Error("cipher Encryptor MustNewIV error")
+		return nil
+	}
+	return iv
 }

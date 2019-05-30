@@ -4,19 +4,19 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
+	"github.com/rc452860/vnet/common"
 	"io"
 
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/common/pool"
-	connect "github.com/rc452860/vnet/network/conn"
 )
 
-func GetStreamConnCiphers(method string) func(string, connect.IConn) (connect.IConn, error) {
+func GetStreamConnCiphers(method string) func(string, common.IConn) (common.IConn, error) {
 	c, ok := streamCiphers[method]
 	if !ok {
 		return nil
 	}
-	return func(password string, conn connect.IConn) (connect.IConn, error) {
+	return func(password string, conn common.IConn) (common.IConn, error) {
 		iv := make([]byte, c.IVLen())
 		if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 			return nil, err
@@ -34,7 +34,7 @@ func GetStreamConnCiphers(method string) func(string, connect.IConn) (connect.IC
 }
 
 type streamConn struct {
-	connect.IConn
+	common.IConn
 	IStreamCipher
 	key       []byte
 	Encrypter cipher.Stream

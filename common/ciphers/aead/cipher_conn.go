@@ -2,9 +2,8 @@ package aead
 
 import (
 	"crypto/cipher"
+	"github.com/rc452860/vnet/common"
 	"io"
-
-	connect "github.com/rc452860/vnet/network/conn"
 
 	"bytes"
 	"crypto/md5"
@@ -13,12 +12,12 @@ import (
 	"github.com/rc452860/vnet/common/log"
 )
 
-func GetAEADConnCipher(method string) func(string, connect.IConn) (connect.IConn, error) {
+func GetAEADConnCipher(method string) func(string, common.IConn) (common.IConn, error) {
 	c, ok := aeadCiphers[method]
 	if !ok {
 		return nil
 	}
-	return func(password string, conn connect.IConn) (connect.IConn, error) {
+	return func(password string, conn common.IConn) (common.IConn, error) {
 		salt := make([]byte, c.SaltSize())
 		if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 			return nil, err
@@ -41,7 +40,7 @@ func GetAEADConnCipher(method string) func(string, connect.IConn) (connect.IConn
 const DataMaxSize = 0x3FFF
 
 type aeadConn struct {
-	connect.IConn
+	common.IConn
 	IAEADCipher
 	key        []byte
 	rNonce     []byte

@@ -37,7 +37,7 @@ func tabaoAPI(ip string) (*IPInfo, error) {
 		},
 	}
 	client := &http.Client{Transport: tr}
-	url := fmt.Sprintf("http://ip.taobao.com/service/getIpInfo.php?ip=%s", ip)
+	url := fmt.Sprintf("httpserver://ip.taobao.com/service/getIpInfo.php?ip=%s", ip)
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func WatchIP(addr string) (*IP, error) {
 }
 
 func GetPublicIP() string {
-	ip, err := http.Get("http://ipinfo.io/ip")
+	ip, err := http.Get("httpserver://ipinfo.io/ip")
 	if err != nil {
 		return ""
 	}

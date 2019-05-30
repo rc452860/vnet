@@ -107,7 +107,7 @@ func TestTestAuthChainUDP(t *testing.T) {
 		return
 	}
 	if string(result) != "hello" && binaryx.LEBytesToUInt32([]byte(uid)) != 1024 {
-		t.Fatal("server decrypt result is not equal hello")
+		t.Fatal("service decrypt result is not equal hello")
 		return
 	}
 	result, err = server.ServerUDPPreEncrypt([]byte("hello"), []byte(uid))
@@ -115,7 +115,7 @@ func TestTestAuthChainUDP(t *testing.T) {
 		fmt.Println(err)
 		return
 	}
-	//fmt.Printf("server encrypt# %s | %s\n",string(result),hex.EncodeToString(result))
+	//fmt.Printf("service encrypt# %s | %s\n",string(result),hex.EncodeToString(result))
 
 	result, err = client.ClientUDPPostDecrypt(result)
 	if err != nil {
@@ -123,7 +123,7 @@ func TestTestAuthChainUDP(t *testing.T) {
 		return
 	}
 	if string(result) != "hello" {
-		t.Fatal("server decrypt result is not equal hello")
+		t.Fatal("service decrypt result is not equal hello")
 		return
 	}
 

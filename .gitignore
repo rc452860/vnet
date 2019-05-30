@@ -6,4 +6,8 @@ bin/
 config.json
 *.test.exe
 *.pprof
-.idea/
+.idea/**
+main
+main.exe
+test
+test.exe

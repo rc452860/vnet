@@ -769,6 +769,9 @@ func (a *AuthChainA) ServerUDPPostDecrypt(buf []byte) ([]byte, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+	if len(buf) - 8 - randLen < 0{
+		return nil,"",errors.New("auth_chain_a buf is too short")
+	}
 	result, err := encryptor.Decrypt(buf[:len(buf)-8-randLen])
 	if err != nil {
 		return nil, "", err
