@@ -2,11 +2,14 @@ package model
 
 type NodeInfo struct {
 	ID            int    `json:"id"`
+	Port          string `json:"port"`
+	Passwd        string `json:"passwd"`
 	Method        string `json:"method"`
 	Protocol      string `json:"protocol"`
 	Obfs          string `json:"obfs"`
 	ProtocolParam string `json:"protocol_param"`
 	ObfsParam     string `json:"obfs_param"`
+	Single        int    `json:"single"`
 }
 
 type UserInfo struct {
@@ -29,7 +32,8 @@ type NodeOnline struct {
 }
 
 type NodeStatus struct {
-	CPU string `json:"cpu"`
-	MEM string `json:"mem"`
-	NET string `json:"net"`
+	CPU  string `json:"cpu"`
+	MEM  string `json:"mem"`
+	NET  string `json:"net"`
+	DISK string `json:"disk"`
 }

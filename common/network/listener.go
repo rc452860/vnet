@@ -55,7 +55,6 @@ func (l *Listener) ListenTCP(fn func(request *Request)) error {
 				errString := err.Error()
 				switch {
 				case strings.Contains(errString, "timeout"):
-					logrus.Warningf("[%s] listener accept timeout")
 					continue
 				default:
 					logrus.Errorf("[%s] listener Unknown error:%s", errString)
@@ -68,7 +67,7 @@ func (l *Listener) ListenTCP(fn func(request *Request)) error {
 						logrus.WithFields(logrus.Fields{}).Errorf("connection handle crashed , err : %s , \ntrace:%s", e, string(debug.Stack()))
 					}
 				}()
-				fn(NewRequestWithTCP( con))
+				fn(NewRequestWithTCP(con))
 			}()
 		}
 	}()

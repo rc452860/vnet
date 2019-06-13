@@ -1,8 +1,10 @@
 package command
 
 const (
-	NODE_ID = "nodeId"
-	KEY     = "key"
+	API_HOST = "api_host"
+	HOST     = "host"
+	NODE_ID  = "node_id"
+	KEY      = "key"
 )
 
 type FlagSetting struct {
@@ -15,8 +17,19 @@ type FlagSetting struct {
 
 var flagConfigs = []FlagSetting{
 	FlagSetting{
+		Name:     API_HOST,
+		Usage:    "api host example: http://localhost",
+		Required: true,
+	},
+	FlagSetting{
+		Name:     HOST,
+		Usage:    "host example: 0.0.0.0",
+		Required: true,
+		Default: "0.0.0.0",
+	},
+	FlagSetting{
 		Name:     NODE_ID,
-		Usage:    "nodeid",
+		Usage:    "node_id",
 		Required: true,
 	},
 	FlagSetting{

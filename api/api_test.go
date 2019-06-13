@@ -7,13 +7,15 @@ import (
 )
 
 func ExampleGetNodeInfo() {
+	HOST = "http://localhost"
 	logrus.SetLevel(logrus.DebugLevel)
-	result := GetNodeInfo(1,"txsnvhghmrmg4pjm")
+	result := GetNodeInfo(2,"txsnvhghmrmg4pjm")
 	fmt.Printf("value: %+v \n",result)
 	//Output:
 }
 
 func ExampleGetUserList(){
+	HOST = "http://localhost"
 	logrus.SetLevel(logrus.DebugLevel)
 	result := GetUserList(1,"txsnvhghmrmg4pjm")
 	fmt.Printf("value: %+v\n",result)
@@ -21,8 +23,9 @@ func ExampleGetUserList(){
 }
 
 func ExamplePostAllUserTraffic() {
+	HOST = "http://localhost"
 	logrus.SetLevel(logrus.DebugLevel)
-	PostAllUserTraffic([]model.UserTraffic{
+	PostAllUserTraffic([]*model.UserTraffic{
 		{
 			1,200,200,
 		},
@@ -31,8 +34,9 @@ func ExamplePostAllUserTraffic() {
 }
 
 func ExamplePostNodeOnline() {
+	HOST = "http://localhost"
 	logrus.SetLevel(logrus.DebugLevel)
-	PostNodeOnline([]model.NodeOnline{
+	PostNodeOnline([]*model.NodeOnline{
 		{
 			1,
 			"192.168.1.1",
@@ -42,6 +46,7 @@ func ExamplePostNodeOnline() {
 }
 
 func ExamplePostNodeStatus() {
+	HOST = "http://localhost"
 	logrus.SetLevel(logrus.DebugLevel)
 	PostNodeStatus(model.NodeStatus{
 		"10%",

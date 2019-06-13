@@ -4,8 +4,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/common/pool"
-	"github.com/rc452860/vnet/utils"
 	"github.com/rc452860/vnet/utils/goroutine"
+	"github.com/rc452860/vnet/utils/socksproxy"
 	"io"
 	"net"
 	"sync"
@@ -111,7 +111,7 @@ func timedCopy(dst net.PacketConn, target net.Addr, src net.PacketConn, timeout 
 			return errors.Cause(err)
 		}
 
-		srcAddr := utils.ParseAddr(raddr.String())
+		srcAddr := socksproxy.ParseAddr(raddr.String())
 		srcAddrByte := srcAddr.Raw
 		copy(buf[len(srcAddrByte):], buf[:n])
 		copy(buf, srcAddrByte)

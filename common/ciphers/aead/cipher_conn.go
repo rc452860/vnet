@@ -2,8 +2,8 @@ package aead
 
 import (
 	"crypto/cipher"
-	"github.com/rc452860/vnet/common"
 	"io"
+	"net"
 
 	"bytes"
 	"crypto/md5"
@@ -12,18 +12,18 @@ import (
 	"github.com/rc452860/vnet/common/log"
 )
 
-func GetAEADConnCipher(method string) func(string, common.IConn) (common.IConn, error) {
+func GetAEADConnCipher(method string) func(string, net.Conn) (net.Conn, error) {
 	c, ok := aeadCiphers[method]
 	if !ok {
 		return nil
 	}
-	return func(password string, conn common.IConn) (common.IConn, error) {
+	return func(password string, conn net.Conn) (net.Conn, error) {
 		salt := make([]byte, c.SaltSize())
 		if _, err := io.ReadFull(rand.Reader, salt); err != nil {
 			return nil, err
 		}
 		sc := &aeadConn{
-			IConn:       conn,
+			Conn:       conn,
 			IAEADCipher: c,
 			key:         evpBytesToKey(password, c.KeySize()),
 			wNonce:      make([]byte, c.NonceSize()),
@@ -40,7 +40,7 @@ func GetAEADConnCipher(method string) func(string, common.IConn) (common.IConn, 
 const DataMaxSize = 0x3FFF
 
 type aeadConn struct {
-	common.IConn
+	net.Conn
 	IAEADCipher
 	key        []byte
 	rNonce     []byte
@@ -61,7 +61,7 @@ func (a *aeadConn) Read(b []byte) (n int, err error) {
 	}
 	if a.Decrypter == nil {
 		salt := make([]byte, a.SaltSize())
-		if _, err = io.ReadFull(a.IConn, salt); err != nil {
+		if _, err = io.ReadFull(a.Conn, salt); err != nil {
 			return
 		}
 		a.Decrypter, err = a.NewAEAD(a.key, salt, 1)
@@ -73,7 +73,7 @@ func (a *aeadConn) Read(b []byte) (n int, err error) {
 	var overHead = a.Decrypter.Overhead()
 	buf := make([]byte, 2+overHead+DataMaxSize+overHead)
 	dataBuf := buf[:2+a.Decrypter.Overhead()]
-	_, err = io.ReadFull(a.IConn, dataBuf)
+	_, err = io.ReadFull(a.Conn, dataBuf)
 	if err != nil {
 		return
 	}
@@ -87,7 +87,7 @@ func (a *aeadConn) Read(b []byte) (n int, err error) {
 	size := (int(dataBuf[0])<<8 + int(dataBuf[1])) & DataMaxSize
 
 	dataBuf = buf[:size+a.Decrypter.Overhead()]
-	_, err = io.ReadFull(a.IConn, dataBuf)
+	_, err = io.ReadFull(a.Conn, dataBuf)
 	if err != nil {
 		return 0, err
 	}
@@ -130,7 +130,7 @@ func (a *aeadConn) Write(b []byte) (n int, err error) {
 			a.Encrypter.Seal(dataBuf[:0], a.wNonce, dataBuf, nil)
 			increment(a.wNonce)
 
-			_, ew := a.IConn.Write(buf)
+			_, ew := a.Conn.Write(buf)
 			if ew != nil {
 				err = ew
 				break

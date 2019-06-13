@@ -4,25 +4,25 @@ import (
 	"crypto/cipher"
 	"crypto/md5"
 	"crypto/rand"
-	"github.com/rc452860/vnet/common"
 	"io"
+	"net"
 
 	"github.com/rc452860/vnet/common/log"
 	"github.com/rc452860/vnet/common/pool"
 )
 
-func GetStreamConnCiphers(method string) func(string, common.IConn) (common.IConn, error) {
+func GetStreamConnCiphers(method string) func(string, net.Conn) (net.Conn, error) {
 	c, ok := streamCiphers[method]
 	if !ok {
 		return nil
 	}
-	return func(password string, conn common.IConn) (common.IConn, error) {
+	return func(password string, conn net.Conn) (net.Conn, error) {
 		iv := make([]byte, c.IVLen())
 		if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 			return nil, err
 		}
 		sc := &streamConn{
-			IConn:         conn,
+			Conn:         conn,
 			IStreamCipher: c,
 			key:           evpBytesToKey(password, c.KeyLen()),
 		}
@@ -34,7 +34,7 @@ func GetStreamConnCiphers(method string) func(string, common.IConn) (common.ICon
 }
 
 type streamConn struct {
-	common.IConn
+	net.Conn
 	IStreamCipher
 	key       []byte
 	Encrypter cipher.Stream
@@ -48,7 +48,7 @@ func (s *streamConn) GetKey() []byte {
 func (s *streamConn) Read(b []byte) (n int, err error) {
 	if s.Decrypter == nil {
 		iv := make([]byte, s.IVLen())
-		if _, err = s.IConn.Read(iv); err != nil {
+		if _, err = s.Conn.Read(iv); err != nil {
 			return
 		}
 		s.Decrypter, err = s.NewStream(s.key, iv, 1)
@@ -66,7 +66,7 @@ func (s *streamConn) Read(b []byte) (n int, err error) {
 	}
 
 	buf = buf[:len(b)]
-	n, err = s.IConn.Read(buf)
+	n, err = s.Conn.Read(buf)
 	if err != nil {
 		return
 	}
@@ -84,7 +84,7 @@ func (s *streamConn) Write(b []byte) (n int, err error) {
 		defer pool.PutBuf(buf)
 	}
 	s.Encrypter.XORKeyStream(buf, b)
-	return s.IConn.Write(buf)
+	return s.Conn.Write(buf)
 }
 
 func evpBytesToKey(password string, keyLen int) (key []byte) {

@@ -1,19 +1,13 @@
 package network
 
 import (
-	"github.com/rc452860/vnet/common"
 	"github.com/rs/xid"
 	"net"
 	"time"
 )
 
 func DialTcp(addr string) (req *Request, err error) {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
-	if err != nil {
-		return nil, err
-	}
-
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	conn, err := net.DialTimeout("tcp", addr,3 * time.Second)
 	if err != nil {
 		return nil, err
 	}

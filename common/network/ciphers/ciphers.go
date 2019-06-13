@@ -9,7 +9,7 @@ import (
 )
 
 //加密装饰
-func CipherDecorate(password, method string, conn IConn) (IConn, error) {
+func CipherDecorate(password, method string, conn net.Conn) (net.Conn, error) {
 	if method == "none" {
 		return conn, nil
 	}

@@ -7,6 +7,7 @@ import (
 	"github.com/rc452860/vnet/model"
 	"github.com/rc452860/vnet/utils/langx"
 	"github.com/rc452860/vnet/utils/stringx"
+	"github.com/sirupsen/logrus"
 	"github.com/tidwall/gjson"
 	"gopkg.in/resty.v1"
 	"net/http"
@@ -18,8 +19,19 @@ func init() {
 	resty.SetTimeout(3 * time.Second)
 }
 
+var(
+	HOST = ""
+)
+
+func SetHost(host string){
+	HOST = host
+}
+
 // implement for vnet api get request
 func get(url string,header map[string]string)(result string,err error){
+	logrus.WithFields(logrus.Fields{
+		"url":url,
+	}).Debug("get")
 	r, err := resty.R().SetHeaders(header).Get(url)
 	if err != nil {
 		return "", errors.Wrap(err, "get request error")
@@ -27,7 +39,8 @@ func get(url string,header map[string]string)(result string,err error){
 	if r.StatusCode() != http.StatusOK{
 		return "",errors.New(fmt.Sprintf("get request status: %d body: %s",r.StatusCode(),string(r.Body())))
 	}
-	responseJson := stringx.BUnicodeToUtf8(r.Body())
+	body := r.Body()
+	responseJson := stringx.BUnicodeToUtf8(body)
 	value := gjson.Get(responseJson, "data").String()
 	if value == ""{
 		return "",errors.New("get data not found: " + responseJson)
@@ -36,6 +49,10 @@ func get(url string,header map[string]string)(result string,err error){
 }
 
 func post(url,param string,header map[string]string)(result string,err error){
+	logrus.WithFields(logrus.Fields{
+		"param":param,
+		"url":url,
+	}).Debug("post")
 	header["Content-Type"] = "application/json"
 	r,err := resty.R().SetHeaders(header).SetBody(param).Post(url)
 	if err != nil {
@@ -53,7 +70,7 @@ func post(url,param string,header map[string]string)(result string,err error){
 
 // GetNodeInfo
 func GetNodeInfo(nodeID int, key string) model.NodeInfo {
-	value,err := get(fmt.Sprintf("http://localhost/api/node/%s",strconv.Itoa(nodeID)),map[string]string{
+	value,err := get(fmt.Sprintf("%s/api/node/%s",HOST,strconv.Itoa(nodeID)),map[string]string{
 		"key":       key,
 		"timestamp": strconv.FormatInt(time.Now().Unix(), 10),
 	})
@@ -70,7 +87,7 @@ func GetNodeInfo(nodeID int, key string) model.NodeInfo {
 
 // GetUserList
 func GetUserList(nodeID int, key string) []model.UserInfo {
-	value,err := get(fmt.Sprintf("http://localhost/api/userList/%s", strconv.Itoa(nodeID)),map[string]string{
+	value,err := get(fmt.Sprintf("%s/api/userList/%s", HOST,strconv.Itoa(nodeID)),map[string]string{
 		"key":       key,
 		"timestamp": strconv.FormatInt(time.Now().Unix(), 10),
 	})
@@ -85,8 +102,8 @@ func GetUserList(nodeID int, key string) []model.UserInfo {
 	return result
 }
 
-func PostAllUserTraffic(allUserTraffic []model.UserTraffic,nodeID int, key string) {
-	value, err := post(fmt.Sprintf("http://localhost/api/userTraffic/%s", strconv.Itoa(nodeID)),
+func PostAllUserTraffic(allUserTraffic []*model.UserTraffic,nodeID int, key string) {
+	value, err := post(fmt.Sprintf("%s/api/userTraffic/%s",HOST, strconv.Itoa(nodeID)),
 	string(langx.Must(func() (interface{}, error) {
 		return json.Marshal(allUserTraffic)
 	}).([]byte)),
@@ -103,8 +120,8 @@ func PostAllUserTraffic(allUserTraffic []model.UserTraffic,nodeID int, key strin
 	}
 }
 
-func PostNodeOnline(nodeOnline []model.NodeOnline,nodeID int, key string){
-	value, err := post(fmt.Sprintf("http://localhost/api/nodeOnline/%s", strconv.Itoa(nodeID)),
+func PostNodeOnline(nodeOnline []*model.NodeOnline,nodeID int, key string){
+	value, err := post(fmt.Sprintf("%s/api/nodeOnline/%s",HOST, strconv.Itoa(nodeID)),
 		string(langx.Must(func() (interface{}, error) {
 			return json.Marshal(nodeOnline)
 		}).([]byte)),
@@ -122,7 +139,7 @@ func PostNodeOnline(nodeOnline []model.NodeOnline,nodeID int, key string){
 }
 
 func PostNodeStatus(status model.NodeStatus,nodeID int, key string){
-	value, err := post(fmt.Sprintf("http://localhost/api/nodeStatus/%s", strconv.Itoa(nodeID)),
+	value, err := post(fmt.Sprintf("%s/api/nodeStatus/%s",HOST, strconv.Itoa(nodeID)),
 		string(langx.Must(func() (interface{}, error) {
 			return json.Marshal(status)
 		}).([]byte)),
