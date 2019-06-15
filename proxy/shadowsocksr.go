@@ -22,19 +22,19 @@ import (
 // ShadowsocksProxy is respect shadowsocks proxy service
 // it have Start and Stop method to control proxy
 type ShadowsocksRProxy struct {
-	Host              string `json:"host,omitempty"`
-	Port              int    `json:"port,omitempty"`
-	Method            string `json:"method,omitempty"`
-	Password          string `json:"password,omitempty"`
-	Protocol          string `json:"protocol,omitempty"`
-	ProtocolParam     string `json:"protocolParam,omitempty"`
-	Obfs              string `json:"obfs,omitempty"`
-	ObfsParam         string `json:"obfsParam,omitempty"`
-	*network.Listener `json:"-"`
-	Users             map[string]string      `json:"users,omitempty"`
-	Status            string                 `json:"status,omitempty"`
+	Host                 string `json:"host,omitempty"`
+	Port                 int    `json:"port,omitempty"`
+	Method               string `json:"method,omitempty"`
+	Password             string `json:"password,omitempty"`
+	Protocol             string `json:"protocol,omitempty"`
+	ProtocolParam        string `json:"protocolParam,omitempty"`
+	Obfs                 string `json:"obfs,omitempty"`
+	ObfsParam            string `json:"obfsParam,omitempty"`
+	*network.Listener    `json:"-"`
+	Users                map[string]string `json:"users,omitempty"`
+	Status               string            `json:"status,omitempty"`
 	common.TrafficReport `json:"-"`
-	common.OnlineReport `json:"-"`
+	common.OnlineReport  `json:"-"`
 	*ShadowsocksRArgs
 }
 
@@ -65,7 +65,7 @@ func (ssr *ShadowsocksRProxy) Start() error {
 	return nil
 }
 
-func (ssr *ShadowsocksRProxy) Stop() error{
+func (ssr *ShadowsocksRProxy) Stop() error {
 	return ssr.Listener.Close()
 }
 func (ssr *ShadowsocksRProxy) StartTCP() error {
@@ -100,8 +100,8 @@ func (ssr *ShadowsocksRProxy) StartTCP() error {
 				}).Errorf("shadowsocksr read address error %s", err)
 				return
 			}
-			ssr.handleStageAddr(ssrd.UID,ssrd.RemoteAddr().String(), ssrd.LocalAddr().String(), addr.String(), "tcp")
-			logrus.Infof("reslove addr success: %s", addr.String())
+			ssr.handleStageAddr(ssrd.UID, ssrd.RemoteAddr().String(), ssrd.LocalAddr().String(), addr.String(), "tcp")
+			logrus.Infof("reslove addrx success: %s", addr.String())
 			req, err := network.DialTcp(addr.String())
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
@@ -142,7 +142,7 @@ func (ssr *ShadowsocksRProxy) StartUDP() error {
 				ssr.Host, ssr.Port,
 				false,
 				ssr.Users)
-			ssrd.TrafficReport =  ssr.TrafficReport
+			ssrd.TrafficReport = ssr.TrafficReport
 			if err != nil {
 				logrus.WithFields(logrus.Fields{
 					"requestId": request.RequestID,
@@ -198,7 +198,7 @@ func (ssr *ShadowsocksRProxy) StartUDP() error {
 					}).Error("shadowoscksr listenPacket udp error")
 					continue
 				}
-				ssr.handleStageAddr(int(binaryx.LEBytesToUInt32(uid)),addr.String(), ssrd.PacketConn.LocalAddr().String(), remoteAddr.String(), "udp")
+				ssr.handleStageAddr(int(binaryx.LEBytesToUInt32(uid)), addr.String(), ssrd.PacketConn.LocalAddr().String(), remoteAddr.String(), "udp")
 				udpMap.Add(addr, ssrd, remotePacketConn)
 				_, err = remotePacketConn.WriteTo(data, remoteAddrResolve)
 				if err != nil {
@@ -220,17 +220,17 @@ func (ssr *ShadowsocksRProxy) StartUDP() error {
 	return err
 }
 
-func (ssr *ShadowsocksRProxy) handleStageAddr(uid int,client, server, proxyTarget, network string) {
-	if uid == 0{
+func (ssr *ShadowsocksRProxy) handleStageAddr(uid int, client, server, proxyTarget, network string) {
+	if uid == 0 {
 		logrus.WithFields(logrus.Fields{
-			"uid":uid,
-			"client":client,
-			"server":server,
-			"proxyTarget":proxyTarget,
+			"uid":         uid,
+			"client":      client,
+			"server":      server,
+			"proxyTarget": proxyTarget,
 		}).Warn("handleStageAddr uid is 0")
 		return
 	}
-	ssr.OnlineReport.Online(uid,client)
+	ssr.OnlineReport.Online(uid, client)
 }
 
 func (ssr *ShadowsocksRProxy) Close() error {

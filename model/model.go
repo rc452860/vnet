@@ -32,8 +32,9 @@ type NodeOnline struct {
 }
 
 type NodeStatus struct {
-	CPU  string `json:"cpu"`
-	MEM  string `json:"mem"`
-	NET  string `json:"net"`
-	DISK string `json:"disk"`
+	CPU    string `json:"cpu"`
+	MEM    string `json:"mem"`
+	NET    string `json:"net"`
+	DISK   string `json:"disk"`
+	UPTIME int    `json:"uptime"`
 }

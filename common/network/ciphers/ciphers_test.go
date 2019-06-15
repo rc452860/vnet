@@ -37,7 +37,7 @@ func Test_Packet(t *testing.T) {
 				log.Err(err)
 				continue
 			}
-			// log.Info("len: %d,addr %v,data: %s\n", n, addr, string(buf[:n]))
+			// log.Info("len: %d,addrx %v,data: %s\n", n, addrx, string(buf[:n]))
 		}
 	}()
 	log.Info("开始发送数据:")

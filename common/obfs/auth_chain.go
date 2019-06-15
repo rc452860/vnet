@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"github.com/pkg/errors"
 	"github.com/rc452860/vnet/common/ciphers"
 	"github.com/rc452860/vnet/utils/bytesx"
@@ -517,12 +518,7 @@ func (a *AuthChainA) ServerPostDecrypt(buf []byte) (result []byte, sendback bool
 			a.UserKey = []byte(a.GetServerInfo().GetUsers()[string(uidPack)])
 			a.GetServerInfo().UpdateUser(uidPack)
 		} else {
-			a.UserIDNum = 0
-			if len(a.GetServerInfo().GetUsers()) == 0 {
-				a.UserKey = a.GetServerInfo().GetKey()
-			} else {
-				a.UserKey = a.GetServerInfo().GetRecvIv()
-			}
+			return []byte{},false,errors.New(fmt.Sprintf("user %v not exist",uid))
 		}
 
 		md5Data = hmacmd5(a.UserKey, a.RecvBuf[12:12+20])

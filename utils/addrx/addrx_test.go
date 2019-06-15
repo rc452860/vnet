@@ -1,4 +1,4 @@
-package addr
+package addrx
 
 import (
 	"net"

@@ -8,7 +8,7 @@ import (
 	"github.com/rc452860/vnet/common"
 	"github.com/rc452860/vnet/common/ciphers"
 	"github.com/rc452860/vnet/common/obfs"
-	"github.com/rc452860/vnet/utils/addr"
+	"github.com/rc452860/vnet/utils/addrx"
 	"github.com/rc452860/vnet/utils/binaryx"
 	"github.com/sirupsen/logrus"
 	"net"
@@ -242,8 +242,8 @@ func (ssrd *ShadowsocksRDecorate) getServerInfo(isObfs bool) obfs.ServerInfo {
 	serverInfo.SetHost(ssrd.Host)
 	serverInfo.SetPort(ssrd.Port)
 	if ssrd.Conn != nil {
-		serverInfo.SetClient(net.ParseIP(addr.GetIPFromAddr(ssrd.Conn.RemoteAddr())))
-		serverInfo.SetPort(addr.GetPortFromAddr(ssrd.Conn.RemoteAddr()))
+		serverInfo.SetClient(net.ParseIP(addrx.GetIPFromAddr(ssrd.Conn.RemoteAddr())))
+		serverInfo.SetPort(addrx.GetPortFromAddr(ssrd.Conn.RemoteAddr()))
 	}
 	if isObfs {
 		serverInfo.SetObfsParam(ssrd.ObfsParam)
