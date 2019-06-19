@@ -2,6 +2,7 @@ package network
 
 import (
 	"errors"
+	"github.com/rc452860/vnet/utils/addrx"
 	"github.com/sirupsen/logrus"
 	"net"
 	"runtime/debug"
@@ -44,7 +45,7 @@ func (l *Listener) ListenTCP(fn func(request *Request)) error {
 			if l.Timeout != 0 {
 				err := l.TCP.SetDeadline(time.Now().Add(l.Timeout))
 				if err != nil {
-					logrus.Error("[%s] listen set timeout error:", err.Error())
+					logrus.Error("listen set timeout error:", err.Error())
 					_ = l.Close()
 					return
 				}
@@ -56,8 +57,11 @@ func (l *Listener) ListenTCP(fn func(request *Request)) error {
 				switch {
 				case strings.Contains(errString, "timeout"):
 					continue
+				case strings.Contains(errString," use of closed network connection"):
+					logrus.Infof("service %v close",addrx.SplitPortFromAddr(l.Addr))
+					return
 				default:
-					logrus.Errorf("[%s] listener Unknown error:%s", errString)
+					logrus.Errorf("listener Unknown error:%s", errString)
 					return
 				}
 			}

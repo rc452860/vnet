@@ -3,12 +3,14 @@ package service
 import (
 	"fmt"
 	"github.com/dustin/go-humanize"
+	"github.com/pkg/errors"
 	"github.com/rc452860/vnet/common/network"
 	"github.com/rc452860/vnet/model"
 	"github.com/rc452860/vnet/proxy"
 	"github.com/rc452860/vnet/utils/addrx"
 	"github.com/rc452860/vnet/utils/monitor"
 	"github.com/sirupsen/logrus"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -23,9 +25,7 @@ func init() {
 		trafficLock:   new(sync.Mutex),
 		online:        make(map[int]*model.NodeOnline),
 		onlineLock:    new(sync.Mutex),
-		uidPortTable:  make(map[int]int),
-		portUidTable:  make(map[int]int),
-		userInfo:      make(map[int]*model.UserInfo),
+		userTable:     make(map[int]*model.UserInfo),
 		UpTime:        time.Now(),
 	}
 }
@@ -37,32 +37,25 @@ type shadowsocksrService struct {
 	trafficLock   *sync.Mutex
 	online        map[int]*model.NodeOnline
 	onlineLock    *sync.Mutex
-	uidPortTable  map[int]int
-	portUidTable  map[int]int
-	userInfo      map[int]*model.UserInfo
+	userTable     map[int]*model.UserInfo
 	host          string
 	UpTime        time.Time
 }
 
-// old python version shadowoscksr use port be protocol_param,
-// so we must convert port to uid in web api version
-func (s *shadowsocksrService) AddUIDPortConvertItem(uid, port int) {
-	s.uidPortTable[uid] = port
-	s.portUidTable[port] = uid
-}
-
-func (s *shadowsocksrService) DelUIDPortConvertItem(uid int) {
-	port := s.uidPortTable[uid]
-	delete(s.uidPortTable, uid)
-	delete(s.portUidTable, port)
-}
-
 func (s *shadowsocksrService) UIDToPort(uid int) int {
-	return s.uidPortTable[uid]
+	if user := s.userTable[uid]; user != nil {
+		return user.Port
+	}
+	return 0
 }
 
 func (s *shadowsocksrService) PortToUid(port int) int {
-	return s.portUidTable[port]
+	for _, value := range s.userTable {
+		if value.Port == port {
+			return value.Uid
+		}
+	}
+	return 0
 }
 
 func (s *shadowsocksrService) Upload(port int, n int64) {
@@ -98,8 +91,12 @@ func (s *shadowsocksrService) ReportTraffic() []*model.UserTraffic {
 	reportData := s.traffic
 	s.traffic = make(map[int]*model.UserTraffic)
 	convertReportData := make([]*model.UserTraffic, 0, len(reportData))
-	for _, value := range reportData {
+	for key, value := range reportData {
+		if value.Download + value.Upload < 50 * 1024{
+			continue
+		}
 		convertReportData = append(convertReportData, value)
+		delete(s.traffic,key)
 	}
 	s.trafficLock.Unlock()
 	return convertReportData
@@ -144,7 +141,7 @@ func (s *shadowsocksrService) ReportNodeStatus() model.NodeStatus {
 	}
 }
 
-func (s *shadowsocksrService) ShadowsocksRProxy(host string, port int, method, passwd, protocol, protocolParam, obfs, obfsParam string, args *proxy.ShadowsocksRArgs) {
+func (s *shadowsocksrService) ShadowsocksRProxy(host string, port int, method, passwd, protocol, protocolParam, obfs, obfsParam string,single int, args *proxy.ShadowsocksRArgs) *proxy.ShadowsocksRProxy {
 	shadowsocksRProxy := new(proxy.ShadowsocksRProxy)
 	shadowsocksRProxy.Host = host
 	shadowsocksRProxy.Port = port
@@ -158,11 +155,42 @@ func (s *shadowsocksrService) ShadowsocksRProxy(host string, port int, method, p
 	shadowsocksRProxy.Listener = network.NewListener(fmt.Sprintf("%s:%v", host, port), 3*time.Second)
 	shadowsocksRProxy.OnlineReport = s
 	shadowsocksRProxy.TrafficReport = s
+	shadowsocksRProxy.Single = single
 	s.Shadowsocksrs[port] = shadowsocksRProxy
+	return shadowsocksRProxy
 }
 
 func (s *shadowsocksrService) SetNodeInfo(nodeInfo *model.NodeInfo) {
 	s.nodeInfo = nodeInfo
+	if s.nodeInfo.Single == 1 {
+		portStrArray := strings.Split(nodeInfo.Port, ",")
+		ports := []int{}
+		for _, item := range portStrArray {
+			convertPort, err := strconv.Atoi(item)
+			if err != nil {
+				panic(fmt.Sprintf("port format error: %s", nodeInfo.Port))
+			}
+			ports = append(ports, convertPort)
+		}
+
+		for _, port := range ports {
+			s.ShadowsocksRProxy(s.host,
+				port,
+				nodeInfo.Method,
+				nodeInfo.Passwd,
+				nodeInfo.Protocol,
+				nodeInfo.ProtocolParam,
+				nodeInfo.Obfs,
+				nodeInfo.ObfsParam,
+				nodeInfo.Single,
+				&proxy.ShadowsocksRArgs{})
+			err := s.Shadowsocksrs[port].Start()
+			if err != nil {
+				// TODO 错误处理
+				panic(err)
+			}
+		}
+	}
 }
 
 func (s *shadowsocksrService) GetNodeInfo() *model.NodeInfo {
@@ -177,20 +205,20 @@ func (s *shadowsocksrService) GetHost(host string) string {
 	return s.host
 }
 
-func (s *shadowsocksrService) AddUser(user *model.UserInfo) {
-	s.userInfo[user.Uid] = user
+func (s *shadowsocksrService) AddUser(user *model.UserInfo) error {
+	if user2 := s.userTable[user.Uid]; user2 != nil {
+		return errors.New(fmt.Sprintf("user %v already exist", user2.Uid))
+	}
+
 	if s.nodeInfo.Single == 1 {
 		for _, server := range s.Shadowsocksrs {
 			server.AddUser(user.Port, user.Passwd)
 		}
 	} else {
 		if s.Shadowsocksrs[user.Port] != nil {
-			if err := s.Shadowsocksrs[user.Port].Close(); err != nil {
-				logrus.Error(err);
-				return
-			}
+			return errors.New(fmt.Sprintf("add user port %v is used by %v", user.Port, s.PortToUid(user.Port)))
 		}
-		s.ShadowsocksRProxy(s.host,
+		server := s.ShadowsocksRProxy(s.host,
 			user.Port,
 			s.nodeInfo.Method,
 			user.Passwd,
@@ -198,44 +226,79 @@ func (s *shadowsocksrService) AddUser(user *model.UserInfo) {
 			s.nodeInfo.ProtocolParam,
 			s.nodeInfo.Obfs,
 			s.nodeInfo.ObfsParam,
+			s.nodeInfo.Single,
 			&proxy.ShadowsocksRArgs{})
+		if err := server.Start(); err != nil {
+			return errors.Wrap(err, "add user error")
+		}
 	}
+	s.userTable[user.Uid] = user
+	return nil
 }
 
-func (s *shadowsocksrService) EditUser(user *model.UserInfo) {
+func (s *shadowsocksrService) EditUser(user *model.UserInfo) error {
 	// TODO after change user profile it will be simultaneously exist old port and new port
-	s.AddUser(user)
+	user2 := s.userTable[user.Uid]
+	if user2 == nil {
+		return errors.New(fmt.Sprintf("user %v dosen't exist", user.Uid))
+	}
+	if s.nodeInfo.Single != 1 && user.Port != user2.Port && s.Shadowsocksrs[user.Port] != nil{
+		return errors.New(fmt.Sprintf("port %v used by user %v",user.Port,s.PortToUid(user.Port)))
+	}
+	if err := s.DelUser(user.Uid); err != nil {
+		return errors.Wrap(err, "edit user del user error")
+	}
+	if err := s.AddUser(user); err != nil {
+		return errors.Wrap(err, "edit user add user error")
+	}
+	return nil
 }
 
-func (s *shadowsocksrService) DelUser(uid int) {
+func (s *shadowsocksrService) DelUser(uid int) error {
 	port := s.UIDToPort(uid)
 	if port == 0 {
-		logrus.WithFields(logrus.Fields{
-			"uid": uid,
-		}).Info("uid is not exist")
-		return
+		return errors.New(fmt.Sprintf("uid %v is not esixt", uid))
 	}
 
 	if s.nodeInfo.Single == 1 {
 		for _, server := range s.Shadowsocksrs {
 			server.DelUser(port)
-			logrus.Infof("server %v del %v", server.Port, port)
+			logrus.Infof("server %v del %v success", server.Port, port)
 		}
+		delete(s.userTable, uid)
+		return nil
 	} else {
 		server := s.Shadowsocksrs[port]
 		if server == nil {
 			logrus.WithFields(logrus.Fields{
 				"port": port,
 			}).Info("port is not exist")
-			return
+			return nil
 		}
 
 		if err := server.Close(); err != nil {
-			logrus.Error(err)
-			return
+			return err
+		}
+		delete(s.Shadowsocksrs, port)
+		delete(s.userTable, uid)
+	}
+	return nil
+}
+
+func (s *shadowsocksrService) GetUserFromPort(port int) *model.UserInfo {
+	for _, value := range s.userTable {
+		if value.Port == port {
+			return value
 		}
 	}
-	logrus.WithFields(logrus.Fields{
-		"uid": uid,
-	}).Info("delete completed")
+	return nil
+}
+
+
+func (s *shadowsocksrService) GetUserList() []*model.UserInfo{
+	users := make([]*model.UserInfo,0,len(s.userTable))
+	for _,value := range s.userTable {
+		users = append(users,value)
+	}
+	return users
 }

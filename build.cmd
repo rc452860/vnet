@@ -8,7 +8,7 @@ echo build windows amd64
 set CGO_ENABLED=0
 set GOOS=windows
 set GOARCH=amd64
-go build -ldflags "-s -w" -o vnet.exe  .\cmd\server\server.go
+go build -ldflags "-s -w" -o vnet.exe  .\cmd\shadowsocksr-server\main.go
 goto end
 
 :linux
@@ -16,7 +16,7 @@ echo build linux amd64
 set CGO_ENABLED=0
 set GOOS=linux
 set GOARCH=amd64
-go build -ldflags "-s -w" -o vnet  .\cmd\server\server.go
+go build -ldflags "-s -w" -o vnet   .\cmd\shadowsocksr-server\main.go
 goto end
 
 :end

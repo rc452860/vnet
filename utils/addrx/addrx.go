@@ -1,7 +1,9 @@
 package addrx
 
 import (
+	"github.com/rc452860/vnet/utils/langx"
 	"net"
+	"strconv"
 
 	"github.com/rc452860/vnet/common/log"
 )
@@ -62,6 +64,14 @@ func SplitIpFromAddr(addr string)string{
 		return ""
 	}
 	return ip
+}
+
+func SplitPortFromAddr(addr string)int{
+	_,port,err := net.SplitHostPort(addr)
+	if err != nil{
+		return 0
+	}
+	return langx.FirstResult(strconv.Atoi,port).(int)
 }
 // func GetAddressType(addrx string) string {
 // 	var (

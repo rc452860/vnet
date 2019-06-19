@@ -15,6 +15,7 @@ import (
 	"golang.org/x/time/rate"
 	"net"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 )
@@ -33,6 +34,7 @@ type ShadowsocksRProxy struct {
 	*network.Listener    `json:"-"`
 	Users                map[string]string `json:"users,omitempty"`
 	Status               string            `json:"status,omitempty"`
+	Single               int               `json:"single,omitempty"`
 	common.TrafficReport `json:"-"`
 	common.OnlineReport  `json:"-"`
 	*ShadowsocksRArgs
@@ -76,6 +78,7 @@ func (ssr *ShadowsocksRProxy) StartTCP() error {
 			ssr.ObfsParam, ssr.ProtocolParam,
 			ssr.Host, ssr.Port,
 			false,
+			ssr.Single,
 			ssr.Users)
 		if err != nil {
 			logrus.WithFields(logrus.Fields{
@@ -141,6 +144,7 @@ func (ssr *ShadowsocksRProxy) StartUDP() error {
 				ssr.ObfsParam, ssr.ProtocolParam,
 				ssr.Host, ssr.Port,
 				false,
+				ssr.Single,
 				ssr.Users)
 			ssrd.TrafficReport = ssr.TrafficReport
 			if err != nil {
@@ -154,6 +158,12 @@ func (ssr *ShadowsocksRProxy) StartUDP() error {
 			for {
 				data, uid, addr, err := ssrd.ReadFrom()
 				if err != nil {
+					if strings.Contains(err.Error(), " use of closed network connection") {
+						logrus.WithFields(logrus.Fields{
+							"port": ssr.Port,
+						}).Info("udp close")
+						return
+					}
 					logrus.WithFields(logrus.Fields{
 						"err": err,
 					}).Error("ShadowsocksRDecrate read udp error")
@@ -235,8 +245,13 @@ func (ssr *ShadowsocksRProxy) handleStageAddr(uid int, client, server, proxyTarg
 
 func (ssr *ShadowsocksRProxy) Close() error {
 	if ssr.TCP != nil {
-		err := ssr.TCP.Close()
-		if err != nil {
+		if err := ssr.TCP.Close(); err != nil {
+			return err
+		}
+
+	}
+	if ssr.UDP != nil {
+		if err := ssr.UDP.Close(); err != nil {
 			return err
 		}
 	}

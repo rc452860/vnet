@@ -16,7 +16,7 @@ import (
 	"sync/atomic"
 )
 
-func NewShadowsocksRDecorate(request *Request, obfsMethod, cryptMethod, key, protocolMethod, obfsParam, protocolParam, host string, port int, isLocal bool, users map[string]string) (ssrd *ShadowsocksRDecorate, err error) {
+func NewShadowsocksRDecorate(request *Request, obfsMethod, cryptMethod, key, protocolMethod, obfsParam, protocolParam, host string, port int, isLocal bool, single int, users map[string]string) (ssrd *ShadowsocksRDecorate, err error) {
 	// init essential parameters
 	ssrd = &ShadowsocksRDecorate{
 		Request:       request,
@@ -26,6 +26,7 @@ func NewShadowsocksRDecorate(request *Request, obfsMethod, cryptMethod, key, pro
 		Port:          port,
 		ISLocal:       isLocal,
 		Users:         users,
+		single:        single,
 		recvBuf:       new(bytes.Buffer),
 	}
 
@@ -38,6 +39,10 @@ func NewShadowsocksRDecorate(request *Request, obfsMethod, cryptMethod, key, pro
 	// set serverinfo
 	ssrd.obfs.SetServerInfo(ssrd.getServerInfo(true))
 	ssrd.protocol.SetServerInfo(ssrd.getServerInfo(false))
+
+	if single != 1 {
+		ssrd.UID = port
+	}
 	return ssrd, err
 }
 
@@ -57,6 +62,7 @@ type ShadowsocksRDecorate struct {
 	recvBuf       *bytes.Buffer
 	upload        int64
 	download      int64
+	single        int
 	common.TrafficReport
 	*sync.Mutex
 }
@@ -155,9 +161,9 @@ func (ssrd *ShadowsocksRDecorate) Read(buf []byte) (n int, err error) {
 		}
 		atomic.AddInt64(&ssrd.download, int64(n))
 	}
-	if ssrd.TrafficReport !=nil && ssrd.UID != 0 && ssrd.upload != 0{
+	if ssrd.TrafficReport != nil && ssrd.UID != 0 && ssrd.upload != 0 {
 		//TODO add lock
-		ssrd.TrafficReport.Upload(ssrd.UID,ssrd.upload)
+		ssrd.TrafficReport.Upload(ssrd.UID, ssrd.upload)
 		ssrd.upload = 0
 	}
 	ssrd.recvBuf.Write(data)
@@ -193,10 +199,10 @@ func (ssrd *ShadowsocksRDecorate) Write(buf []byte) (n int, err error) {
 	if err != nil {
 		return 0, err
 	}
-	atomic.AddInt64(&ssrd.download,int64(n))
-	if ssrd.TrafficReport != nil && ssrd.download != 0 && ssrd.UID != 0{
+	atomic.AddInt64(&ssrd.download, int64(n))
+	if ssrd.TrafficReport != nil && ssrd.download != 0 && ssrd.UID != 0 {
 		//TODO add lock
-		ssrd.TrafficReport.Download(ssrd.UID,ssrd.download)
+		ssrd.TrafficReport.Download(ssrd.UID, ssrd.download)
 		ssrd.download = 0
 	}
 	return len(buf), nil
@@ -218,10 +224,15 @@ func (ssrd *ShadowsocksRDecorate) ReadFrom() (data, uid []byte, addr net.Addr, e
 		return nil, nil, nil, err
 	}
 	// update upload traffic
-	if ssrd.TrafficReport != nil {
-		ssrd.TrafficReport.Upload(int(binaryx.LEBytesToUInt32([]byte(uidPack))),int64(n))
+	if ssrd.single == 1 && ssrd.TrafficReport != nil {
+		ssrd.TrafficReport.Upload(int(binaryx.LEBytesToUInt32([]byte(uidPack))), int64(n))
+	}
+	if ssrd.single != 1 && ssrd.TrafficReport != nil{
+		ssrd.TrafficReport.Upload(ssrd.UID, int64(n))
+		uidPack = string(binaryx.LEUint32ToBytes(uint32(ssrd.UID)))
 	}
 	return result, []byte(uidPack), addr, err
+
 }
 
 func (ssrd *ShadowsocksRDecorate) WriteTo(p, uid []byte, addr net.Addr) error {
@@ -233,7 +244,9 @@ func (ssrd *ShadowsocksRDecorate) WriteTo(p, uid []byte, addr net.Addr) error {
 	if err != nil {
 		return err
 	}
-	_, err = ssrd.Request.WriteTo(data, addr)
+	n, err := ssrd.Request.WriteTo(data, addr)
+
+	ssrd.TrafficReport.Download(int(binaryx.LEBytesToUInt32([]byte(uid))), int64(n))
 	return err
 }
 
@@ -267,8 +280,10 @@ func (ssrd *ShadowsocksRDecorate) getServerInfo(isObfs bool) obfs.ServerInfo {
 }
 
 func (ssrd *ShadowsocksRDecorate) UpdateUser(uid []byte) {
-	// TODO: update user callback
-	uidInt := binaryx.LEBytesToUInt32(uid)
-	ssrd.UID = int(uidInt)
-	logrus.Infof("ShadowsocksRDecorate update uid: %v", uidInt)
+	if ssrd.single ==1 {
+		// TODO: update user callback
+		uidInt := binaryx.LEBytesToUInt32(uid)
+		ssrd.UID = int(uidInt)
+		logrus.Infof("ShadowsocksRDecorate update uid: %v", uidInt)
+	}
 }

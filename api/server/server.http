@@ -5,7 +5,7 @@
 # * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
 # * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
 ### DEL USER
-POST http://localhost:8081/api/user/del/1
+POST http://localhost:8081/api/user/del/3
 
 ### ADD USER
 
@@ -13,8 +13,8 @@ POST http://localhost:8081/api/user/add
 Content-Type: application/json
 
 {
-"uid":1,
-"port":10000,
+"uid":4,
+"port":10003,
 "passwd":"@123",
 "limit":0
 }
@@ -25,9 +25,12 @@ Content-Type: application/json
 
 {
   "uid":1,
-  "port":10001,
+  "port":10002,
   "passwd":"@123",
   "limit":0
 }
+
+###
+GET http://localhost:8081/api/user/list
 
 ###

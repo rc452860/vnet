@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-	resty.SetTimeout(3 * time.Second)
+	resty.SetTimeout(5 * time.Second)
 }
 
 var(
