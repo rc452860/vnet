@@ -4,10 +4,10 @@
 # * 'gtrp' and 'gtr' create a GET request with or without query parameters;
 # * 'ptr' and 'ptrp' create a POST request with a simple or parameter-like body;
 # * 'mptr' and 'fptr' create a POST request to submit a form with a text or file field (multipart/form-data);
-### DEL USER
+### 删除用户
 POST http://localhost:8081/api/user/del/3
 
-### ADD USER
+### 添加用户
 
 POST http://localhost:8081/api/user/add
 Content-Type: application/json
@@ -19,7 +19,7 @@ Content-Type: application/json
 "limit":0
 }
 
-###
+### 编辑用户
 POST http://localhost:8081/api/user/edit
 Content-Type: application/json
 
@@ -30,7 +30,19 @@ Content-Type: application/json
   "limit":0
 }
 
-###
+### 用户列表
 GET http://localhost:8081/api/user/list
 
+###  服务器测试
+
+
 ###
+GET http://localhost/api/web/v1/node/1
+key: zckjjvkhuufpkwnr
+timestamp: {{$timestamp}}
+
+###
+
+
+
+

@@ -8,8 +8,9 @@ type NodeInfo struct {
 	Protocol      string `json:"protocol"`
 	Obfs          string `json:"obfs"`
 	ProtocolParam string `json:"protocol_param"`
-	ObfsParam     string `json:"obfs_param"`
-	Single        int    `json:"single"`
+	ObfsParam     string
+	PushPort      int `json:"push_port"`
+	Single        int `json:"single"`
 }
 
 type UserInfo struct {

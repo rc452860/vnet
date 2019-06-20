@@ -35,7 +35,7 @@ func main(){
 		}
 
 		go timeWheelTask()
-		go server.StartServer()
+		go server.StartServer(nodeInfo.PushPort)
 		// Wait for interrupt signal to gracefully shutdown the server with
 		// a timeout of 5 seconds.
 		quit := make(chan os.Signal)

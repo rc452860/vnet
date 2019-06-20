@@ -70,7 +70,7 @@ func post(url,param string,header map[string]string)(result string,err error){
 
 // GetNodeInfo
 func GetNodeInfo(nodeID int, key string) model.NodeInfo {
-	value,err := get(fmt.Sprintf("%s/api/node/%s",HOST,strconv.Itoa(nodeID)),map[string]string{
+	value,err := get(fmt.Sprintf("%s/api/web/v1/node/%s",HOST,strconv.Itoa(nodeID)),map[string]string{
 		"key":       key,
 		"timestamp": strconv.FormatInt(time.Now().Unix(), 10),
 	})
@@ -87,7 +87,7 @@ func GetNodeInfo(nodeID int, key string) model.NodeInfo {
 
 // GetUserList
 func GetUserList(nodeID int, key string) []model.UserInfo {
-	value,err := get(fmt.Sprintf("%s/api/userList/%s", HOST,strconv.Itoa(nodeID)),map[string]string{
+	value,err := get(fmt.Sprintf("%s/api/web/v1/userList/%s", HOST,strconv.Itoa(nodeID)),map[string]string{
 		"key":       key,
 		"timestamp": strconv.FormatInt(time.Now().Unix(), 10),
 	})
@@ -103,7 +103,7 @@ func GetUserList(nodeID int, key string) []model.UserInfo {
 }
 
 func PostAllUserTraffic(allUserTraffic []*model.UserTraffic,nodeID int, key string) {
-	value, err := post(fmt.Sprintf("%s/api/userTraffic/%s",HOST, strconv.Itoa(nodeID)),
+	value, err := post(fmt.Sprintf("%s/api/web/v1/userTraffic/%s",HOST, strconv.Itoa(nodeID)),
 	string(langx.Must(func() (interface{}, error) {
 		return json.Marshal(allUserTraffic)
 	}).([]byte)),
@@ -121,7 +121,7 @@ func PostAllUserTraffic(allUserTraffic []*model.UserTraffic,nodeID int, key stri
 }
 
 func PostNodeOnline(nodeOnline []*model.NodeOnline,nodeID int, key string){
-	value, err := post(fmt.Sprintf("%s/api/nodeOnline/%s",HOST, strconv.Itoa(nodeID)),
+	value, err := post(fmt.Sprintf("%s/api/web/v1/nodeOnline/%s",HOST, strconv.Itoa(nodeID)),
 		string(langx.Must(func() (interface{}, error) {
 			return json.Marshal(nodeOnline)
 		}).([]byte)),
@@ -139,7 +139,7 @@ func PostNodeOnline(nodeOnline []*model.NodeOnline,nodeID int, key string){
 }
 
 func PostNodeStatus(status model.NodeStatus,nodeID int, key string){
-	value, err := post(fmt.Sprintf("%s/api/nodeStatus/%s",HOST, strconv.Itoa(nodeID)),
+	value, err := post(fmt.Sprintf("%s/api/web/v1/nodeStatus/%s",HOST, strconv.Itoa(nodeID)),
 		string(langx.Must(func() (interface{}, error) {
 			return json.Marshal(status)
 		}).([]byte)),
