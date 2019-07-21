@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"syscall"
 	"time"
 
 	"github.com/rc452860/vnet/common/config"
@@ -33,15 +34,9 @@ func main() {
 	}
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c)
-	for {
-		data := <-c
-		log.Error("recive signal: %s", data.String())
-		if data == os.Interrupt {
-			cancle()
-			return
-		}
-	}
+	signal.Notify(c,syscall.SIGINT, syscall.SIGTERM)
+	<-c
+	cancle()
 }
 
 func BareStarted() {
