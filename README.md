@@ -5,7 +5,7 @@
 <img src="./assert/donate.png" width="300" title="you have me!">
 
 ## 功能介绍
-Vnet是一个代理工具,在某些网络条件受到限制的情况先提供突破服务.
+Vnet是一个代理工具
 
 ## 开发计划
 - [ x ] shadowsocsk代理协议
